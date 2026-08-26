@@ -1,0 +1,85 @@
+{
+  "updatedAt": "2026-07-10T13:14:58.066Z",
+  "createdAt": "2025-10-16T04:00:43.144Z",
+  "id": "4TETRU8WfquLsLjJ",
+  "name": "Real-Time Earnings Estimates Fetcher",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1fbca4ce-57af-4d0f-98c5-89c6cf405a44",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "model": "sonar-pro",
+        "messages": {
+          "message": [
+            {
+              "content": "Give me the result estimates which includes the Revenue, EBITDA & PAT for INFY for the current quarter"
+            }
+          ]
+        },
+        "simplify": true,
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.perplexity",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "8217c010-7018-43ed-84a7-c235c44640fc",
+      "name": "Message a model",
+      "credentials": {
+        "perplexityApi": {
+          "id": "9o8x6wOWmnlG4lRA",
+          "name": "Perplexity account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "28f08577-2649-4e11-8f6f-ea03f8bd7235",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-16T04:00:43.152Z",
+      "createdAt": "2025-10-16T04:00:43.152Z",
+      "role": "workflow:owner",
+      "workflowId": "4TETRU8WfquLsLjJ",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
