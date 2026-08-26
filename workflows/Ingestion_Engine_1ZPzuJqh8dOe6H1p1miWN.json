@@ -1,0 +1,1412 @@
+{
+  "updatedAt": "2026-03-23T10:05:26.605Z",
+  "createdAt": "2026-01-29T09:00:36.560Z",
+  "id": "1ZPzuJqh8dOe6H1p1miWN",
+  "name": "Ingestion Engine",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.body.file_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        128,
+        652
+      ],
+      "id": "4dc49cf2-8a37-49cf-976c-61e3b2b6e894",
+      "name": "Download File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        576,
+        400
+      ],
+      "id": "d921a1b6-eeb8-47b7-99cd-1a320602aeab",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "document_embeddings",
+          "mode": "list",
+          "cachedResultName": "document_embeddings"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1056,
+        192
+      ],
+      "id": "b6a6a344-a503-4cfa-be3a-05e76808d0f4",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "=session_id",
+                "value": "={{ $('Webhook1').item.json.body.session_id }}"
+              },
+              {
+                "name": "file_name",
+                "value": "={{ $('Webhook1').item.json.body.file_name }}"
+              },
+              {
+                "name": "drive_file_id",
+                "value": "={{ $('Webhook1').item.json.body.file_id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        416
+      ],
+      "id": "18ad74fb-a01a-4a21-8e2c-021cad2f85de",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1024,
+        416
+      ],
+      "id": "16546fc9-0454-4161-86a7-4afd3aa4edc8",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "TMMS3pMqjiGuuWVj",
+          "name": "RAG 23-12-2025"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $('Webhook1').first().json.body;\nconst sessionId = webhookData.sessionId || webhookData.session_id;\nconst driveFileId = webhookData.driveFileId || webhookData.drive_file_id || webhookData.file_id;\nconst fileName = webhookData.fileName || webhookData.file_name;\n\nconst SUPABASE_URL = 'https://bmpvcjbfeyvkkbvclwkb.supabase.co';\nconst SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY';\n\n// Use metadata to find chunks from THIS specific file (race-condition safe)\n// The Default Data Loader stores session_id and drive_file_id in metadata JSON\nconst response = await this.helpers.httpRequest({\n  method: 'PATCH',\n  url: `${SUPABASE_URL}/rest/v1/document_embeddings?session_id=is.null&metadata->>drive_file_id=eq.${driveFileId}`,\n  headers: {\n    'apikey': SUPABASE_KEY,\n    'Authorization': `Bearer ${SUPABASE_KEY}`,\n    'Content-Type': 'application/json',\n    'Prefer': 'return=headers-only'\n  },\n  body: {\n    session_id: sessionId,\n    drive_file_id: driveFileId,\n    file_name: fileName\n  },\n  json: true,\n  returnFullResponse: true\n});\n\nreturn [{\n  json: {\n    success: true,\n    sessionId,\n    driveFileId,\n    fileName,\n    status: response.statusCode || 'done'\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        652
+      ],
+      "id": "b71d21ca-f433-41f4-ba5c-8a812826916f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You generate search queries for retrieving relevant document chunks from a vector database.\nGiven a company name and section prompt, generate exactly 5 specific search queries.\nEach query should approach the topic from a different angle.\nReturn ONLY a JSON array of 5 strings. No explanation."
+            },
+            {
+              "content": "=Company: {{ $json.body.companyName }}\n\nSection to write:\n{{ $json.body.sectionPrompt }}\n\nOriginal keywords: {{ $json.body.searchKeywords.join(', ') }}\n\nGenerate 5 search queries that would find the most relevant document chunks for writing this section about {{ $json.body.companyName }}.\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 300,
+          "temperature": 0.5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        128,
+        1232
+      ],
+      "id": "8555c5a5-0b37-4f19-a123-07b53714a1e9",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "TMMS3pMqjiGuuWVj",
+          "name": "RAG 23-12-2025"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const llmOutput = $input.first().json.output?.[0]?.content?.[0]?.text || $input.first().json.message?.content || $input.first().json.text || '';\nconst webhookData = $('Webhook').first().json.body;\n\nlet queries;\ntry {\n  // Strip markdown code blocks first\n  const cleaned = llmOutput.replace(/```json\\s*/g, '').replace(/```\\s*/g, '').trim();\n  const match = cleaned.match(/\\[[\\s\\S]*\\]/);\n  queries = match ? JSON.parse(match[0]) : [];\n} catch (e) {\n  queries = llmOutput.split('\\n').filter(q => q.trim().length > 5).slice(0, 5);\n}\n\nif (queries.length === 0) {\n  queries = [webhookData.searchKeywords.join(' ')];\n}\n\nreturn [{\n  json: {\n    queries: queries.slice(0, 5),\n    sessionId: webhookData.sessionId,\n    companyName: webhookData.companyName,\n    sectionPrompt: webhookData.sectionPrompt,\n    searchKeywords: webhookData.searchKeywords,\n    selectedDocIds: webhookData.selectedDocIds || [],\n    maxChunks: webhookData.maxChunks || 20\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        1232
+      ],
+      "id": "f5bc8427-b0c8-42f4-9c1d-7ff5bf3ebab9",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ingest-document",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        652
+      ],
+      "id": "48c3b062-a1b8-4445-82bb-ec2b1d0d4955",
+      "name": "Webhook1",
+      "webhookId": "0eceed9b-6cae-468f-9d8f-59e3039206ae"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rag-retrieve",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -96,
+        1232
+      ],
+      "id": "c41cde7f-68f1-4ad9-975e-8d2ecedd2fcd",
+      "name": "Webhook",
+      "webhookId": "f99f200b-7311-4c19-9b15-f51655b35e55"
+    },
+    {
+      "parameters": {
+        "jsCode": "const queries = $input.first().json.queries;\nconst OPENROUTER_KEY = '[REDACTED_SECRET]';\n\n// OpenRouter uses the same OpenAI-compatible format\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://openrouter.ai/api/v1/embeddings',\n  headers: {\n    'Authorization': `Bearer ${OPENROUTER_KEY}`,\n    'Content-Type': 'application/json'\n  },\n  body: {\n    model: 'openai/text-embedding-ada-002',\n    input: queries\n  },\n  json: true\n});\n\nconst embeddings = response.data.map(d => d.embedding);\n\nreturn [{\n  json: {\n    ...$input.first().json,\n    embeddings: embeddings\n  }\n}];\n  "
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        1232
+      ],
+      "id": "7db60db2-663e-4089-8304-9387bef92e94",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst SUPABASE_URL = 'https://bmpvcjbfeyvkkbvclwkb.supabase.co';\nconst SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY';\n\nconst headers = {\n  'apikey': SUPABASE_KEY,\n  'Authorization': `Bearer ${SUPABASE_KEY}`,\n  'Content-Type': 'application/json'\n};\n\n// Vector search for each embedding\nconst vectorResults = [];\nfor (const embedding of data.embeddings) {\n  const chunks = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${SUPABASE_URL}/rest/v1/rpc/match_documents`,\n    headers,\n    body: {\n      query_embedding: embedding,\n      filter_session_id: data.sessionId,\n      filter_doc_ids: data.selectedDocIds.length > 0 ? data.selectedDocIds : null,\n      match_count: 10\n    },\n    json: true\n  });\n  vectorResults.push(Array.isArray(chunks) ? chunks : []);\n}\n\n// Full-text search with original keywords\nconst keywordQuery = data.searchKeywords.join(' ');\nlet ftsResults = [];\ntry {\n  ftsResults = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${SUPABASE_URL}/rest/v1/rpc/search_documents_text`,\n    headers,\n    body: {\n      query_text: keywordQuery,\n      filter_session_id: data.sessionId,\n      filter_doc_ids: data.selectedDocIds.length > 0 ? data.selectedDocIds : null,\n      match_count: 10\n    },\n    json: true\n  });\n  if (!Array.isArray(ftsResults)) ftsResults = [];\n} catch (e) {\n  ftsResults = [];\n}\n\nreturn [{\n  json: {\n    ...data,\n    vectorResults,\n    ftsResults\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        1232
+      ],
+      "id": "2da5f678-da38-49ab-bdd3-c0dcffc961b6",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst k = 60;\n\nconst allResultSets = [...data.vectorResults, data.ftsResults];\n\nconst scoreMap = new Map();\n\nfor (const resultSet of allResultSets) {\n  if (!Array.isArray(resultSet)) continue;\n  resultSet.forEach((chunk, rank) => {\n    const id = chunk.id;\n    const rrfScore = 1 / (k + rank + 1);\n\n    if (scoreMap.has(id)) {\n      scoreMap.get(id).score += rrfScore;\n    } else {\n      scoreMap.set(id, {\n        chunk: {\n          id: chunk.id,\n          content: chunk.content,\n          file_name: chunk.file_name || null\n        },\n        score: rrfScore\n      });\n    }\n  });\n}\n\nconst candidates = Array.from(scoreMap.values())\n  .sort((a, b) => b.score - a.score)\n  .slice(0, 30);\n\nreturn [{\n  json: {\n    sessionId: data.sessionId,\n    companyName: data.companyName,\n    sectionPrompt: data.sectionPrompt,\n    maxChunks: data.maxChunks,\n    candidates: candidates.map(c => c.chunk)\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        1232
+      ],
+      "id": "76b848a8-f8e9-4997-b80b-49c0044507a7",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst maxChunks = data.maxChunks || 20;\nconst candidates = data.candidates;\nconst llmOutput = data.rerankOutput || '';\n\nlet scores = [];\ntry {\n  const match = llmOutput.match(/\\[[\\s\\S]*\\]/);\n  scores = match ? JSON.parse(match[0]) : [];\n} catch (e) {\n  return [{\n    json: {\n      chunks: candidates.slice(0, maxChunks).map(c => ({\n        id: c.id,\n        content: c.content,\n        file_name: c.file_name\n      }))\n    }\n  }];\n}\n\nconst scoreMap = new Map();\nfor (const s of scores) {\n  scoreMap.set(Number(s.id), s.score);\n}\n\nconst rankedChunks = candidates\n  .map(c => ({\n    ...c,\n    relevanceScore: scoreMap.get(c.id) ?? 5\n  }))\n  .filter(c => c.relevanceScore >= 6)\n  .sort((a, b) => b.relevanceScore - a.relevanceScore)\n  .slice(0, maxChunks)\n  .map(({ relevanceScore, ...chunk }) => chunk);\n\nconst finalChunks = rankedChunks.length >= 3\n  ? rankedChunks\n  : candidates.slice(0, maxChunks);\n\n// Return only essential fields — no extra data\nreturn [{\n  json: {\n    chunks: finalChunks.map(c => ({\n      id: c.id,\n      content: c.content,\n      file_name: c.file_name || null\n    }))\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        1232
+      ],
+      "id": "91e8e6ee-340a-45ad-9504-2afa57319fd7",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type:",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1824,
+        1232
+      ],
+      "id": "e7e2d904-4abc-4f55-ad2c-bacbfe345617",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst OPENROUTER_KEY = '[REDACTED_SECRET]';\n\nconst chunkList = data.candidates\n  .map(c => `--- CHUNK ${c.id} ---\\n${c.content.substring(0, 500)}`)\n  .join('\\n\\n');\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://openrouter.ai/api/v1/chat/completions',\n  headers: {\n    'Authorization': `Bearer ${OPENROUTER_KEY}`,\n    'Content-Type': 'application/json'\n  },\n  body: {\n    model: 'google/gemini-2.0-flash-001',\n    temperature: 0,\n    max_tokens: 1000,\n    messages: [\n      {\n        role: 'system',\n        content: 'You are a relevance scorer. Given a section topic and document chunks, score each chunk from 1-10 for relevance. Return ONLY a JSON array: [{\"id\": chunk_id, \"score\": number}]. No explanation. No markdown.'\n      },\n      {\n        role: 'user',\n        content: `Company: ${data.companyName}\\n\\nSection to write:\\n${data.sectionPrompt}\\n\\nScore each chunk 1 (irrelevant) to 10 (highly relevant):\\n\\n${chunkList}`\n      }\n    ]\n  },\n  json: true\n});\n\nconst llmOutput = response.choices[0].message.content;\n\nreturn [{\n  json: {\n    candidates: data.candidates,\n    maxChunks: data.maxChunks,\n    rerankOutput: llmOutput\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        1232
+      ],
+      "id": "70ccfc5c-ac9f-4aeb-9dc8-2d0ef652ea5d",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8881514a-71da-4956-8c5e-b69a76346700",
+              "leftValue": "={{ $('Webhook1').first().json.body.file_name }}",
+              "rightValue": ".pdf",
+              "operator": {
+                "type": "string",
+                "operation": "endsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        352,
+        652
+      ],
+      "id": "1a2a9afd-0e4a-4acb-9ccd-f30cd87ff30c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chunkSize": 1500,
+        "chunkOverlap": 200,
+        "options": {
+          "splitCode": "markdown"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        624
+      ],
+      "id": "12ff7a49-257f-4519-a445-e2b5ad7d6297",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        904
+      ],
+      "id": "c75f5bc0-4d42-4bce-aa20-6b9064bdb2aa",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "document_embeddings",
+          "mode": "list",
+          "cachedResultName": "document_embeddings"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1096,
+        800
+      ],
+      "id": "9f0cfe80-4794-487b-b60d-db11b57142f1",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "=session_id",
+                "value": "={{ $('Webhook1').item.json.body.session_id }}"
+              },
+              {
+                "name": "file_name",
+                "value": "={{ $('Webhook1').item.json.body.file_name }}"
+              },
+              {
+                "name": "drive_file_id",
+                "value": "={{ $('Webhook1').item.json.body.file_id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1232,
+        1024
+      ],
+      "id": "479f458b-30b7-400f-8dd8-b36e7f214dbc",
+      "name": "Default Data Loader1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1104,
+        1024
+      ],
+      "id": "a5859636-661f-43a0-9f9b-df8095ee4000",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "TMMS3pMqjiGuuWVj",
+          "name": "RAG 23-12-2025"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $('Webhook1').first().json.body;\nconst fileName = webhookData.file_name.toLowerCase();\n\n// Only apply filtering to annual reports\nif (!fileName.includes('annual') && !fileName.includes('ar_') && !fileName.includes('annual_report')) {\n  // Pass through non-AR documents unchanged\n  return $input.all();\n}\n\nconst fullText = $input.first().json.text || $input.first().json.data || '';\n\n// Define the sections we want to keep\nconst RELEVANT_SECTIONS = [\n  // Section markers commonly found in Indian annual reports\n  { start: /consolidated\\s+(financial\\s+)?statement/i, end: /standalone\\s+(financial\\s+)?statement|notes\\s+to\\s+.*financial/i, label: 'consolidated_financials' },\n  { start: /standalone\\s+(financial\\s+)?statement/i, end: /notes\\s+to\\s+.*financial|cash\\s+flow/i, label: 'standalone_financials' },\n  { start: /balance\\s+sheet|statement\\s+of\\s+financial\\s+position/i, end: /statement\\s+of\\s+profit|income\\s+statement/i, label: 'balance_sheet' },\n  { start: /cash\\s+flow\\s+statement|statement\\s+of\\s+cash\\s+flow/i, end: /notes\\s+to|significant\\s+accounting/i, label: 'cash_flow' },\n  { start: /management\\s+discussion|management('s)?\\s+discussion\\s+(&|and)\\s+analysis|md\\s*&\\s*a/i, end: /director('s)?\\s+report|corporate\\s+governance/i, label: 'mda' },\n  { start: /director('s)?\\s+report|board('s)?\\s+report/i, end: /corporate\\s+governance|auditor/i, label: 'directors_report' },\n  { start: /related\\s+party\\s+transaction/i, end: /additional\\s+information|other\\s+notes/i, label: 'related_party' },\n  { start: /auditor('s)?\\s+report|independent\\s+auditor/i, end: /annexure|financial\\s+statement/i, label: 'auditor_report' },\n  { start: /statement\\s+of\\s+profit\\s+(and|&)\\s+loss|income\\s+statement/i, end: /balance\\s+sheet|cash\\s+flow|notes/i, label: 'profit_loss' }\n];\n\n// Split into pages/sections (using form feeds or page markers)\nconst pages = fullText.split(/\\f|\\n{4,}|(?=\\n.*page\\s+\\d+)/i);\n\nconst relevantContent = [];\nlet currentSection = null;\nlet capturing = false;\n\nfor (const page of pages) {\n  const pageText = page.trim();\n  if (pageText.length < 50) continue;\n\n  // Check if this page starts a relevant section\n  for (const section of RELEVANT_SECTIONS) {\n    if (section.start.test(pageText)) {\n      currentSection = section.label;\n      capturing = true;\n      break;\n    }\n    if (capturing && section.end && section.end.test(pageText)) {\n      // We've hit the end marker of current section\n      relevantContent.push({\n        text: pageText,\n        section: currentSection\n      });\n      capturing = false;\n      currentSection = null;\n      break;\n    }\n  }\n\n  if (capturing) {\n    relevantContent.push({\n      text: pageText,\n      section: currentSection\n    });\n  }\n}\n\n// If regex-based extraction found very little, fall back to keyword density filtering\nif (relevantContent.length < 5) {\n  const HIGH_VALUE_KEYWORDS = [\n    'revenue', 'ebitda', 'profit', 'loss', 'margin', 'growth',\n    'cash flow', 'balance sheet', 'debt', 'equity', 'roe', 'roce',\n    'management discussion', 'director', 'auditor', 'related party',\n    'operating', 'capex', 'working capital', 'dividend',\n    'consolidated', 'standalone', 'segment', 'subsidiary'\n  ];\n\n  for (const page of pages) {\n    const lower = page.toLowerCase();\n    const keywordHits = HIGH_VALUE_KEYWORDS.filter(kw => lower.includes(kw)).length;\n    // Keep pages with 3+ financial keyword matches\n    if (keywordHits >= 3 && page.trim().length > 100) {\n      relevantContent.push({\n        text: page.trim(),\n        section: 'keyword_matched'\n      });\n    }\n  }\n}\n\n// Reconstruct as single text with section markers\nconst filteredText = relevantContent\n  .map(r => `[SECTION: ${r.section}]\\n${r.text}`)\n  .join('\\n\\n---\\n\\n');\n\nreturn [{\n  json: {\n    ...($input.first().json),\n    text: filteredText,\n    original_pages: pages.length,\n    filtered_sections: relevantContent.length,\n    is_filtered: true\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        400
+      ],
+      "id": "e74c59d0-b22a-44d1-b4c7-d5cddecf563d",
+      "name": "Code in JavaScript7"
+    }
+  ],
+  "connections": {
+    "Download File": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript7": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "2e3c9a6f-11c3-420c-8f6b-156e2aaa99e3",
+  "activeVersionId": "14503cc1-5607-44b9-8497-2376d75c721f",
+  "triggerCount": 2,
+  "shared": [
+    {
+      "updatedAt": "2026-01-29T09:00:36.565Z",
+      "createdAt": "2026-01-29T09:00:36.565Z",
+      "role": "workflow:owner",
+      "workflowId": "1ZPzuJqh8dOe6H1p1miWN",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-02-25T11:13:08.000Z",
+    "createdAt": "2026-02-25T11:13:07.089Z",
+    "versionId": "14503cc1-5607-44b9-8497-2376d75c721f",
+    "workflowId": "1ZPzuJqh8dOe6H1p1miWN",
+    "nodes": [
+      {
+        "parameters": {
+          "operation": "download",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json.body.file_id }}",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          128,
+          652
+        ],
+        "id": "4dc49cf2-8a37-49cf-976c-61e3b2b6e894",
+        "name": "Download File",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "pdf",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1,
+        "position": [
+          576,
+          400
+        ],
+        "id": "d921a1b6-eeb8-47b7-99cd-1a320602aeab",
+        "name": "Extract from File"
+      },
+      {
+        "parameters": {
+          "mode": "insert",
+          "tableName": {
+            "__rl": true,
+            "value": "document_embeddings",
+            "mode": "list",
+            "cachedResultName": "document_embeddings"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+        "typeVersion": 1.3,
+        "position": [
+          832,
+          192
+        ],
+        "id": "b6a6a344-a503-4cfa-be3a-05e76808d0f4",
+        "name": "Supabase Vector Store",
+        "credentials": {
+          "supabaseApi": {
+            "id": "0G7QiEV7evRjasbP",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "textSplittingMode": "custom",
+          "options": {
+            "metadata": {
+              "metadataValues": [
+                {
+                  "name": "=session_id",
+                  "value": "={{ $('Webhook1').item.json.body.session_id }}"
+                },
+                {
+                  "name": "file_name",
+                  "value": "={{ $('Webhook1').item.json.body.file_name }}"
+                },
+                {
+                  "name": "drive_file_id",
+                  "value": "={{ $('Webhook1').item.json.body.file_id }}"
+                }
+              ]
+            }
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+        "typeVersion": 1.1,
+        "position": [
+          928,
+          416
+        ],
+        "id": "18ad74fb-a01a-4a21-8e2c-021cad2f85de",
+        "name": "Default Data Loader"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          800,
+          416
+        ],
+        "id": "16546fc9-0454-4161-86a7-4afd3aa4edc8",
+        "name": "Embeddings OpenAI",
+        "credentials": {
+          "openAiApi": {
+            "id": "TMMS3pMqjiGuuWVj",
+            "name": "RAG 23-12-2025"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const webhookData = $('Webhook1').first().json.body;\nconst sessionId = webhookData.sessionId || webhookData.session_id;\nconst driveFileId = webhookData.driveFileId || webhookData.drive_file_id || webhookData.file_id;\nconst fileName = webhookData.fileName || webhookData.file_name;\n\nconst SUPABASE_URL = 'https://bmpvcjbfeyvkkbvclwkb.supabase.co';\nconst SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY';\n\n// Use metadata to find chunks from THIS specific file (race-condition safe)\n// The Default Data Loader stores session_id and drive_file_id in metadata JSON\nconst response = await this.helpers.httpRequest({\n  method: 'PATCH',\n  url: `${SUPABASE_URL}/rest/v1/document_embeddings?session_id=is.null&metadata->>drive_file_id=eq.${driveFileId}`,\n  headers: {\n    'apikey': SUPABASE_KEY,\n    'Authorization': `Bearer ${SUPABASE_KEY}`,\n    'Content-Type': 'application/json',\n    'Prefer': 'return=headers-only'\n  },\n  body: {\n    session_id: sessionId,\n    drive_file_id: driveFileId,\n    file_name: fileName\n  },\n  json: true,\n  returnFullResponse: true\n});\n\nreturn [{\n  json: {\n    success: true,\n    sessionId,\n    driveFileId,\n    fileName,\n    status: response.statusCode || 'done'\n  }\n}];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1296,
+          652
+        ],
+        "id": "b71d21ca-f433-41f4-ba5c-8a812826916f",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o",
+            "mode": "list",
+            "cachedResultName": "GPT-4O"
+          },
+          "responses": {
+            "values": [
+              {
+                "role": "system",
+                "content": "You generate search queries for retrieving relevant document chunks from a vector database.\nGiven a company name and section prompt, generate exactly 5 specific search queries.\nEach query should approach the topic from a different angle.\nReturn ONLY a JSON array of 5 strings. No explanation."
+              },
+              {
+                "content": "=Company: {{ $json.body.companyName }}\n\nSection to write:\n{{ $json.body.sectionPrompt }}\n\nOriginal keywords: {{ $json.body.searchKeywords.join(', ') }}\n\nGenerate 5 search queries that would find the most relevant document chunks for writing this section about {{ $json.body.companyName }}.\n"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {
+            "maxTokens": 300,
+            "temperature": 0.5
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.1,
+        "position": [
+          128,
+          1232
+        ],
+        "id": "8555c5a5-0b37-4f19-a123-07b53714a1e9",
+        "name": "Message a model",
+        "credentials": {
+          "openAiApi": {
+            "id": "TMMS3pMqjiGuuWVj",
+            "name": "RAG 23-12-2025"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const llmOutput = $input.first().json.output?.[0]?.content?.[0]?.text || $input.first().json.message?.content || $input.first().json.text || '';\nconst webhookData = $('Webhook').first().json.body;\n\nlet queries;\ntry {\n  // Strip markdown code blocks first\n  const cleaned = llmOutput.replace(/```json\\s*/g, '').replace(/```\\s*/g, '').trim();\n  const match = cleaned.match(/\\[[\\s\\S]*\\]/);\n  queries = match ? JSON.parse(match[0]) : [];\n} catch (e) {\n  queries = llmOutput.split('\\n').filter(q => q.trim().length > 5).slice(0, 5);\n}\n\nif (queries.length === 0) {\n  queries = [webhookData.searchKeywords.join(' ')];\n}\n\nreturn [{\n  json: {\n    queries: queries.slice(0, 5),\n    sessionId: webhookData.sessionId,\n    companyName: webhookData.companyName,\n    sectionPrompt: webhookData.sectionPrompt,\n    searchKeywords: webhookData.searchKeywords,\n    selectedDocIds: webhookData.selectedDocIds || [],\n    maxChunks: webhookData.maxChunks || 20\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          480,
+          1232
+        ],
+        "id": "f5bc8427-b0c8-42f4-9c1d-7ff5bf3ebab9",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "ingest-document",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          -96,
+          652
+        ],
+        "id": "48c3b062-a1b8-4445-82bb-ec2b1d0d4955",
+        "name": "Webhook1",
+        "webhookId": "0eceed9b-6cae-468f-9d8f-59e3039206ae"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "rag-retrieve",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -96,
+          1232
+        ],
+        "id": "c41cde7f-68f1-4ad9-975e-8d2ecedd2fcd",
+        "name": "Webhook",
+        "webhookId": "f99f200b-7311-4c19-9b15-f51655b35e55"
+      },
+      {
+        "parameters": {
+          "jsCode": "const queries = $input.first().json.queries;\nconst OPENROUTER_KEY = '[REDACTED_SECRET]';\n\n// OpenRouter uses the same OpenAI-compatible format\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://openrouter.ai/api/v1/embeddings',\n  headers: {\n    'Authorization': `Bearer ${OPENROUTER_KEY}`,\n    'Content-Type': 'application/json'\n  },\n  body: {\n    model: 'openai/text-embedding-ada-002',\n    input: queries\n  },\n  json: true\n});\n\nconst embeddings = response.data.map(d => d.embedding);\n\nreturn [{\n  json: {\n    ...$input.first().json,\n    embeddings: embeddings\n  }\n}];\n  "
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          704,
+          1232
+        ],
+        "id": "7db60db2-663e-4089-8304-9387bef92e94",
+        "name": "Code in JavaScript2"
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst SUPABASE_URL = 'https://bmpvcjbfeyvkkbvclwkb.supabase.co';\nconst SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY';\n\nconst headers = {\n  'apikey': SUPABASE_KEY,\n  'Authorization': `Bearer ${SUPABASE_KEY}`,\n  'Content-Type': 'application/json'\n};\n\n// Vector search for each embedding\nconst vectorResults = [];\nfor (const embedding of data.embeddings) {\n  const chunks = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${SUPABASE_URL}/rest/v1/rpc/match_documents`,\n    headers,\n    body: {\n      query_embedding: embedding,\n      filter_session_id: data.sessionId,\n      filter_doc_ids: data.selectedDocIds.length > 0 ? data.selectedDocIds : null,\n      match_count: 10\n    },\n    json: true\n  });\n  vectorResults.push(Array.isArray(chunks) ? chunks : []);\n}\n\n// Full-text search with original keywords\nconst keywordQuery = data.searchKeywords.join(' ');\nlet ftsResults = [];\ntry {\n  ftsResults = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${SUPABASE_URL}/rest/v1/rpc/search_documents_text`,\n    headers,\n    body: {\n      query_text: keywordQuery,\n      filter_session_id: data.sessionId,\n      filter_doc_ids: data.selectedDocIds.length > 0 ? data.selectedDocIds : null,\n      match_count: 10\n    },\n    json: true\n  });\n  if (!Array.isArray(ftsResults)) ftsResults = [];\n} catch (e) {\n  ftsResults = [];\n}\n\nreturn [{\n  json: {\n    ...data,\n    vectorResults,\n    ftsResults\n  }\n}];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          928,
+          1232
+        ],
+        "id": "2da5f678-da38-49ab-bdd3-c0dcffc961b6",
+        "name": "Code in JavaScript3"
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst k = 60;\n\nconst allResultSets = [...data.vectorResults, data.ftsResults];\n\nconst scoreMap = new Map();\n\nfor (const resultSet of allResultSets) {\n  if (!Array.isArray(resultSet)) continue;\n  resultSet.forEach((chunk, rank) => {\n    const id = chunk.id;\n    const rrfScore = 1 / (k + rank + 1);\n\n    if (scoreMap.has(id)) {\n      scoreMap.get(id).score += rrfScore;\n    } else {\n      scoreMap.set(id, {\n        chunk: {\n          id: chunk.id,\n          content: chunk.content,\n          file_name: chunk.file_name || null\n        },\n        score: rrfScore\n      });\n    }\n  });\n}\n\nconst candidates = Array.from(scoreMap.values())\n  .sort((a, b) => b.score - a.score)\n  .slice(0, 30);\n\nreturn [{\n  json: {\n    sessionId: data.sessionId,\n    companyName: data.companyName,\n    sectionPrompt: data.sectionPrompt,\n    maxChunks: data.maxChunks,\n    candidates: candidates.map(c => c.chunk)\n  }\n}];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1152,
+          1232
+        ],
+        "id": "76b848a8-f8e9-4997-b80b-49c0044507a7",
+        "name": "Code in JavaScript4"
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst maxChunks = data.maxChunks || 20;\nconst candidates = data.candidates;\nconst llmOutput = data.rerankOutput || '';\n\nlet scores = [];\ntry {\n  const match = llmOutput.match(/\\[[\\s\\S]*\\]/);\n  scores = match ? JSON.parse(match[0]) : [];\n} catch (e) {\n  return [{\n    json: {\n      chunks: candidates.slice(0, maxChunks).map(c => ({\n        id: c.id,\n        content: c.content,\n        file_name: c.file_name\n      }))\n    }\n  }];\n}\n\nconst scoreMap = new Map();\nfor (const s of scores) {\n  scoreMap.set(Number(s.id), s.score);\n}\n\nconst rankedChunks = candidates\n  .map(c => ({\n    ...c,\n    relevanceScore: scoreMap.get(c.id) ?? 5\n  }))\n  .filter(c => c.relevanceScore >= 6)\n  .sort((a, b) => b.relevanceScore - a.relevanceScore)\n  .slice(0, maxChunks)\n  .map(({ relevanceScore, ...chunk }) => chunk);\n\nconst finalChunks = rankedChunks.length >= 3\n  ? rankedChunks\n  : candidates.slice(0, maxChunks);\n\n// Return only essential fields — no extra data\nreturn [{\n  json: {\n    chunks: finalChunks.map(c => ({\n      id: c.id,\n      content: c.content,\n      file_name: c.file_name || null\n    }))\n  }\n}];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1600,
+          1232
+        ],
+        "id": "91e8e6ee-340a-45ad-9504-2afa57319fd7",
+        "name": "Code in JavaScript5"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify($json) }}",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type:",
+                  "value": "application/json"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1824,
+          1232
+        ],
+        "id": "e7e2d904-4abc-4f55-ad2c-bacbfe345617",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst OPENROUTER_KEY = '[REDACTED_SECRET]';\n\nconst chunkList = data.candidates\n  .map(c => `--- CHUNK ${c.id} ---\\n${c.content.substring(0, 500)}`)\n  .join('\\n\\n');\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://openrouter.ai/api/v1/chat/completions',\n  headers: {\n    'Authorization': `Bearer ${OPENROUTER_KEY}`,\n    'Content-Type': 'application/json'\n  },\n  body: {\n    model: 'google/gemini-2.0-flash-001',\n    temperature: 0,\n    max_tokens: 1000,\n    messages: [\n      {\n        role: 'system',\n        content: 'You are a relevance scorer. Given a section topic and document chunks, score each chunk from 1-10 for relevance. Return ONLY a JSON array: [{\"id\": chunk_id, \"score\": number}]. No explanation. No markdown.'\n      },\n      {\n        role: 'user',\n        content: `Company: ${data.companyName}\\n\\nSection to write:\\n${data.sectionPrompt}\\n\\nScore each chunk 1 (irrelevant) to 10 (highly relevant):\\n\\n${chunkList}`\n      }\n    ]\n  },\n  json: true\n});\n\nconst llmOutput = response.choices[0].message.content;\n\nreturn [{\n  json: {\n    candidates: data.candidates,\n    maxChunks: data.maxChunks,\n    rerankOutput: llmOutput\n  }\n}];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1376,
+          1232
+        ],
+        "id": "70ccfc5c-ac9f-4aeb-9dc8-2d0ef652ea5d",
+        "name": "Code in JavaScript6"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "8881514a-71da-4956-8c5e-b69a76346700",
+                "leftValue": "={{ $('Webhook1').first().json.body.file_name }}",
+                "rightValue": ".pdf",
+                "operator": {
+                  "type": "string",
+                  "operation": "endsWith"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          352,
+          652
+        ],
+        "id": "1a2a9afd-0e4a-4acb-9ccd-f30cd87ff30c",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "chunkSize": 1500,
+          "chunkOverlap": 200,
+          "options": {
+            "splitCode": "markdown"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+        "typeVersion": 1,
+        "position": [
+          1008,
+          624
+        ],
+        "id": "12ff7a49-257f-4519-a445-e2b5ad7d6297",
+        "name": "Recursive Character Text Splitter"
+      },
+      {
+        "parameters": {
+          "operation": "xlsx",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1.1,
+        "position": [
+          576,
+          904
+        ],
+        "id": "c75f5bc0-4d42-4bce-aa20-6b9064bdb2aa",
+        "name": "Extract from File1"
+      },
+      {
+        "parameters": {
+          "mode": "insert",
+          "tableName": {
+            "__rl": true,
+            "value": "document_embeddings",
+            "mode": "list",
+            "cachedResultName": "document_embeddings"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+        "typeVersion": 1.3,
+        "position": [
+          872,
+          800
+        ],
+        "id": "9f0cfe80-4794-487b-b60d-db11b57142f1",
+        "name": "Supabase Vector Store1",
+        "credentials": {
+          "supabaseApi": {
+            "id": "0G7QiEV7evRjasbP",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "options": {
+            "metadata": {
+              "metadataValues": [
+                {
+                  "name": "=session_id",
+                  "value": "={{ $('Webhook1').item.json.body.session_id }}"
+                },
+                {
+                  "name": "file_name",
+                  "value": "={{ $('Webhook1').item.json.body.file_name }}"
+                },
+                {
+                  "name": "drive_file_id",
+                  "value": "={{ $('Webhook1').item.json.body.file_id }}"
+                }
+              ]
+            }
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+        "typeVersion": 1.1,
+        "position": [
+          1008,
+          1024
+        ],
+        "id": "479f458b-30b7-400f-8dd8-b36e7f214dbc",
+        "name": "Default Data Loader1"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          880,
+          1024
+        ],
+        "id": "a5859636-661f-43a0-9f9b-df8095ee4000",
+        "name": "Embeddings OpenAI1",
+        "credentials": {
+          "openAiApi": {
+            "id": "TMMS3pMqjiGuuWVj",
+            "name": "RAG 23-12-2025"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Download File": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract from File": {
+        "main": [
+          [
+            {
+              "node": "Supabase Vector Store",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Default Data Loader": {
+        "ai_document": [
+          [
+            {
+              "node": "Supabase Vector Store",
+              "type": "ai_document",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Embeddings OpenAI": {
+        "ai_embedding": [
+          [
+            {
+              "node": "Supabase Vector Store",
+              "type": "ai_embedding",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase Vector Store": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook1": {
+        "main": [
+          [
+            {
+              "node": "Download File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript4": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript5": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript6": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Extract from File",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Extract from File1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Recursive Character Text Splitter": {
+        "ai_textSplitter": [
+          [
+            {
+              "node": "Default Data Loader",
+              "type": "ai_textSplitter",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Default Data Loader1": {
+        "ai_document": [
+          [
+            {
+              "node": "Supabase Vector Store1",
+              "type": "ai_document",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Embeddings OpenAI1": {
+        "ai_embedding": [
+          [
+            {
+              "node": "Supabase Vector Store1",
+              "type": "ai_embedding",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract from File1": {
+        "main": [
+          [
+            {
+              "node": "Supabase Vector Store1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase Vector Store1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version 14503cc1",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
