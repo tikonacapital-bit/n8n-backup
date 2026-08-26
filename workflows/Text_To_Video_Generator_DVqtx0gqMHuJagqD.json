@@ -1,0 +1,306 @@
+{
+  "updatedAt": "2025-12-24T13:49:53.000Z",
+  "createdAt": "2025-12-22T10:32:07.157Z",
+  "id": "DVqtx0gqMHuJagqD",
+  "name": "Text To Video Generator",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "allowFileUploads": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        336,
+        0
+      ],
+      "id": "5fbfbc34-c6be-4786-bdb5-09428819612f",
+      "name": "When chat message received",
+      "webhookId": "9883c7e1-dc69-4775-8fba-81eadc36efae",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ginigen-veo3-free.hf.space/gradio_api/call/generate_video_with_audio",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    \n    \"{{ $json.output }}\",\n\"\",\n    1,\n    512,\n    512,\n    2,\n    4,\n    2025,\n    true,\n    true,\n    \"\",\n    10,\n    1\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        912,
+        328
+      ],
+      "id": "e4bc8731-16bc-4268-9983-aa5cfda7f36f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "=https://ginigen-veo3-free.hf.space/gradio_api/call/generate_video_with_audio/{{$json.event_id}}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        336
+      ],
+      "id": "e2d8db05-776a-4b27-9084-6f99bddda7c6",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen-2.5-vl-7b-instruct:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        632,
+        552
+      ],
+      "id": "a9444f22-c895-4dde-ab45-37a9c77207f5",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "O9TUEIPHEYHKBEVk",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function node\n// Extracts video URL from string like:\n// event: complete\\ndata: [{...}]\\n\\n\n\nconst input =  $input.first().json;\n\n// If your input is like { data: \"...\" }\nconst rawString = input.data || input;\n\n// Extract everything AFTER 'data: '\nconst dataStart = rawString.indexOf('data: ');\nif (dataStart === -1) {\n  throw new Error('No `data:` found in input string');\n}\n\n// Get the JSON substring\nconst jsonStringPart = rawString.substring(dataStart + 6);\n\n// Remove trailing escaped \\n\\n if present\nconst cleanedJsonString = jsonStringPart.replace(/\\\\n\\\\n$/, '');\n\n// Now parse JSON\nlet parsedArray;\ntry {\n  parsedArray = JSON.parse(cleanedJsonString);\n} catch (err) {\n  throw new Error('Could not parse JSON: ' + err.message);\n}\n\n// Grab the URL\nconst videoUrl = parsedArray[0].video.url;\n\nreturn [\n  {\n    json: {\n      videoUrl: videoUrl,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        328
+      ],
+      "id": "22eedc99-b931-4948-9bdf-4eda6d11c252",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "content": "### Using Veo 3 for Free for AI Videos\n##### Note: Make the output shouldn't not include special characters else invalid error will come.",
+        "height": 272,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        984,
+        216
+      ],
+      "typeVersion": 1,
+      "id": "6ec3b470-970c-446f-a3e0-9c91bd70b642",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### Extract the ai video url from string output of veo 3 model.",
+        "height": 240,
+        "width": 252,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1506,
+        248
+      ],
+      "typeVersion": 1,
+      "id": "b908b6ec-190b-4101-a1f7-70dd117604a8",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.idea }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a Video Prompt Generator. Give only video prompt, no other text/word."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        560,
+        328
+      ],
+      "id": "4467215d-6026-402c-9846-6e3fb7808d2f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1_GXwW5KEuToEl2aeUstFf9ktUoDWcI5Jh9eC3yfFMz4",
+          "mode": "list",
+          "cachedResultName": "Ai video",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_GXwW5KEuToEl2aeUstFf9ktUoDWcI5Jh9eC3yfFMz4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_GXwW5KEuToEl2aeUstFf9ktUoDWcI5Jh9eC3yfFMz4/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "new"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        336,
+        328
+      ],
+      "id": "9c31ef2d-7ad7-4eec-ad4b-fe2fa318251f",
+      "name": "Get row(s) in sheet",
+      "executeOnce": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ginigen-veo3-free.hf.space/gradio_api/call/generate_video_with_audio",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": [\n    \n    \"{{ $json.output }}\",\n\"\",\n    1,\n    512,\n    512,\n    2,\n    4,\n    2025,\n    true,\n    true,\n    \"\",\n    10,\n    1\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        112,
+        -16
+      ],
+      "id": "c9e3a8c2-36d9-46d1-8c1b-4af5ac777111",
+      "name": "HTTP Request2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1136,
+        328
+      ],
+      "id": "1dc13621-bcc7-4a08-b9bf-1f4261f4f88f",
+      "name": "Wait",
+      "webhookId": "be2485bd-39eb-4400-a4db-0df98d488720"
+    }
+  ],
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "060fdb13-ee1f-46f2-9aeb-78c4829fbaba",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-22T10:32:07.163Z",
+      "createdAt": "2025-12-22T10:32:07.163Z",
+      "role": "workflow:owner",
+      "workflowId": "DVqtx0gqMHuJagqD",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
