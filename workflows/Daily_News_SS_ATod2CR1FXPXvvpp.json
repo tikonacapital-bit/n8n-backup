@@ -1,0 +1,278 @@
+{
+  "updatedAt": "2025-09-22T08:34:41.000Z",
+  "createdAt": "2025-07-17T07:57:31.647Z",
+  "id": "ATod2CR1FXPXvvpp",
+  "name": "Daily News SS",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "urlInput": "https://docs.google.com/spreadsheets/d/1_jeSY_gVGYXZKMjjaGcbXOkGRKZKLrwyvxt6LD3O5Dk/edit?gid=2007698790#gid=2007698790"
+      },
+      "id": "ce2bcfe9-f5a8-4d8e-b216-3117d8dc3262",
+      "name": "Take a screenshot of a website",
+      "type": "@custom-js/n8n-nodes-pdf-toolkit.websiteScreenshot",
+      "position": [
+        784,
+        48
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "customJsApi": {
+          "id": "nFOK7xbhs1bnuRzj",
+          "name": "CustomJS account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.Title }}.png",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1oFbmzgG2fsRix45r5JtowYjAdwskJ0P6",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1oFbmzgG2fsRix45r5JtowYjAdwskJ0P6",
+          "cachedResultName": "screenshots"
+        },
+        "options": {}
+      },
+      "id": "fd2cb7cd-becc-46f3-b699-7b3c5d0651ca",
+      "name": "Store Screenshots",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        304,
+        144
+      ],
+      "typeVersion": 3,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "-1002262360602",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        544
+      ],
+      "id": "7fbbd470-4ea8-46fe-9fd9-487ce6ad9e59",
+      "name": "Send a photo message",
+      "webhookId": "3cf7e932-2ed8-4ef4-984a-0fa78af1268d",
+      "credentials": {
+        "telegramApi": {
+          "id": "I0rf76FsxPDgaIaQ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Configuration\nconst spreadsheetId = \"1_jeSY_gVGYXZKMjjaGcbXOkGRKZKLrwyvxt6LD3O5Dk\"; // Your Google Sheets ID\nconst sheetGid = \"1209422735\"; // 0 for first sheet, or specific sheet ID\nconst exportUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&size=7&portrait=false&scale=2&gridlines=false&printtitle=false&sheetnames=false&pagenum=UNDEFINED&gid=${sheetGid}&fzr=false&fzc=false`;\n\nreturn [{\n  json: {\n    exportUrl: exportUrl,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        288
+      ],
+      "id": "8761773a-75cf-4287-bcaa-3b1a15d31436",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.exportUrl }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        768,
+        304
+      ],
+      "id": "359903c9-d60c-4cd4-85e3-3a4796580e5d",
+      "name": "HTTP Request",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@custom-js/n8n-nodes-pdf-toolkit.PdfToPng",
+      "typeVersion": 1,
+      "position": [
+        960,
+        304
+      ],
+      "id": "a15b81b9-0953-4ffa-acc1-c5ecdb15cf4c",
+      "name": "Convert PDF into PNG",
+      "credentials": {
+        "customJsApi": {
+          "id": "nFOK7xbhs1bnuRzj",
+          "name": "CustomJS account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "55 8 * * 1-5"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        528,
+        448
+      ],
+      "id": "ae787f5c-333e-4d79-8469-cd8caf873ece",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://e.customjs.io/__js1-b66o7gLN1H9kpX8Uirwg88sfjJImkwIc4QgLSoKD",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "customjs-origin",
+              "value": "inline/screenshot"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"input\": {\n    \"url\": \"https://docs.google.com/spreadsheets/d/1_jeSY_gVGYXZKMjjaGcbXOkGRKZKLrwyvxt6LD3O5Dk/edit?gid=1209422735#gid=1209422735\",\n    \"commands\": [],\n    \"box\": {\n      \"x\": 63,\n      \"y\": 169,\n      \"width\": 870,\n      \"height\": 521\n    }\n  },\n  \"code\": \"const { SCRAPER } = require(\\\"./utils\\\"); return SCRAPER(input.url, input.commands, \\\"image\\\", true, input.box);\",\n  \"returnBinary\": \"true\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        864,
+        544
+      ],
+      "id": "1314d5b5-356d-4cce-9ad0-1eecc2400cdc",
+      "name": "HTTP Request1"
+    }
+  ],
+  "connections": {
+    "Take a screenshot of a website": {
+      "main": [
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Convert PDF into PNG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF into PNG": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "38460d2c-e9ea-4d9a-ad67-d21c26944954",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-07-17T07:57:31.686Z",
+      "createdAt": "2025-07-17T07:57:31.686Z",
+      "role": "workflow:owner",
+      "workflowId": "ATod2CR1FXPXvvpp",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2025-07-07T02:47:29.277Z",
+      "createdAt": "2025-07-07T02:47:29.277Z",
+      "id": "usBpWvKJ18XVI8DB",
+      "name": "🟢 Done"
+    }
+  ]
+}
