@@ -524,8 +524,8 @@
       "parameters": {
         "method": "POST",
         "url": "http://strapi_cms:1337/api/blogs?status=draft",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "authentication": "[REDACTED_SECRET]",
+        "genericAuthType": "[REDACTED_SECRET]",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"data\": {\n    \"internalName\": {{ JSON.stringify($json.topic) }},\n    \"title\": {{ JSON.stringify($json.topic) }},\n    \"slug\": {{ JSON.stringify($json.topic.toLowerCase().replace(/[^a-z0-9\\s-]/g, '').replace(/\\s+/g, '-').replace(/-+/g, '-').trim()) }},\n    \"author\": \"Sumit Poddar\",\n    \"content\": {{ JSON.stringify($json.google_doc_text) }}\n  }\n}",
@@ -797,8 +797,8 @@
       "parameters": {
         "method": "PUT",
         "url": "=http://strapi_cms:1337/api/blogs/{{ $json['Strapi ID'] }}?status=published",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "authentication": "[REDACTED_SECRET]",
+        "genericAuthType": "[REDACTED_SECRET]",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"data\": {\n    \"date\": {{ JSON.stringify(new Date().toISOString()) }}\n  }\n}",
