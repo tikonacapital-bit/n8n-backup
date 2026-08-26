@@ -1,0 +1,772 @@
+{
+  "updatedAt": "2026-08-18T08:55:59.429Z",
+  "createdAt": "2026-07-07T07:01:13.824Z",
+  "id": "2uiS-W0aG4v3g3VRWe8hQ",
+  "name": "Free Plan Coupon Registration",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "sender": "noreply@send.tradeboxlive.com"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2608,
+        560
+      ],
+      "id": "01052455-7c3a-4295-a4f0-8637464afd74",
+      "name": "Gmail: Tradebox Emails",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fdxjEgUJK0aKR2Qh",
+          "name": "Sumit Poddar Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════════════════\n// Parse Tradebox order confirmation email\n// Email format:\n//   Subject: \"Confirmation for {Plan Name} purchase\"\n//   Body: Name, Email, Purchase Date, Plan table with ₹0\n// ═══════════════════════════════════════════════════════════\n\nconst item = $input.first().json;\nconst subject = item.subject || '';\nconst bodyRaw = item.text || item.textPlain || item.html || item.textHtml || '';\n\n// Strip HTML tags for plain-text parsing\nconst body = bodyRaw\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&nbsp;/g, ' ')\n  .replace(/&#8377;/g, '₹')\n  .replace(/&amp;/g, '&')\n  .replace(/\\s+/g, ' ');\n\n// ── Plan name from subject ──────────────────────────────────\nconst planMatch = subject.match(/Confirmation for (.+?) purchase/i);\nconst rawPlanName = planMatch ? planMatch[1].trim() : '';\n\nconst PLAN_MAP = {\n  'smallcap alpha': 'smallcap_alpha',\n  'smallcap alpha picks': 'smallcap_alpha',\n  'midcap wealth': 'midcap_wealth',\n  'mid cap wealth': 'midcap_wealth',\n  'mid cap wealth builders': 'midcap_wealth',\n  'sme emerging': 'sme_emerging',\n  'sme emerging business': 'sme_emerging',\n  'all in growth': 'all_in_growth',\n  'all in growth bundle': 'all_in_growth',\n};\nconst planSlug = PLAN_MAP[rawPlanName.toLowerCase()] || 'free';\n\n// ── Extract user fields ─────────────────────────────────────\nconst nameMatch = body.match(/Name:\\s*([^\\n\\r<]+)/i);\nconst fullName = nameMatch\n  ? nameMatch[1].trim().replace(/\\s+/g, ' ')\n  : '';\n\nconst emailMatch = body.match(\n  /Email:\\s*([a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,})/i\n);\nconst userEmail = emailMatch\n  ? emailMatch[1].trim().toLowerCase()\n  : '';\n\nconst dateMatch = body.match(/Purchase Date:\\s*([\\d\\/]+)/i);\nconst purchaseDateRaw = dateMatch ? dateMatch[1].trim() : '';\n\n// Parse D/M/YYYY → ISO\nlet purchaseDate = new Date().toISOString();\nif (purchaseDateRaw) {\n  const parts = purchaseDateRaw.match(/(\\d+)\\/(\\d+)\\/(\\d+)/);\n  if (parts) {\n    purchaseDate = new Date(\n      parseInt(parts[3]),\n      parseInt(parts[2]) - 1,\n      parseInt(parts[1])\n    ).toISOString();\n  }\n}\n\n// Expiry = purchase + 1 year\nconst expiry = new Date(purchaseDate);\nexpiry.setFullYear(expiry.getFullYear() + 1);\n\n// Check if total is ₹0\nconst isFree = /Total Amount[^₹R]*[₹Rs\\.\\s]*0/i.test(body);\n\nif (!userEmail) {\n  throw new Error(\n    'Could not parse user email from Tradebox confirmation email. Subject: ' + subject\n  );\n}\n\nreturn [\n  {\n    json: {\n      fullName,\n      userEmail,\n      planName: rawPlanName,\n      planSlug,\n      purchaseDate,\n      expiryDate: expiry.toISOString(),\n      emailSubject: subject,\n      isFree,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2320,
+        560
+      ],
+      "id": "97404736-f353-4822-a00e-d5c05438112f",
+      "name": "Parse Email Body"
+    },
+    {
+      "parameters": {
+        "url": "=https://bmpvcjbfeyvkkbvclwkb.supabase.co/rest/v1/profiles?email=eq.{{ $json.userEmail }}&select=user_id,email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+            },
+            {
+              "name": "Authorization",
+              "value": "[REDACTED_SECRET]"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2048,
+        560
+      ],
+      "id": "7a0297dc-18df-402c-86e9-0c25c17b1a34",
+      "name": "Find User in Profiles"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════════════════\n// Merge parsed email with user lookup result.\n// The HTTP response is text format (to handle empty arrays).\n// ═══════════════════════════════════════════════════════════\n\nconst parsed = $('Parse Email Body').first().json;\nconst responseText = $input.first().json.data || '[]';\n\nlet userId = '';\nlet resolveMethod = 'none';\n\ntry {\n  const profiles = JSON.parse(responseText);\n  if (\n    Array.isArray(profiles) &&\n    profiles.length > 0 &&\n    profiles[0].user_id\n  ) {\n    userId = profiles[0].user_id;\n    resolveMethod = 'profiles_email';\n  }\n} catch (e) {\n  // not valid JSON — ignore\n}\n\nreturn [\n  {\n    json: {\n      ...parsed,\n      userId,\n      userFound: !!userId,\n      resolveMethod,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        560
+      ],
+      "id": "49eb200d-5250-48ae-8335-bdc3aa87be04",
+      "name": "Prepare Subscription Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
+          "conditions": [
+            {
+              "id": "condition-user-found",
+              "leftValue": "={{ $json.userFound }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1504,
+        560
+      ],
+      "id": "29583042-a812-4a62-b897-30d51b645707",
+      "name": "User Found?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bmpvcjbfeyvkkbvclwkb.supabase.co/rest/v1/subscriptions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+            },
+            {
+              "name": "Authorization",
+              "value": "[REDACTED_SECRET]"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"user_id\": \"{{ $json.userId }}\",\n  \"plan\": \"{{ $json.planSlug }}\",\n  \"is_active\": true,\n  \"started_at\": \"{{ $json.purchaseDate }}\",\n  \"expires_at\": \"{{ $json.expiryDate }}\",\n  \"amount_paid\": 0\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1232,
+        432
+      ],
+      "id": "525d729c-27b7-4eab-a8e8-6b68bd62022b",
+      "name": "Upsert Subscription"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://bmpvcjbfeyvkkbvclwkb.supabase.co/rest/v1/kyc?user_id=eq.{{ $('Prepare Subscription Data').item.json.userId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+            },
+            {
+              "name": "Authorization",
+              "value": "[REDACTED_SECRET]"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"approved\",\n  \"kyc_initiated_at\": \"{{ $('Prepare Subscription Data').item.json.purchaseDate }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -944,
+        432
+      ],
+      "id": "f9b2917f-02a7-44d1-a069-2ce50c471b8f",
+      "name": "Update KYC → Approved"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bmpvcjbfeyvkkbvclwkb.supabase.co/rest/v1/webhook_logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+            },
+            {
+              "name": "Authorization",
+              "value": "[REDACTED_SECRET]"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"source\": \"email_coupon\",\n  \"event\": \"free_plan_registration\",\n  \"payload\": {\n    \"name\": \"{{ $('Prepare Subscription Data').item.json.fullName }}\",\n    \"email\": \"{{ $('Prepare Subscription Data').item.json.userEmail }}\",\n    \"plan\": \"{{ $('Prepare Subscription Data').item.json.planSlug }}\",\n    \"plan_display\": \"{{ $('Prepare Subscription Data').item.json.planName }}\",\n    \"purchase_date\": \"{{ $('Prepare Subscription Data').item.json.purchaseDate }}\",\n    \"resolve_method\": \"{{ $('Prepare Subscription Data').item.json.resolveMethod }}\",\n    \"is_free\": {{ $('Prepare Subscription Data').item.json.isFree }}\n  },\n  \"user_id\": \"{{ $('Prepare Subscription Data').item.json.userId }}\",\n  \"processed\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -672,
+        432
+      ],
+      "id": "c2bd9d6d-99c4-40cb-a374-56c8bac238f7",
+      "name": "Log Success"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bmpvcjbfeyvkkbvclwkb.supabase.co/rest/v1/webhook_logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+            },
+            {
+              "name": "Authorization",
+              "value": "[REDACTED_SECRET]"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"source\": \"email_coupon\",\n  \"event\": \"free_plan_registration\",\n  \"payload\": {\n    \"name\": \"{{ $json.fullName }}\",\n    \"email\": \"{{ $json.userEmail }}\",\n    \"plan\": \"{{ $json.planSlug }}\",\n    \"plan_display\": \"{{ $json.planName }}\",\n    \"email_subject\": \"{{ $json.emailSubject }}\"\n  },\n  \"user_id\": null,\n  \"processed\": false,\n  \"error_message\": \"user_not_found_in_profiles — email={{ $json.userEmail }} — manual review needed\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1232,
+        752
+      ],
+      "id": "e094f216-349f-4fc7-ba1b-945d7695e576",
+      "name": "Log: User Not Found"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gmail-tradebox",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1984,
+        336
+      ],
+      "id": "43df4eef-d3e6-47f5-a7ce-7d242f0721b4",
+      "name": "Webhook",
+      "webhookId": "ac59a703-df42-4c2a-89b4-ddf9cc3a850f"
+    }
+  ],
+  "connections": {
+    "Gmail: Tradebox Emails": {
+      "main": [
+        [
+          {
+            "node": "Parse Email Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Email Body": {
+      "main": [
+        [
+          {
+            "node": "Find User in Profiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find User in Profiles": {
+      "main": [
+        [
+          {
+            "node": "Prepare Subscription Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Subscription Data": {
+      "main": [
+        [
+          {
+            "node": "User Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Found?": {
+      "main": [
+        [
+          {
+            "node": "Upsert Subscription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log: User Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Subscription": {
+      "main": [
+        [
+          {
+            "node": "Update KYC → Approved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update KYC → Approved": {
+      "main": [
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "afed9aca-5744-45c1-a9bc-2c8b7b7ace22",
+  "activeVersionId": "afed9aca-5744-45c1-a9bc-2c8b7b7ace22",
+  "triggerCount": 2,
+  "shared": [
+    {
+      "updatedAt": "2026-07-07T07:01:13.829Z",
+      "createdAt": "2026-07-07T07:01:13.829Z",
+      "role": "workflow:owner",
+      "workflowId": "2uiS-W0aG4v3g3VRWe8hQ",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-08-18T08:56:01.000Z",
+    "createdAt": "2026-08-18T08:55:59.431Z",
+    "versionId": "afed9aca-5744-45c1-a9bc-2c8b7b7ace22",
+    "workflowId": "2uiS-W0aG4v3g3VRWe8hQ",
+    "nodes": [
+      {
+        "parameters": {
+          "pollTimes": {
+            "item": [
+              {
+                "mode": "everyMinute"
+              }
+            ]
+          },
+          "filters": {
+            "sender": "noreply@send.tradeboxlive.com"
+          }
+        },
+        "type": "n8n-nodes-base.gmailTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -2608,
+          560
+        ],
+        "id": "01052455-7c3a-4295-a4f0-8637464afd74",
+        "name": "Gmail: Tradebox Emails",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "fdxjEgUJK0aKR2Qh",
+            "name": "Sumit Poddar Gmail"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// ═══════════════════════════════════════════════════════════\n// Parse Tradebox order confirmation email\n// Email format:\n//   Subject: \"Confirmation for {Plan Name} purchase\"\n//   Body: Name, Email, Purchase Date, Plan table with ₹0\n// ═══════════════════════════════════════════════════════════\n\nconst item = $input.first().json;\nconst subject = item.subject || '';\nconst bodyRaw = item.text || item.textPlain || item.html || item.textHtml || '';\n\n// Strip HTML tags for plain-text parsing\nconst body = bodyRaw\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&nbsp;/g, ' ')\n  .replace(/&#8377;/g, '₹')\n  .replace(/&amp;/g, '&')\n  .replace(/\\s+/g, ' ');\n\n// ── Plan name from subject ──────────────────────────────────\nconst planMatch = subject.match(/Confirmation for (.+?) purchase/i);\nconst rawPlanName = planMatch ? planMatch[1].trim() : '';\n\nconst PLAN_MAP = {\n  'smallcap alpha': 'smallcap_alpha',\n  'smallcap alpha picks': 'smallcap_alpha',\n  'midcap wealth': 'midcap_wealth',\n  'mid cap wealth': 'midcap_wealth',\n  'mid cap wealth builders': 'midcap_wealth',\n  'sme emerging': 'sme_emerging',\n  'sme emerging business': 'sme_emerging',\n  'all in growth': 'all_in_growth',\n  'all in growth bundle': 'all_in_growth',\n};\nconst planSlug = PLAN_MAP[rawPlanName.toLowerCase()] || 'free';\n\n// ── Extract user fields ─────────────────────────────────────\nconst nameMatch = body.match(/Name:\\s*([^\\n\\r<]+)/i);\nconst fullName = nameMatch\n  ? nameMatch[1].trim().replace(/\\s+/g, ' ')\n  : '';\n\nconst emailMatch = body.match(\n  /Email:\\s*([a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,})/i\n);\nconst userEmail = emailMatch\n  ? emailMatch[1].trim().toLowerCase()\n  : '';\n\nconst dateMatch = body.match(/Purchase Date:\\s*([\\d\\/]+)/i);\nconst purchaseDateRaw = dateMatch ? dateMatch[1].trim() : '';\n\n// Parse D/M/YYYY → ISO\nlet purchaseDate = new Date().toISOString();\nif (purchaseDateRaw) {\n  const parts = purchaseDateRaw.match(/(\\d+)\\/(\\d+)\\/(\\d+)/);\n  if (parts) {\n    purchaseDate = new Date(\n      parseInt(parts[3]),\n      parseInt(parts[2]) - 1,\n      parseInt(parts[1])\n    ).toISOString();\n  }\n}\n\n// Expiry = purchase + 1 year\nconst expiry = new Date(purchaseDate);\nexpiry.setFullYear(expiry.getFullYear() + 1);\n\n// Check if total is ₹0\nconst isFree = /Total Amount[^₹R]*[₹Rs\\.\\s]*0/i.test(body);\n\nif (!userEmail) {\n  throw new Error(\n    'Could not parse user email from Tradebox confirmation email. Subject: ' + subject\n  );\n}\n\nreturn [\n  {\n    json: {\n      fullName,\n      userEmail,\n      planName: rawPlanName,\n      planSlug,\n      purchaseDate,\n      expiryDate: expiry.toISOString(),\n      emailSubject: subject,\n      isFree,\n    },\n  },\n];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2320,
+          560
+        ],
+        "id": "97404736-f353-4822-a00e-d5c05438112f",
+        "name": "Parse Email Body"
+      },
+      {
+        "parameters": {
+          "url": "=https://bmpvcjbfeyvkkbvclwkb.supabase.co/rest/v1/profiles?email=eq.{{ $json.userEmail }}&select=user_id,email",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+              },
+              {
+                "name": "Authorization",
+                "value": "[REDACTED_SECRET]"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "text"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -2048,
+          560
+        ],
+        "id": "7a0297dc-18df-402c-86e9-0c25c17b1a34",
+        "name": "Find User in Profiles"
+      },
+      {
+        "parameters": {
+          "jsCode": "// ═══════════════════════════════════════════════════════════\n// Merge parsed email with user lookup result.\n// The HTTP response is text format (to handle empty arrays).\n// ═══════════════════════════════════════════════════════════\n\nconst parsed = $('Parse Email Body').first().json;\nconst responseText = $input.first().json.data || '[]';\n\nlet userId = '';\nlet resolveMethod = 'none';\n\ntry {\n  const profiles = JSON.parse(responseText);\n  if (\n    Array.isArray(profiles) &&\n    profiles.length > 0 &&\n    profiles[0].user_id\n  ) {\n    userId = profiles[0].user_id;\n    resolveMethod = 'profiles_email';\n  }\n} catch (e) {\n  // not valid JSON — ignore\n}\n\nreturn [\n  {\n    json: {\n      ...parsed,\n      userId,\n      userFound: !!userId,\n      resolveMethod,\n    },\n  },\n];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1760,
+          560
+        ],
+        "id": "49eb200d-5250-48ae-8335-bdc3aa87be04",
+        "name": "Prepare Subscription Data"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": ""
+            },
+            "conditions": [
+              {
+                "id": "condition-user-found",
+                "leftValue": "={{ $json.userFound }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -1504,
+          560
+        ],
+        "id": "29583042-a812-4a62-b897-30d51b645707",
+        "name": "User Found?"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://bmpvcjbfeyvkkbvclwkb.supabase.co/rest/v1/subscriptions",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+              },
+              {
+                "name": "Authorization",
+                "value": "[REDACTED_SECRET]"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "resolution=merge-duplicates"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"user_id\": \"{{ $json.userId }}\",\n  \"plan\": \"{{ $json.planSlug }}\",\n  \"is_active\": true,\n  \"started_at\": \"{{ $json.purchaseDate }}\",\n  \"expires_at\": \"{{ $json.expiryDate }}\",\n  \"amount_paid\": 0\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1232,
+          432
+        ],
+        "id": "525d729c-27b7-4eab-a8e8-6b68bd62022b",
+        "name": "Upsert Subscription"
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "=https://bmpvcjbfeyvkkbvclwkb.supabase.co/rest/v1/kyc?user_id=eq.{{ $('Prepare Subscription Data').item.json.userId }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+              },
+              {
+                "name": "Authorization",
+                "value": "[REDACTED_SECRET]"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"status\": \"approved\",\n  \"kyc_initiated_at\": \"{{ $('Prepare Subscription Data').item.json.purchaseDate }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -944,
+          432
+        ],
+        "id": "f9b2917f-02a7-44d1-a069-2ce50c471b8f",
+        "name": "Update KYC → Approved"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://bmpvcjbfeyvkkbvclwkb.supabase.co/rest/v1/webhook_logs",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+              },
+              {
+                "name": "Authorization",
+                "value": "[REDACTED_SECRET]"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"source\": \"email_coupon\",\n  \"event\": \"free_plan_registration\",\n  \"payload\": {\n    \"name\": \"{{ $('Prepare Subscription Data').item.json.fullName }}\",\n    \"email\": \"{{ $('Prepare Subscription Data').item.json.userEmail }}\",\n    \"plan\": \"{{ $('Prepare Subscription Data').item.json.planSlug }}\",\n    \"plan_display\": \"{{ $('Prepare Subscription Data').item.json.planName }}\",\n    \"purchase_date\": \"{{ $('Prepare Subscription Data').item.json.purchaseDate }}\",\n    \"resolve_method\": \"{{ $('Prepare Subscription Data').item.json.resolveMethod }}\",\n    \"is_free\": {{ $('Prepare Subscription Data').item.json.isFree }}\n  },\n  \"user_id\": \"{{ $('Prepare Subscription Data').item.json.userId }}\",\n  \"processed\": true\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -672,
+          432
+        ],
+        "id": "c2bd9d6d-99c4-40cb-a374-56c8bac238f7",
+        "name": "Log Success"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://bmpvcjbfeyvkkbvclwkb.supabase.co/rest/v1/webhook_logs",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+              },
+              {
+                "name": "Authorization",
+                "value": "[REDACTED_SECRET]"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"source\": \"email_coupon\",\n  \"event\": \"free_plan_registration\",\n  \"payload\": {\n    \"name\": \"{{ $json.fullName }}\",\n    \"email\": \"{{ $json.userEmail }}\",\n    \"plan\": \"{{ $json.planSlug }}\",\n    \"plan_display\": \"{{ $json.planName }}\",\n    \"email_subject\": \"{{ $json.emailSubject }}\"\n  },\n  \"user_id\": null,\n  \"processed\": false,\n  \"error_message\": \"user_not_found_in_profiles — email={{ $json.userEmail }} — manual review needed\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1232,
+          752
+        ],
+        "id": "e094f216-349f-4fc7-ba1b-945d7695e576",
+        "name": "Log: User Not Found"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "gmail-tradebox",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -1984,
+          336
+        ],
+        "id": "43df4eef-d3e6-47f5-a7ce-7d242f0721b4",
+        "name": "Webhook",
+        "webhookId": "ac59a703-df42-4c2a-89b4-ddf9cc3a850f"
+      }
+    ],
+    "connections": {
+      "Gmail: Tradebox Emails": {
+        "main": [
+          [
+            {
+              "node": "Parse Email Body",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Email Body": {
+        "main": [
+          [
+            {
+              "node": "Find User in Profiles",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Find User in Profiles": {
+        "main": [
+          [
+            {
+              "node": "Prepare Subscription Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Subscription Data": {
+        "main": [
+          [
+            {
+              "node": "User Found?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "User Found?": {
+        "main": [
+          [
+            {
+              "node": "Upsert Subscription",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Log: User Not Found",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upsert Subscription": {
+        "main": [
+          [
+            {
+              "node": "Update KYC → Approved",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update KYC → Approved": {
+        "main": [
+          [
+            {
+              "node": "Log Success",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version afed9aca",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
