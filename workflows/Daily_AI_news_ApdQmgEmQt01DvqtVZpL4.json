@@ -1,0 +1,325 @@
+{
+  "updatedAt": "2026-04-29T03:32:33.000Z",
+  "createdAt": "2026-04-15T16:00:10.090Z",
+  "id": "ApdQmgEmQt01DvqtVZpL4",
+  "name": "Daily AI news",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "return [\n  // { json: { url: 'https://venturebeat.com/category/ai/feed/' } },\n  { json: { url: 'https://techcrunch.com/category/artificial-intelligence/feed/' } },\n  { json: { url: 'https://news.mit.edu/rss/topic/artificial-intelligence2' } },\n  { json: { url: 'https://www.artificialintelligence-news.com/feed/' } }\n];"
+      },
+      "id": "52d91636-a1f0-4fa8-b48f-3bc7ffe76198",
+      "name": "Target RSS URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1712,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "id": "b7a19321-e397-4759-838f-8440ebdce6c0",
+      "name": "Read RSS",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        -1264,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);\n\nfor (const item of $input.all()) {\n  const pubDate = new Date(item.json.isoDate || item.json.pubDate);\n  if (pubDate > fortyEightHoursAgo) {\n    results.push({\n      json: {\n        title: item.json.title,\n        link: item.json.link,\n        snippet: item.json.contentSnippet || item.json.content || 'No content provided.',\n        date: pubDate.toISOString()\n      }\n    });\n  }\n}\nreturn results;"
+      },
+      "id": "4712ab91-d232-46ef-9721-c3cce1640a8c",
+      "name": "Filter 48h & Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\n\n// We are changing the array name to 'processedUrls_v2' to force a fresh start\nstaticData.processedUrls_v2 = staticData.processedUrls_v2 || [];\n\nconst newItems = [];\nfor (const item of $input.all()) {\n  if (!staticData.processedUrls_v2.includes(item.json.link)) {\n    newItems.push(item);\n    staticData.processedUrls_v2.push(item.json.link);\n  }\n}\n\n// Prevent memory bloat\nif (staticData.processedUrls_v2.length > 500) {\n  staticData.processedUrls_v2 = staticData.processedUrls_v2.slice(-500);\n}\n\nreturn newItems;"
+      },
+      "id": "477f0b0d-7f8b-4e07-859e-468b50e2a509",
+      "name": "Deduplicate (Memory)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -816,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "gpt-4",
+        "prompt": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are a specialized AI and tech analyst. Evaluate the following news article on a scale of 1 to 5 based on significance. 5 = Major product launch (OpenAI, Google, Anthropic) or massive acquisition. 4 = High-impact case study, real-world application, or mid-tier investment. 1-3 = Minor UI updates, fluff, opinion pieces, or redundant PR.  Respond ONLY with a valid JSON object matching this schema: {   \"score\": number,   \"category\": \"string (Product Launch, Case Study, Investment, or Other)\",   \"summary\": \"string (1 concise paragraph summarizing why it matters)\",   \"original_title\": \"string (copy exactly from input)\",   \"original_link\": \"string (copy exactly from input)\" }"
+            },
+            {
+              "content": "=Title: {{ $json.title }} Link: {{ $json.link }} Snippet: {{ $json.snippet }}"
+            }
+          ]
+        },
+        "simplifyOutput": false,
+        "options": {},
+        "requestOptions": {}
+      },
+      "id": "6ca63708-cc30-405f-8b18-0ba50b6acfc2",
+      "name": "OpenAI JSON Scorer",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        144
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "TMMS3pMqjiGuuWVj",
+          "name": "RAG 23-12-2025"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nfor (const item of $input.all()) {\n  try {\n    // This line checks both the \"Simplified\" and \"Raw\" locations for the OpenAI text\n    let rawContent = item.json.message?.content || item.json.choices[0]?.message?.content;\n    \n    const aiResponse = JSON.parse(rawContent);\n    \n    results.push({\n      json: {\n        title: aiResponse.original_title,\n        link: aiResponse.original_link,\n        score: aiResponse.score,\n        category: aiResponse.category,\n        summary: aiResponse.summary\n      }\n    });\n  } catch (e) {\n    // If it fails, it will now pass a helpful error message to the console instead of just failing silently\n    console.log(\"Failed to parse JSON for an item: \", e);\n  }\n}\nreturn results;"
+      },
+      "id": "ada4ba44-cccd-424d-b986-7734fd846c08",
+      "name": "Parse & Rebuild",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.score }}",
+              "operation": "largerEqual",
+              "value2": 4
+            }
+          ]
+        }
+      },
+      "id": "6da3ac5f-7601-4e33-bf4e-a8ebb7b8b07f",
+      "name": "Filter Score >= 4",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6385774688",
+        "text": "=<b>{{ $json.title }}</b>\n\n<i>Category:</i> {{ $json.category }} | <i>Score:</i> {{ $json.score }}/5\n\n{{ $json.summary }}\n\n<a href=\"{{ $json.link }}\">Read Full Article</a>",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "23f89bc4-f7e8-4c76-a99e-79025b3809f2",
+      "name": "Send Briefing",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        224
+      ],
+      "webhookId": "210db22d-aeb3-48af-8dca-686e95237c4a",
+      "credentials": {
+        "telegramApi": {
+          "id": "47upFPOpOra2MRmJ",
+          "name": "Telegram account 8"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1488,
+        224
+      ],
+      "id": "cb04a799-b140-45b2-8598-8bba3bcb0571",
+      "name": "URL Loop (Outer)"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "45 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "be8ec619-8f27-4b6e-8fe3-39f69f571abe",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1936,
+        224
+      ]
+    }
+  ],
+  "connections": {
+    "Target RSS URLs": {
+      "main": [
+        [
+          {
+            "node": "URL Loop (Outer)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read RSS": {
+      "main": [
+        [
+          {
+            "node": "Filter 48h & Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter 48h & Normalize": {
+      "main": [
+        [
+          {
+            "node": "Deduplicate (Memory)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deduplicate (Memory)": {
+      "main": [
+        [
+          {
+            "node": "OpenAI JSON Scorer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI JSON Scorer": {
+      "main": [
+        [
+          {
+            "node": "Parse & Rebuild",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Rebuild": {
+      "main": [
+        [
+          {
+            "node": "Filter Score >= 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Score >= 4": {
+      "main": [
+        [
+          {
+            "node": "Send Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Briefing": {
+      "main": [
+        [
+          {
+            "node": "URL Loop (Outer)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "URL Loop (Outer)": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Read RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Target RSS URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "0a2cc3e9-c319-4194-ba45-aa3a4b42e7ef",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-15T16:00:10.100Z",
+      "createdAt": "2026-04-15T16:00:10.100Z",
+      "role": "workflow:owner",
+      "workflowId": "ApdQmgEmQt01DvqtVZpL4",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
