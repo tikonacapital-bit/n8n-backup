@@ -122,8 +122,8 @@
     {
       "parameters": {
         "url": "https://api.linkedin.com/rest/posts",
-        "authentication": "[REDACTED_SECRET]",
-        "genericAuthType": "[REDACTED_SECRET]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -188,8 +188,8 @@
       "parameters": {
         "method": "POST",
         "url": "http://strapi_cms:1337/api/upload",
-        "authentication": "[REDACTED_SECRET]",
-        "genericAuthType": "[REDACTED_SECRET]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "contentType": "multipart-form-data",
         "bodyParameters": {
@@ -242,8 +242,8 @@
       "parameters": {
         "method": "POST",
         "url": "http://strapi_cms:1337/api/social-posts",
-        "authentication": "[REDACTED_SECRET]",
-        "genericAuthType": "[REDACTED_SECRET]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{\n  {\n    \"data\": {\n      \"platform\": $('split in batches1').item.json.platform.toLowerCase(),\n      \"caption\": $('split in batches1').item.json.caption,\n      \"publishedDate\": $('split in batches1').item.json.strapi_date_final,\n      \"image\": $json.id || null,\n      \"originalPostUrl\": $('split in batches1').item.json.permalink\n    }\n  }\n}}",
@@ -268,8 +268,8 @@
       "parameters": {
         "method": "POST",
         "url": "http://strapi_cms:1337/api/upload",
-        "authentication": "[REDACTED_SECRET]",
-        "genericAuthType": "[REDACTED_SECRET]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "contentType": "multipart-form-data",
         "bodyParameters": {
@@ -322,8 +322,8 @@
       "parameters": {
         "method": "POST",
         "url": "http://strapi_cms:1337/api/social-posts",
-        "authentication": "[REDACTED_SECRET]",
-        "genericAuthType": "[REDACTED_SECRET]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{\n  {\n    \"data\": {\n      \"platform\": $('split in batches3').item.json.platform.toLowerCase(),\n      \"caption\": $('split in batches3').item.json.caption,\n      \"publishedDate\": $('split in batches3').item.json.strapi_date_final,\n      \"image\": $json.id || null,\n      \"originalPostUrl\": $('split in batches3').item.json.permalink\n    }\n  }\n}}",
@@ -348,8 +348,8 @@
       "parameters": {
         "method": "POST",
         "url": "http://strapi_cms:1337/api/upload",
-        "authentication": "[REDACTED_SECRET]",
-        "genericAuthType": "[REDACTED_SECRET]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "contentType": "multipart-form-data",
         "bodyParameters": {
@@ -383,8 +383,8 @@
       "parameters": {
         "method": "POST",
         "url": "http://strapi_cms:1337/api/social-posts",
-        "authentication": "[REDACTED_SECRET]",
-        "genericAuthType": "[REDACTED_SECRET]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{\n  {\n    \"data\": {\n      \"platform\": $('split in batches').item.json.platform.toLowerCase(),\n      \"caption\": $('split in batches').item.json.caption,\n      \"publishedDate\": $('split in batches').item.json.strapi_date_final,\n      \"image\": $json.id || null,\n      \"originalPostUrl\": $('split in batches').item.json.permalink\n    }\n  }\n}}",
@@ -496,8 +496,8 @@
     {
       "parameters": {
         "url": "=https://api.linkedin.com/rest/images/{{ encodeURIComponent($json.media_url) }}",
-        "authentication": "[REDACTED_SECRET]",
-        "genericAuthType": "[REDACTED_SECRET]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1022,8 +1022,8 @@
       {
         "parameters": {
           "url": "https://api.linkedin.com/rest/posts",
-          "authentication": "[REDACTED_SECRET]",
-          "genericAuthType": "[REDACTED_SECRET]",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
           "sendQuery": true,
           "queryParameters": {
             "parameters": [
@@ -1088,8 +1088,8 @@
         "parameters": {
           "method": "POST",
           "url": "http://strapi_cms:1337/api/upload",
-          "authentication": "[REDACTED_SECRET]",
-          "genericAuthType": "[REDACTED_SECRET]",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "contentType": "multipart-form-data",
           "bodyParameters": {
@@ -1142,8 +1142,8 @@
         "parameters": {
           "method": "POST",
           "url": "http://strapi_cms:1337/api/social-posts",
-          "authentication": "[REDACTED_SECRET]",
-          "genericAuthType": "[REDACTED_SECRET]",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{\n  {\n    \"data\": {\n      \"platform\": $('split in batches1').item.json.platform.toLowerCase(),\n      \"caption\": $('split in batches1').item.json.caption,\n      \"publishedDate\": $('split in batches1').item.json.strapi_date_final,\n      \"image\": $json.id || null,\n      \"originalPostUrl\": $('split in batches1').item.json.permalink\n    }\n  }\n}}",
@@ -1168,8 +1168,8 @@
         "parameters": {
           "method": "POST",
           "url": "http://strapi_cms:1337/api/upload",
-          "authentication": "[REDACTED_SECRET]",
-          "genericAuthType": "[REDACTED_SECRET]",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "contentType": "multipart-form-data",
           "bodyParameters": {
@@ -1222,8 +1222,8 @@
         "parameters": {
           "method": "POST",
           "url": "http://strapi_cms:1337/api/social-posts",
-          "authentication": "[REDACTED_SECRET]",
-          "genericAuthType": "[REDACTED_SECRET]",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{\n  {\n    \"data\": {\n      \"platform\": $('split in batches3').item.json.platform.toLowerCase(),\n      \"caption\": $('split in batches3').item.json.caption,\n      \"publishedDate\": $('split in batches3').item.json.strapi_date_final,\n      \"image\": $json.id || null,\n      \"originalPostUrl\": $('split in batches3').item.json.permalink\n    }\n  }\n}}",
@@ -1248,8 +1248,8 @@
         "parameters": {
           "method": "POST",
           "url": "http://strapi_cms:1337/api/upload",
-          "authentication": "[REDACTED_SECRET]",
-          "genericAuthType": "[REDACTED_SECRET]",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "contentType": "multipart-form-data",
           "bodyParameters": {
@@ -1283,8 +1283,8 @@
         "parameters": {
           "method": "POST",
           "url": "http://strapi_cms:1337/api/social-posts",
-          "authentication": "[REDACTED_SECRET]",
-          "genericAuthType": "[REDACTED_SECRET]",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{\n  {\n    \"data\": {\n      \"platform\": $('split in batches').item.json.platform.toLowerCase(),\n      \"caption\": $('split in batches').item.json.caption,\n      \"publishedDate\": $('split in batches').item.json.strapi_date_final,\n      \"image\": $json.id || null,\n      \"originalPostUrl\": $('split in batches').item.json.permalink\n    }\n  }\n}}",
@@ -1396,8 +1396,8 @@
       {
         "parameters": {
           "url": "=https://api.linkedin.com/rest/images/{{ encodeURIComponent($json.media_url) }}",
-          "authentication": "[REDACTED_SECRET]",
-          "genericAuthType": "[REDACTED_SECRET]",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
@@ -1776,7 +1776,7 @@
         ]
       }
     },
-    "authors": "[REDACTED_SECRET]",
+    "authors": "Sumit Poddar",
     "name": "Version f28c7a5c",
     "description": "",
     "autosaved": false
