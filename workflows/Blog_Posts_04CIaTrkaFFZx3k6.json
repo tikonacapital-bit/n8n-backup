@@ -1,0 +1,32 @@
+{
+  "updatedAt": "2025-10-27T03:03:44.000Z",
+  "createdAt": "2025-10-25T07:47:08.068Z",
+  "id": "04CIaTrkaFFZx3k6",
+  "name": "Blog Posts",
+  "active": false,
+  "isArchived": true,
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "1f039722-69d1-4f2c-9060-8c298bd386c9",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-25T07:47:08.070Z",
+      "createdAt": "2025-10-25T07:47:08.070Z",
+      "role": "workflow:owner",
+      "workflowId": "04CIaTrkaFFZx3k6",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
