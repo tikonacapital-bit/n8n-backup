@@ -10,8 +10,8 @@
       "parameters": {
         "method": "POST",
         "url": "https://api.bolna.ai/call",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "authentication": "[REDACTED_SECRET]",
+        "genericAuthType": "[REDACTED_SECRET]",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"agent_id\": \"99b6d972-bc9e-4b87-a147-17080838e776\",\n  \"recipient_phone_number\": \"+{{ $json.Phone }}\",\n  \"user_data\": {\n    \"name\": \"{{ $json.Name }}\"\n  }\n}",
