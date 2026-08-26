@@ -1,0 +1,736 @@
+{
+  "updatedAt": "2025-11-21T06:52:43.000Z",
+  "createdAt": "2025-11-17T10:14:02.974Z",
+  "id": "WRZKA4UtT9sPntnR",
+  "name": "My workflow 6",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "Week gone by and economy:",
+              "cssSelector": "#form1 > div:nth-child(9) > section > div > div > div > div > div.new-left-section.left-section.new-left-gainer",
+              "skipSelectors": "h2"
+            },
+            {
+              "key": "Gainers",
+              "cssSelector": "#all-in-one-screener-v2 > div > div.col-xs-12.p-y-0",
+              "skipSelectors": "h2"
+            },
+            {
+              "key": "Losers",
+              "cssSelector": "#TLReactTableV7"
+            },
+            {
+              "key": "Unlisted shares",
+              "cssSelector": "#main-container"
+            },
+            {
+              "key": "Week Ahead",
+              "cssSelector": "#form1 > div:nth-child(9) > section > div > div > div > div > div.new-right-section"
+            },
+            {
+              "cssSelector": "#t_top"
+            }
+          ]
+        },
+        "options": {
+          "cleanUpText": true
+        }
+      },
+      "id": "bbd20a56-6603-4dfe-b178-c67664850b0d",
+      "name": "Extract specific content",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        1712,
+        880
+      ],
+      "notesInFlow": true,
+      "typeVersion": 1.2,
+      "disabled": true,
+      "notes": "Extract selected headlines, editor's picks, spotlight etc."
+    },
+    {
+      "parameters": {
+        "url": "https://www.capitalmarket.com/markets/news/the-week-that-was-news",
+        "options": {}
+      },
+      "id": "71abc3e5-e953-4abb-bcff-fb536fda5bf2",
+      "name": "Get financial news online",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        816,
+        1008
+      ],
+      "notesInFlow": true,
+      "typeVersion": 4.2,
+      "notes": "Url : https://www.ft.com/"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                5
+              ],
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "id": "f8a48f86-8f2f-449c-8ed7-88c6cdf6f97c",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        592,
+        1488
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "id": "c38a2665-98c3-410b-b85a-f79cd0b5512e",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        1568,
+        1712
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "sgfrpa4Ce64SoBTf",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5412a5ee-dbbe-4fcc-98a5-6fafc37b94d1",
+              "name": "=News together",
+              "type": "string",
+              "value": "==Here is this week's full financial roundup:\n\n--- SITE 1: Week gone by and economy (CapitalMarket) ---\n{{ $('Extract specific content').item.json['Week gone by and economy:'] }}\n\n--- SITE 2: Top Gainers (Trendlyne NIFTY500) ---\n{{ $json.Gainers }}\n\n--- SITE 3: Top Losers (Trendlyne NIFTY500) ---\n{{ $json.Losers }}\n\n--- SITE 4: Unlisted Shares News (Precize / similar) ---\n{{ $json['Unlisted shares'] }}\n\n--- SITE 5 & 6: Week Ahead (Moneycontrol / CapitalMarket) ---\n{{ $json['Week Ahead'] }}\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6c723e5c-4007-48d1-9b24-96eb0b8ad8d5",
+      "name": "Gather the elements",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1392,
+        640
+      ],
+      "typeVersion": 3.4,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "==Here is the raw combined weekly data from all websites. \nUse it to create one unified weekly market newsletter:\n\n{{ $json.combined }}\n",
+        "options": {
+          "systemMessage": "You are an expert financial content writer for an Indian equity research and wealth advisory firm.\n\nYou will receive raw weekly data in this structure:\n\nWeekGoneBy:\n<text>\n\nGainers:\n<text>\n\nLosers:\n<text>\n\nUnlistedEquity:\n<text>\n\nWeekAhead:\n<text>\n\nYour job is to write a clean, professional WEEKLY MARKET NOTE in MARKDOWN, following THIS EXACT FORMAT:\n\n1. First line: \n   Week Gone By – <DATE>: <SHORT HOOK TITLE>\n   - The date should be the week-ending date if present in the input, otherwise infer logically from the text (or leave as a generic \"Week Gone By\" without a specific date).\n   - The hook title should be 6–12 words summarising the main theme (e.g., \"Markets Rally on Cooling Inflation and Strong Macro Signals\").\n\n2. Intro section – 2–3 paragraphs:\n   - Summarise how Indian markets performed during the week (Sensex, Nifty 50, Midcap, Smallcap, risk sentiment).\n   - Mention key drivers: inflation, global cues, policy decisions, earnings, flows etc., based strictly on the WeekGoneBy text.\n   - Keep tone professional but readable, like a client newsletter.\n\n3. Section: #Economy:\n   - Heading exactly: #Economy:\n   - 1–3 paragraphs summarising important macro data from the WeekGoneBy text: inflation, FX reserves, government packages, global trade news, etc.\n   - Clearly separate domestic data and global developments.\n\n4. Section: #Gainers4Week – Top 3\n   - Heading exactly: #Gainers4Week – Top 3\n   - Write 3 entries in this format:\n     #<Stock Name> (+X.X%): <1–2 sentence explanation based on the Gainers text>\n   - If exact percentages are not clearly available, use approximate wording like \"(strong weekly gains)\" instead of inventing numbers.\n\n5. Section: #Losers4Week – Top 3\n   - Heading exactly: #Losers4Week – Top 3\n   - Write 3 entries in this format:\n     #<Stock Name> (−X.X%): <1–2 sentence explanation based on the Losers text>\n   - Again, do not fabricate precise numbers. Only use what appears in the raw input.\n\n6. Section: #UnlistedEquity\n   - Heading exactly: #UnlistedEquity\n   - 1–3 paragraphs summarising key developments in the unlisted / pre-IPO space from the UnlistedEquity text: fund-raises, DRHP filings, investor interest, demand trends etc.\n   - If there is a quote or link in the input, include it naturally (for example as a blockquote and then its link on the next line).\n\n7. Section: #WeekAhead\n   - Heading exactly: #WeekAhead\n   - 2–4 paragraphs describing the key triggers for the coming week based on the WeekAhead text: upcoming data (CPI, PMI, trade data), global events (Fed, PBoC, crude, China data), and expected market bias.\n   - End with a short, crisp summary of what will drive markets next week, optionally as 3–5 short lines like:\n     India: ...\n     China: ...\n     US: ...\n     Global: ...\n\nGENERAL RULES:\n- Output MUST be valid Markdown (not HTML).\n- Follow the order of sections exactly as above.\n- Do NOT invent data or tickers. Only use names, numbers and facts that are present or clearly implied in the input.\n- Keep tone consistent with a professional sell-side/wealth management weekly note.\n- Keep the whole piece within roughly 700–1000 words.\n"
+        }
+      },
+      "id": "388a1bfa-bde1-413b-814f-9a333d61bd3b",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1488,
+        1488
+      ],
+      "typeVersion": 1.6
+    },
+    {
+      "parameters": {
+        "content": "# Financial News Recap Workflow\n\nThis workflow automates the daily email delivery of curated financial news to a designated recipient at 7:00 AM. It extracts relevant financial news articles, structures the content, and sends it in a concise summary format via Microsoft Outlook.\n\n### Workflow Steps\n1. **Schedule Trigger** \n Sets the workflow to activate daily at 7:00 AM.\n2. **Fetch Financial News** \n Retrieves financial news content from [ft.com](https://www.ft.com/) using an HTTP Request node.\n3. **Extract News Headlines and Sections** \n Using CSS selectors, this node parses specific sections of the HTML page to gather key headlines and sections:\n - Headline #1, Headline #2\n - Editor's Picks\n - etc.\n4. **Aggregate News Content** \n Combines all extracted news sections into a single data set, organizing content under relevant categories.\n5. **AI Agent for Summarization** \n A Google Gemini Chat Model generates a structured summary in HTML format, optimized to provide investors with a clear market overview.\n6. **Email Dispatch** \n Sends the summarized content via Microsoft Outlook with a subject \"Financial news from today,\" formatted in HTML for clarity and readability.\n",
+        "height": 581.4193548387093,
+        "width": 683.6774193548385
+      },
+      "id": "27f12301-75a5-425e-89f3-2a25c9b5a1ee",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        816,
+        -768
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "https://trendlyne.com/fundamentals/all-in-one-screener/intraday/top-gainers/week/index/NIFTY500/",
+        "options": {}
+      },
+      "id": "825938c8-10a4-4dfa-8a75-8c9d3b008aa8",
+      "name": "Get financial news online1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        816,
+        1200
+      ],
+      "notesInFlow": true,
+      "typeVersion": 4.2,
+      "notes": "Url : https://www.ft.com/"
+    },
+    {
+      "parameters": {
+        "url": "https://trendlyne.com/fundamentals/all-in-one-screener/intraday/top-losers/week/index/NIFTY500/",
+        "options": {}
+      },
+      "id": "22f68c82-9830-4ea9-874a-f97d512d6fdf",
+      "name": "Get financial news online2",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        816,
+        1392
+      ],
+      "notesInFlow": true,
+      "typeVersion": 4.2,
+      "notes": "Url : https://www.ft.com/"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "Gainers",
+              "cssSelector": "#all-in-one-screener-v2 > div > div.col-xs-12.p-y-0",
+              "skipSelectors": "h2"
+            }
+          ]
+        },
+        "options": {
+          "cleanUpText": true
+        }
+      },
+      "id": "df5fd4c6-cdfa-412e-9af8-77470cc168f4",
+      "name": "Extract specific content1",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        592,
+        112
+      ],
+      "notesInFlow": true,
+      "typeVersion": 1.2,
+      "disabled": true,
+      "notes": "Extract selected headlines, editor's picks, spotlight etc."
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "Losers",
+              "cssSelector": "#TLReactTableV7"
+            }
+          ]
+        },
+        "options": {
+          "cleanUpText": true
+        }
+      },
+      "id": "2864f36c-4b92-45e6-afe6-923cf8673391",
+      "name": "Extract specific content2",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        592,
+        336
+      ],
+      "notesInFlow": true,
+      "typeVersion": 1.2,
+      "disabled": true,
+      "notes": "Extract selected headlines, editor's picks, spotlight etc."
+    },
+    {
+      "parameters": {
+        "url": "https://www.precize.in/unlistedsharesnews",
+        "options": {}
+      },
+      "id": "d95ea56a-9f8c-4b2b-9889-a7434c8c4f61",
+      "name": "Get financial news online4",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        816,
+        1584
+      ],
+      "notesInFlow": true,
+      "typeVersion": 4.2,
+      "notes": "Url : https://www.ft.com/"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "Unlisted shares",
+              "cssSelector": "#main-container"
+            }
+          ]
+        },
+        "options": {
+          "cleanUpText": true
+        }
+      },
+      "id": "94de5a49-cd96-41d3-8245-891c4099d0a9",
+      "name": "Extract specific content4",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        592,
+        784
+      ],
+      "notesInFlow": true,
+      "typeVersion": 1.2,
+      "disabled": true,
+      "notes": "Extract selected headlines, editor's picks, spotlight etc."
+    },
+    {
+      "parameters": {
+        "url": "https://www.moneycontrol.com/news/tags/business-in-the-week-ahead.html",
+        "options": {}
+      },
+      "id": "18b8c53e-ef3b-4ce1-963c-002ef843ca50",
+      "name": "Get financial news online6",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        816,
+        1968
+      ],
+      "notesInFlow": true,
+      "typeVersion": 4.2,
+      "notes": "https://www.moneycontrol.com/news/tags/business-in-the-week-ahead.html"
+    },
+    {
+      "parameters": {
+        "url": "https://www.capitalmarket.com/markets/news/week-ahead-news",
+        "options": {}
+      },
+      "id": "e7cd346b-03a9-448a-9892-80bdaa2bed13",
+      "name": "Get financial news online7",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        816,
+        1776
+      ],
+      "notesInFlow": true,
+      "typeVersion": 4.2,
+      "notes": "Url : https://www.ft.com/"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "Week Ahead",
+              "cssSelector": "#form1 > div:nth-child(9) > section > div > div > div > div > div.new-right-section"
+            },
+            {
+              "cssSelector": "#t_top"
+            }
+          ]
+        },
+        "options": {
+          "cleanUpText": true
+        }
+      },
+      "id": "c1d2c39f-f65b-4fea-bda0-9fcf05121d13",
+      "name": "Extract specific content5",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        592,
+        560
+      ],
+      "notesInFlow": true,
+      "typeVersion": 1.2,
+      "disabled": true,
+      "notes": "Extract selected headlines, editor's picks, spotlight etc."
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert Markdown formatter.\n\nYou will receive a weekly market note that is already well-written and structured in Markdown, with sections like:\n\n- Week Gone By – <date>: <title>\n- #Economy:\n- #Gainers4Week – Top 3\n- #Losers4Week – Top 3\n- #UnlistedEquity\n- #WeekAhead\n\nYOUR JOB:\n- DO NOT change the wording, numbers, names, or the order of sections.\n- Only:\n  - Fix headings so they use proper Markdown syntax (#, ##, ###).\n  - Remove duplicate or unnecessary blank lines.\n  - Ensure bullet points and lists are formatted cleanly in Markdown.\n  - Make sure hashtags like #Economy: or #Gainers4Week – Top 3 stay exactly as they are.\n  - If there are links, format them cleanly on their own line.\n\nReturn the cleaned note as valid Markdown.\n\nRAW TEXT TO FORMAT:\n\n{{ $node[\"AI Agent\"].json.output }}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1840,
+        1488
+      ],
+      "id": "aba3e907-6fe9-4d4a-ae90-1d63871acb6d",
+      "name": "Formatter"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "id": "ef106911-89ae-4157-9ba0-789b1c9226d9",
+      "name": "Google Gemini Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        1920,
+        1712
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "sgfrpa4Ce64SoBTf",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "html": "<html>\n  <head>\n    <style>\n      body { font-family: 'Arial', sans-serif; padding: 20px; line-height: 1.6; }\n      h1, h2, h3 { color: #2E3A59; }\n      table { width: 100%; border-collapse: collapse; margin-top: 10px; }\n      th, td { border: 1px solid #ddd; padding: 8px; }\n    </style>\n  </head>\n  <body>\n    {{ $json.output }}\n  </body>\n</html>\n"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        2192,
+        1488
+      ],
+      "id": "3124bf57-0f8d-469c-b0e7-405df39d975a",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "={{ $json.html }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2416,
+        1488
+      ],
+      "id": "81305689-e581-47fd-ab5a-3aa91a758e2d",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "BIOmOY6f2u2k8lgA",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "1334670746",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2640,
+        1488
+      ],
+      "id": "7e12eb71-9352-42a9-8edf-e7c795433ed9",
+      "name": "Send a document",
+      "webhookId": "99cd9234-447b-4132-9be7-07f60de15f57",
+      "credentials": {
+        "telegramApi": {
+          "id": "YWjyhDu5J78b9yKN",
+          "name": "Telegram account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// This code runs once and combines all incoming items into one output\n\nconst items = $input.all();\n\nlet weekGoneBy = '';\nlet gainers = '';\nlet losers = '';\nlet unlisted = '';\nlet weekAhead = '';\n\nfor (const item of items) {\n  const type = item.json.type;\n  const content = item.json.content || '';\n\n  if (type === 'week_gone_by') {\n    weekGoneBy = content;\n  } else if (type === 'gainers') {\n    gainers = content;\n  } else if (type === 'losers') {\n    losers = content;\n  } else if (type === 'unlisted') {\n    unlisted = content;\n  } else if (type === 'week_ahead') {\n    weekAhead = content;\n  }\n}\n\nconst combined = \n`WeekGoneBy:\n${weekGoneBy}\n\nGainers:\n${gainers}\n\nLosers:\n${losers}\n\nUnlistedEquity:\n${unlisted}\n\nWeekAhead:\n${weekAhead}`;\n\nreturn [\n  {\n    json: {\n      weekGoneBy,\n      gainers,\n      losers,\n      unlisted,\n      weekAhead,\n      combined,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        1472
+      ],
+      "id": "37533151-58fc-49e0-bfd9-b4cc7f5d178c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "mode": "combineBySql",
+        "numberInputs": 6,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2032,
+        752
+      ],
+      "id": "aa74ad1e-b88f-4f90-ac75-e79725500076",
+      "name": "Merge",
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get financial news online",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get financial news online1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get financial news online2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get financial news online4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get financial news online7",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get financial news online6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gather the elements": {
+      "main": [
+        []
+      ]
+    },
+    "Extract specific content": {
+      "main": [
+        [
+          {
+            "node": "Gather the elements",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get financial news online": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get financial news online1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get financial news online2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract specific content1": {
+      "main": [
+        []
+      ]
+    },
+    "Extract specific content2": {
+      "main": [
+        []
+      ]
+    },
+    "Get financial news online4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract specific content4": {
+      "main": [
+        []
+      ]
+    },
+    "Get financial news online6": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get financial news online7": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract specific content5": {
+      "main": [
+        []
+      ]
+    },
+    "Formatter": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Formatter",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "cd45d644-39a9-4db6-b78e-3adda5005ccb",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-17T10:14:02.982Z",
+      "createdAt": "2025-11-17T10:14:02.982Z",
+      "role": "workflow:owner",
+      "workflowId": "WRZKA4UtT9sPntnR",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
