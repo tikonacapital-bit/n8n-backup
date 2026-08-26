@@ -55,7 +55,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+              "value": "[REDACTED_SECRET]"
             },
             {
               "name": "Authorization",
@@ -133,7 +133,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+              "value": "[REDACTED_SECRET]"
             },
             {
               "name": "Authorization",
@@ -172,7 +172,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+              "value": "[REDACTED_SECRET]"
             },
             {
               "name": "Authorization",
@@ -207,7 +207,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+              "value": "[REDACTED_SECRET]"
             },
             {
               "name": "Authorization",
@@ -242,7 +242,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+              "value": "[REDACTED_SECRET]"
             },
             {
               "name": "Authorization",
@@ -447,7 +447,7 @@
             "parameters": [
               {
                 "name": "apikey",
-                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+                "value": "[REDACTED_SECRET]"
               },
               {
                 "name": "Authorization",
@@ -525,7 +525,7 @@
             "parameters": [
               {
                 "name": "apikey",
-                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+                "value": "[REDACTED_SECRET]"
               },
               {
                 "name": "Authorization",
@@ -564,7 +564,7 @@
             "parameters": [
               {
                 "name": "apikey",
-                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+                "value": "[REDACTED_SECRET]"
               },
               {
                 "name": "Authorization",
@@ -599,7 +599,7 @@
             "parameters": [
               {
                 "name": "apikey",
-                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+                "value": "[REDACTED_SECRET]"
               },
               {
                 "name": "Authorization",
@@ -634,7 +634,7 @@
             "parameters": [
               {
                 "name": "apikey",
-                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtcHZjamJmZXl2a2tidmNsd2tiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk4OTUzMSwiZXhwIjoyMDg0NTY1NTMxfQ.PBMDR3HdZ0RaeZpplTpDOztuVI-uGeU-mIL51-m1DwY"
+                "value": "[REDACTED_SECRET]"
               },
               {
                 "name": "Authorization",
@@ -763,7 +763,7 @@
         ]
       }
     },
-    "authors": "Sumit Poddar",
+    "authors": "[REDACTED_SECRET]",
     "name": "Version afed9aca",
     "description": "",
     "autosaved": false
