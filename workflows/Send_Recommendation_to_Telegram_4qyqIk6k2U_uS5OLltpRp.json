@@ -1,0 +1,458 @@
+{
+  "updatedAt": "2026-06-01T08:26:25.512Z",
+  "createdAt": "2026-03-27T12:31:49.015Z",
+  "id": "4qyqIk6k2U_uS5OLltpRp",
+  "name": "Send Recommendation to Telegram",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "send-recommendation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -288,
+        304
+      ],
+      "id": "16e01f91-f15d-49cf-8c29-10ccc42ae15a",
+      "name": "Webhook",
+      "webhookId": "send-recommendation"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook').first().json.body;\n\nconst PLAN_CHANNELS = {\n  midcap_wealth:  '-1003556619522',\n  smallcap_alpha: '-1003457667360',\n  sme_emerging:   '-1003841397664',\n};\n\nconst {\n  company_name, nse_symbol, rating, cmp, target_price,\n  upside_pct, validity_type, validity_date, plans,\n  trade_notes, report_file_url, pdf_file_id, session_id\n} = body;\n\nlet validityText;\nif (validity_type === 'custom' && validity_date) {\n  validityText = new Date(validity_date).toLocaleDateString('en-IN', {\n    day: '2-digit', month: 'short', year: 'numeric'\n  });\n} else {\n  const expiry = new Date();\n  expiry.setFullYear(expiry.getFullYear() + 1);\n  validityText = expiry.toLocaleDateString('en-IN', {\n    day: '2-digit', month: 'short', year: 'numeric'\n  });\n}\n\nconst ratingEmoji = rating === 'BUY' ? '🟢' : '🔴';\nconst upsideText = upside_pct != null\n  ? ` <b>(${upside_pct > 0 ? '+' : ''}${upside_pct}% upside)</b>`\n  : '';\n\nlet message = `${ratingEmoji} <b>${rating} — ${company_name}</b>\\n`;\nmessage += `<code>NSE: ${nse_symbol}</code>\\n\\n`;\nmessage += `💰 <b>CMP:</b> ₹${cmp ? Number(cmp).toLocaleString('en-IN') : 'N/A'}\\n`;\nmessage += `🎯 <b>Target:</b> ₹${Number(target_price).toLocaleString('en-IN')}${upsideText}\\n`;\nmessage += `📅 <b>Valid till:</b> ${validityText}\\n`;\n\nif (trade_notes) {\n  message += `\\n📝 <b>Notes:</b>\\n${trade_notes}\\n`;\n}\n\n// === Secure In-App Viewer Link using Mobile Vercel Domain ===\nif (session_id) {\n  const appRedirectUrl = `https://tikona-mobile.vercel.app/report/${session_id}`;\n  message += `\\n📄 <b>Research Report:</b> <a href=\"${appRedirectUrl}\">View Report</a>\\n`;\n} else if (report_file_url) {\n  message += `\\n📄 <b>Research Report:</b> <a href=\"${report_file_url}\">View Report</a>\\n`;\n}\n\nmessage += `\\n<i>— Tikona Capital Research</i>`;\n\nconst items = [];\nfor (const planId of (plans || [])) {\n  const chatId = PLAN_CHANNELS[planId];\n  if (chatId) {\n    items.push({\n      json: {\n        chat_id: chatId,\n        message,\n        plan: planId,\n        pdf_file_id: pdf_file_id || null,\n        company_name,\n        nse_symbol\n      }\n    });\n  }\n}\n\nif (items.length === 0) {\n  throw new Error('No matching channels for plans: ' + JSON.stringify(plans));\n}\n\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        304
+      ],
+      "id": "e3c69660-97cc-4d9d-8763-39cc05a74496",
+      "name": "Build Messages"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "a1b2c3d4",
+              "leftValue": "={{ $json.pdf_file_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        304
+      ],
+      "id": "de70de5e-e75a-44ce-a2c6-434e7a6824aa",
+      "name": "Has PDF?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot8692928774:AAE1VIaBmsHSYK8LwkrpKhtsfDCRKdK-sSc/sendDocument",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "={{ $json.chat_id }}"
+            },
+            {
+              "name": "document",
+              "value": "={{ 'https://drive.google.com/uc?export=download&id=' + $json.pdf_file_id }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "parse_mode",
+              "value": "HTML"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        432,
+        192
+      ],
+      "id": "6dd3d5c1-3a45-42c2-abb1-e6c54b7effc5",
+      "name": "Send PDF Document"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_notification": false,
+          "disable_web_page_preview": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        400
+      ],
+      "id": "50b82a66-158a-4730-a6b4-403daf372994",
+      "name": "Send Text Only",
+      "webhookId": "dc04c5c9-7870-4366-a0af-eb5ffec35c78",
+      "credentials": {
+        "telegramApi": {
+          "id": "KHYJT0YTZqNa2WRE",
+          "name": "bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"sent\", \"count\": $input.all().length } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        304
+      ],
+      "id": "07969a6c-6f82-49d2-910c-16c18866a7a9",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Build Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Messages": {
+      "main": [
+        [
+          {
+            "node": "Has PDF?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has PDF?": {
+      "main": [
+        [
+          {
+            "node": "Send PDF Document",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Text Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send PDF Document": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Text Only": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "c6385410-1cbf-4b55-a597-25f4bed4d367",
+  "activeVersionId": "c6385410-1cbf-4b55-a597-25f4bed4d367",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-27T12:31:49.020Z",
+      "createdAt": "2026-03-27T12:31:49.020Z",
+      "role": "workflow:owner",
+      "workflowId": "4qyqIk6k2U_uS5OLltpRp",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-06-01T08:26:27.000Z",
+    "createdAt": "2026-06-01T08:26:25.514Z",
+    "versionId": "c6385410-1cbf-4b55-a597-25f4bed4d367",
+    "workflowId": "4qyqIk6k2U_uS5OLltpRp",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "send-recommendation",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -288,
+          304
+        ],
+        "id": "16e01f91-f15d-49cf-8c29-10ccc42ae15a",
+        "name": "Webhook",
+        "webhookId": "send-recommendation"
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $('Webhook').first().json.body;\n\nconst PLAN_CHANNELS = {\n  midcap_wealth:  '-1003556619522',\n  smallcap_alpha: '-1003457667360',\n  sme_emerging:   '-1003841397664',\n};\n\nconst {\n  company_name, nse_symbol, rating, cmp, target_price,\n  upside_pct, validity_type, validity_date, plans,\n  trade_notes, report_file_url, pdf_file_id, session_id\n} = body;\n\nlet validityText;\nif (validity_type === 'custom' && validity_date) {\n  validityText = new Date(validity_date).toLocaleDateString('en-IN', {\n    day: '2-digit', month: 'short', year: 'numeric'\n  });\n} else {\n  const expiry = new Date();\n  expiry.setFullYear(expiry.getFullYear() + 1);\n  validityText = expiry.toLocaleDateString('en-IN', {\n    day: '2-digit', month: 'short', year: 'numeric'\n  });\n}\n\nconst ratingEmoji = rating === 'BUY' ? '🟢' : '🔴';\nconst upsideText = upside_pct != null\n  ? ` <b>(${upside_pct > 0 ? '+' : ''}${upside_pct}% upside)</b>`\n  : '';\n\nlet message = `${ratingEmoji} <b>${rating} — ${company_name}</b>\\n`;\nmessage += `<code>NSE: ${nse_symbol}</code>\\n\\n`;\nmessage += `💰 <b>CMP:</b> ₹${cmp ? Number(cmp).toLocaleString('en-IN') : 'N/A'}\\n`;\nmessage += `🎯 <b>Target:</b> ₹${Number(target_price).toLocaleString('en-IN')}${upsideText}\\n`;\nmessage += `📅 <b>Valid till:</b> ${validityText}\\n`;\n\nif (trade_notes) {\n  message += `\\n📝 <b>Notes:</b>\\n${trade_notes}\\n`;\n}\n\n// === Secure In-App Viewer Link using Mobile Vercel Domain ===\nif (session_id) {\n  const appRedirectUrl = `https://tikona-mobile.vercel.app/report/${session_id}`;\n  message += `\\n📄 <b>Research Report:</b> <a href=\"${appRedirectUrl}\">View Report</a>\\n`;\n} else if (report_file_url) {\n  message += `\\n📄 <b>Research Report:</b> <a href=\"${report_file_url}\">View Report</a>\\n`;\n}\n\nmessage += `\\n<i>— Tikona Capital Research</i>`;\n\nconst items = [];\nfor (const planId of (plans || [])) {\n  const chatId = PLAN_CHANNELS[planId];\n  if (chatId) {\n    items.push({\n      json: {\n        chat_id: chatId,\n        message,\n        plan: planId,\n        pdf_file_id: pdf_file_id || null,\n        company_name,\n        nse_symbol\n      }\n    });\n  }\n}\n\nif (items.length === 0) {\n  throw new Error('No matching channels for plans: ' + JSON.stringify(plans));\n}\n\nreturn items;\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -48,
+          304
+        ],
+        "id": "e3c69660-97cc-4d9d-8763-39cc05a74496",
+        "name": "Build Messages"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "a1b2c3d4",
+                "leftValue": "={{ $json.pdf_file_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "isNotEmpty"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          192,
+          304
+        ],
+        "id": "de70de5e-e75a-44ce-a2c6-434e7a6824aa",
+        "name": "Has PDF?"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://api.telegram.org/bot8692928774:AAE1VIaBmsHSYK8LwkrpKhtsfDCRKdK-sSc/sendDocument",
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "chat_id",
+                "value": "={{ $json.chat_id }}"
+              },
+              {
+                "name": "document",
+                "value": "={{ 'https://drive.google.com/uc?export=download&id=' + $json.pdf_file_id }}"
+              },
+              {
+                "name": "caption",
+                "value": "={{ $json.message }}"
+              },
+              {
+                "name": "parse_mode",
+                "value": "HTML"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          432,
+          192
+        ],
+        "id": "6dd3d5c1-3a45-42c2-abb1-e6c54b7effc5",
+        "name": "Send PDF Document"
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $json.chat_id }}",
+          "text": "={{ $json.message }}",
+          "additionalFields": {
+            "appendAttribution": false,
+            "disable_notification": false,
+            "disable_web_page_preview": false,
+            "parse_mode": "HTML"
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          432,
+          400
+        ],
+        "id": "50b82a66-158a-4730-a6b4-403daf372994",
+        "name": "Send Text Only",
+        "webhookId": "dc04c5c9-7870-4366-a0af-eb5ffec35c78",
+        "credentials": {
+          "telegramApi": {
+            "id": "KHYJT0YTZqNa2WRE",
+            "name": "bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { \"status\": \"sent\", \"count\": $input.all().length } }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          672,
+          304
+        ],
+        "id": "07969a6c-6f82-49d2-910c-16c18866a7a9",
+        "name": "Respond to Webhook"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Build Messages",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Messages": {
+        "main": [
+          [
+            {
+              "node": "Has PDF?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has PDF?": {
+        "main": [
+          [
+            {
+              "node": "Send PDF Document",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send Text Only",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send PDF Document": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Text Only": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version c6385410",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
