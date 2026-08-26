@@ -1,0 +1,1558 @@
+{
+  "updatedAt": "2026-08-07T10:07:50.793Z",
+  "createdAt": "2026-07-10T05:44:25.429Z",
+  "id": "66DyMeDk9WIRuCd8_I6h9",
+  "name": "Podcast workflow",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-media-script",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a1c039b0-d125-46de-a16a-ccf2155d63f7",
+      "name": "Webhook5",
+      "webhookId": "5ba92547-f137-4422-9935-e0f68f145fc6"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "research_reports",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "report_id",
+              "keyValue": "={{ $json.body.report_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "e85c5964-ed94-43e0-bff3-718959da7756",
+      "name": "Supabase1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "research_sections",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{ $json.session_id }}"
+            },
+            {
+              "keyName": "stage",
+              "keyValue": "stage2"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "5befe92d-a0dc-4b84-9adf-7e3dbf1ccab8",
+      "name": "Fetch Report Sections",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst companyName = $('Supabase1').first().json.company_name;\nconst nseSymbol = $('Supabase1').first().json.nse_symbol;\n\nconst result = {\n  company_name: companyName,\n  nse_symbol: nseSymbol,\n  investment_rationale: '',\n  company_background: '',\n  business_model: '',\n  management_analysis: '',\n  corporate_governance: '',\n  industry_overview: '',\n  industry_tailwinds: '',\n  demand_drivers: '',\n  industry_risks: '',\n  saarthi_framework: '',\n  entry_review_exit_strategy: '',\n  scenario_analysis: '',\n  rating: '',\n  target_price: '',\n  upside_percentage: '',\n  current_market_price: ''\n};\n\nfor (const item of items) {\n  const key = item.json.section_key;\n  const content = item.json.content;\n  if (key in result) {\n    result[key] = content;\n  }\n}\n\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "87a4bcfc-4810-4f18-9c10-2ddd6a6cfe33",
+      "name": "Aggregate Sections"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Act as a professional financial podcast script writer producing institutional equity-research content for professional investors and analysts — not consumer marketing or alcohol-brand advertising.\n\nWrite a comprehensive, detailed, and highly conversational 15-minute two-host podcast dialogue analyzing the specified company's business performance, financial results, strategy, competitive position, and investment outlook, based strictly on the research report content provided. The two hosts are Ayush (male) and Ananya (female), discussing the company the way two sell-side equity analysts would on a research desk.\n\nScope and tone:\n- Cover the company as a publicly listed business: revenue, margins, growth drivers, competitive dynamics, management strategy, risks, and valuation.\n- Discuss any products purely as revenue/business-segment drivers (e.g. \"the premium segment contributed X% of revenue\"), the way a financial analyst would — never describe taste, quality, or appeal of the products, and never use language that encourages or promotes consumption.\n- This is objective financial analysis for an investment audience, not a product review or advertisement.\n\nFormat requirements:\n- Natural, deep, back-and-forth conversation, ~1800-2000 words total.\n- Output ONLY raw conversational lines, each starting with exactly 'Host A:' or 'Host B:' (Host A = Ayush, Host B = Ananya). Do not use 'Ayush:' or 'Ananya:' as line prefixes — the downstream audio synthesizer requires the literal 'Host A:' / 'Host B:' tags to split voices.\n- Do NOT output JSON, markdown code blocks, headers, or any other formatting — plain dialogue lines only.\n"
+            },
+            {
+              "content": "=Create a detailed, 15-minute deep-dive podcast dialogue for {{ $json.company_name }} ({{ $json.nse_symbol }}).\nBase it strictly on this comprehensive data:\n- Target Price: {{ $json.target_price }} | Upside: {{ $json.upside_percentage }} | CMP: {{ $json.current_market_price }} | Rating: {{ $json.rating }}\n- Investment Rationale: {{ $json.investment_rationale }}\n- SAARTHI Scorecard: {{ $json.saarthi_framework }}\n- Company Background & Business Model: {{ $json.company_background }} | {{ $json.business_model }}\n- Management Quality & Corporate Governance: {{ $json.management_analysis }} | {{ $json.corporate_governance }}\n- Industry Dynamics & Tailwinds: {{ $json.industry_overview }} | {{ $json.industry_tailwinds }} | {{ $json.demand_drivers }}\n- Risks & Downsides: {{ $json.industry_risks }}\n- Scenario Analysis (Bull/Bear cases): {{ $json.scenario_analysis }}\n- Strategy (Entry/Exit): {{ $json.entry_review_exit_strategy }}\n\nStructure the dialogue naturally to cover:\n1. The Hook & Target Price: Open with an exciting hook and immediately discuss the target price, upside potential, and overall recommendation.\n2. Company Background & Business Model: Explain what the company does and how it makes money in simple terms.\n3. The SAARTHI Scorecard: Go through the SAARTHI scores in detail. Explain what each dimension represents and why the company scored the way it did.\n4. Management & Governance: Evaluate the leadership team and their execution capabilities.\n5. Industry Outlook & Tailwinds: Discuss market opportunity, indigenisation, order pipelines, etc.\n6. Key Risks & Scenario Analysis: Discuss what could go wrong (bear case) and the best-case potential (bull case).\n7. Verdict & Strategy: Give a clear, detailed wrap-up of the entry and exit strategy, concluding with a question for the listeners.\n\nREMEMBER: Output ONLY lines starting with 'Host A:' or 'Host B:'. Do not use any other text or prefixes. Make it very long, detailed, and substantive (1800+ words) to reach the 15-minute length.\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 4000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        896,
+        0
+      ],
+      "id": "d7a30d70-8f59-4f72-8d9b-306a522843a6",
+      "name": "Generates Podcast Script",
+      "credentials": {
+        "openAiApi": {
+          "id": "TMMS3pMqjiGuuWVj",
+          "name": "RAG 23-12-2025"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "research_reports",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "report_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook5').first().json.body.report_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "podcast_script",
+              "fieldValue": "={{ $('Generates Podcast Script').first().json.output[0].content[0].text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "0c9413a2-7a53-48ff-89ad-e96b69868ab8",
+      "name": "Update a row2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "synthesize-podcast",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        272
+      ],
+      "id": "203d3e9a-c1aa-4282-b67e-462c1bc80750",
+      "name": "Webhook Podcast",
+      "webhookId": "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "research_reports",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "report_id",
+              "keyValue": "={{ $json.body.report_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        224,
+        272
+      ],
+      "id": "8d9517b9-c9b4-42ef-8fe3-c4625e12fb70",
+      "name": "Fetch Podcast Script",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ─── SARVAM SPEAKER NAMES ───────────────────────────────────────────────────\n// Male options:   anand, aditya, rahul, rohan, kabir, shubh\n// Female options: priya, ritu, neha, simran, kavya, ishita\nconst speakerA = 'anand';  // Host A — Male\nconst speakerB = 'priya';  // Host B — Female\n\n// ─── PARSE SCRIPT ───────────────────────────────────────────────────────────\nconst script = $input.first().json.podcast_script || '';\nif (!script || script.trim() === '') {\n  throw new Error('podcast_script is empty in research_reports. Run Script Generator workflow first.');\n}\n\nconst lines = script.split('\\n').filter(line => line.trim() !== '');\nconst audioSegments = [];\n\nfor (const line of lines) {\n  const trimmed = line.trim();\n  if (trimmed.startsWith('Host A:')) {\n    audioSegments.push({\n      text: trimmed.replace(/^Host A:/i, '').trim(),\n      speaker_name: speakerA,\n      speaker: 'Ananya'\n    });\n  } else if (trimmed.startsWith('Host B:')) {\n    audioSegments.push({\n      text: trimmed.replace(/^Host B:/i, '').trim(),\n      speaker_name: speakerB,\n      speaker: 'Ayush'\n    });\n  }\n}\n\nif (audioSegments.length === 0) {\n  throw new Error('No dialogue lines found. Script must have \"Host A:\" and \"Host B:\" prefixes. Preview: ' + script.substring(0, 200));\n}\n\nconsole.log('Parsed ' + audioSegments.length + ' dialogue segments.');\n\n// Return one item per segment so HTTP Request node processes each one\nreturn audioSegments;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        272
+      ],
+      "id": "9b205ebc-69af-426a-89a7-c94c6c9c6a8f",
+      "name": "Split Script"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.sarvam.ai/text-to-speech",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-subscription-key",
+              "value": "sk_zqejhnf6_nmGedfuqpv2iFRqSuoUgpu4o"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inputs\": [\n    {{ JSON.stringify($json.text) }}\n  ],\n  \"target_language_code\": \"en-IN\",\n  \"speaker\": {{ JSON.stringify($json.speaker_name) }},\n  \"model\": \"bulbul:v3\",\n  \"pace\": 1.0,\n  \"enable_preprocessing\": true\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        272
+      ],
+      "id": "11081902-730f-4bd1-8b28-97ef9a60541c",
+      "name": "Sarvam TTS"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\n\nconst allItems = $input.all();\nif (!allItems || allItems.length === 0) {\n  throw new Error('No items received from Sarvam TTS node.');\n}\n\n// Extract base64 audio from each Sarvam response\nconst audioBuffers = allItems.map((item, i) => {\n  const audios = item.json.audios;\n  if (!audios || audios.length === 0) {\n    throw new Error('No audio in item ' + (i + 1) + '. Response: ' + JSON.stringify(item.json).substring(0, 200));\n  }\n  return Buffer.from(audios[0], 'base64');\n});\n\nconsole.log('Merging ' + audioBuffers.length + ' WAV segments in pure JS...');\n\n// WAV header is 44 bytes\n// Keep full first file, strip 44-byte header from all subsequent files\nconst WAV_HEADER_SIZE = 44;\nconst firstBuffer = audioBuffers[0];\n\n// Calculate total PCM data size (all files minus headers of files 2+)\nlet totalPcmSize = firstBuffer.length - WAV_HEADER_SIZE;\nfor (let i = 1; i < audioBuffers.length; i++) {\n  totalPcmSize += audioBuffers[i].length - WAV_HEADER_SIZE;\n}\n\n// Update the data chunk size in the WAV header (bytes 40-43)\nconst mergedBuffer = Buffer.concat(audioBuffers.map((buf, i) => {\n  return i === 0 ? buf : buf.slice(WAV_HEADER_SIZE);\n}));\n\n// Fix WAV header sizes\n// Byte 4-7: total file size - 8\nmergedBuffer.writeUInt32LE(mergedBuffer.length - 8, 4);\n// Byte 40-43: data chunk size\nmergedBuffer.writeUInt32LE(totalPcmSize, 40);\n\nconst mergedBase64 = mergedBuffer.toString('base64');\nconsole.log('Merged WAV size: ' + mergedBuffer.length + ' bytes');\n\nreturn [{\n  json: {\n    success: true,\n    segments_merged: audioBuffers.length,\n    file_size_bytes: mergedBuffer.length\n  },\n  binary: {\n    data: {\n      data: mergedBase64,\n      mimeType: 'audio/wav',\n      fileName: 'podcast_final.wav',\n      fileExtension: 'wav',\n      fileSize: mergedBuffer.length\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        272
+      ],
+      "id": "749bb694-85bb-45f0-9ee6-4d2088d13e55",
+      "name": "FFmpeg Merge"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://bmpvcjbfeyvkkbvclwkb.supabase.co/storage/v1/object/media-assets/podcast_{{ $('Webhook Podcast').first().json.body.report_id }}.wav",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "[REDACTED_SECRET]"
+            },
+            {
+              "name": "Content-Type",
+              "value": "audio/wav"
+            },
+            {
+              "name": "x-upsert",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1120,
+        272
+      ],
+      "id": "0cfbe8b9-d594-4fa2-90bd-641eb4fe7c12",
+      "name": "Upload to Supabase Storage"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "research_sessions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{ $('Fetch Podcast Script').first().json.session_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        272
+      ],
+      "id": "330955f0-6fbd-427d-a758-6fb3c1e6043a",
+      "name": "Fetch Session for Drive",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "name = 'Podcast' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+        "filter": {
+          "driveId": {
+            "__rl": true,
+            "value": "0AEuW1s1xlgD1Uk9PVA",
+            "mode": "list",
+            "cachedResultName": "Tikona Capital Research & Automation OS",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.vault_folder_id }}",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1568,
+        272
+      ],
+      "id": "bc2cee39-e0fc-4d44-9c35-8c62e2065d93",
+      "name": "Search Podcast Folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: $input.first().json,\n  binary: $('FFmpeg Merge').first().binary\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        272
+      ],
+      "id": "6d3e4edd-e5eb-43e5-b83d-3aaf73ab7ad2",
+      "name": "Restore Podcast Binary"
+    },
+    {
+      "parameters": {
+        "name": "=podcast_{{ $('Webhook Podcast').first().json.body.report_id }}.wav",
+        "driveId": {
+          "__rl": true,
+          "value": "0AEuW1s1xlgD1Uk9PVA",
+          "mode": "list",
+          "cachedResultName": "Tikona Capital Research & Automation OS",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2016,
+        272
+      ],
+      "id": "29d47e84-72b8-45f2-8468-4396e8f86757",
+      "name": "Upload Podcast to Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "research_reports",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "report_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook Podcast').first().json.body.report_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "audio_file_url",
+              "fieldValue": "=https://bmpvcjbfeyvkkbvclwkb.supabase.co/storage/v1/object/public/media-assets/podcast_{{ $('Webhook Podcast').first().json.body.report_id }}.wav"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        272
+      ],
+      "id": "0f1e1045-6fe0-4bfc-b82d-33fb09ebea1d",
+      "name": "Update Podcast URL",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"report_id\": \"{{ $('Webhook Podcast').first().json.body.report_id }}\",\n  \"podcast_audio_url\": \"https://bmpvcjbfeyvkkbvclwkb.supabase.co/storage/v1/object/public/media-assets/podcast_{{ $('Webhook Podcast').first().json.body.report_id }}.wav\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2464,
+        272
+      ],
+      "id": "32f4ba4d-a0f5-408f-81eb-9e26a8fe72b6",
+      "name": "Respond to Webhook12"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "name = 'Podcast' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+        "returnAll": true,
+        "filter": {
+          "driveId": {
+            "__rl": true,
+            "value": "0AEuW1s1xlgD1Uk9PVA",
+            "mode": "list",
+            "cachedResultName": "Tikona Capital Research & Automation OS",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $('Supabase1').first().json.vault_folder_id }}",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1488,
+        0
+      ],
+      "id": "4af95b88-5e2a-4717-9c7c-362a1fdcfef3",
+      "name": "Search Podcast Subfolder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the generated podcast script and company name\nconst scriptText = $('Generates Podcast Script').first().json.output[0].content[0].text || \"No script generated\";\nconst companyName = $('Supabase1').first().json.company_name || \"Company\";\n\nconst fileName = `${companyName} - Podcast Script.txt`;\n\n// 2. Create a raw data buffer from the script text\nconst scriptBuffer = Buffer.from(scriptText, 'utf8');\n\n// 3. Use n8n's internal helper to officially register the file\nconst properBinaryData = await this.helpers.prepareBinaryData(\n  scriptBuffer,\n  fileName,\n  'text/plain'\n);\n\n// 4. Output the properly formatted binary object\nreturn [{\n  json: {\n    status: \"success\",\n    fileName: fileName\n  },\n  binary: {\n    data: properBinaryData\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        0
+      ],
+      "id": "640017a4-bc5b-403a-81da-c84f0576a41f",
+      "name": "Convert Podcast Script to File"
+    },
+    {
+      "parameters": {
+        "name": "=={{ $json.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "value": "0AEuW1s1xlgD1Uk9PVA",
+          "mode": "list",
+          "cachedResultName": "Tikona Capital Research & Automation OS",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Search Podcast Subfolder').first().json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1904,
+        0
+      ],
+      "id": "4335b208-f4cb-46e8-bbd5-39caffe8ce7f",
+      "name": "Upload Podcast Script",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook5": {
+      "main": [
+        [
+          {
+            "node": "Supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Report Sections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Report Sections": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Sections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Sections": {
+      "main": [
+        [
+          {
+            "node": "Generates Podcast Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generates Podcast Script": {
+      "main": [
+        [
+          {
+            "node": "Update a row2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Podcast": {
+      "main": [
+        [
+          {
+            "node": "Fetch Podcast Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Podcast Script": {
+      "main": [
+        [
+          {
+            "node": "Split Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Script": {
+      "main": [
+        [
+          {
+            "node": "Sarvam TTS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sarvam TTS": {
+      "main": [
+        [
+          {
+            "node": "FFmpeg Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FFmpeg Merge": {
+      "main": [
+        [
+          {
+            "node": "Upload to Supabase Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Supabase Storage": {
+      "main": [
+        [
+          {
+            "node": "Fetch Session for Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Session for Drive": {
+      "main": [
+        [
+          {
+            "node": "Search Podcast Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Podcast Folder": {
+      "main": [
+        [
+          {
+            "node": "Restore Podcast Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore Podcast Binary": {
+      "main": [
+        [
+          {
+            "node": "Upload Podcast to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Podcast to Drive": {
+      "main": [
+        [
+          {
+            "node": "Update Podcast URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Podcast URL": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row2": {
+      "main": [
+        [
+          {
+            "node": "Search Podcast Subfolder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Podcast Subfolder": {
+      "main": [
+        [
+          {
+            "node": "Convert Podcast Script to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert Podcast Script to File": {
+      "main": [
+        [
+          {
+            "node": "Upload Podcast Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "1348c0d9-8ed0-44b7-8ced-42d30a9dcac1",
+  "activeVersionId": "1348c0d9-8ed0-44b7-8ced-42d30a9dcac1",
+  "triggerCount": 2,
+  "shared": [
+    {
+      "updatedAt": "2026-07-10T05:44:25.436Z",
+      "createdAt": "2026-07-10T05:44:25.436Z",
+      "role": "workflow:owner",
+      "workflowId": "66DyMeDk9WIRuCd8_I6h9",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-08-07T10:08:02.000Z",
+    "createdAt": "2026-08-07T10:07:50.794Z",
+    "versionId": "1348c0d9-8ed0-44b7-8ced-42d30a9dcac1",
+    "workflowId": "66DyMeDk9WIRuCd8_I6h9",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "generate-media-script",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "a1c039b0-d125-46de-a16a-ccf2155d63f7",
+        "name": "Webhook5",
+        "webhookId": "5ba92547-f137-4422-9935-e0f68f145fc6"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "research_reports",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "report_id",
+                "keyValue": "={{ $json.body.report_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          224,
+          0
+        ],
+        "id": "e85c5964-ed94-43e0-bff3-718959da7756",
+        "name": "Supabase1",
+        "credentials": {
+          "supabaseApi": {
+            "id": "0G7QiEV7evRjasbP",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "research_sections",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "session_id",
+                "keyValue": "={{ $json.session_id }}"
+              },
+              {
+                "keyName": "stage",
+                "keyValue": "stage2"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          448,
+          0
+        ],
+        "id": "5befe92d-a0dc-4b84-9adf-7e3dbf1ccab8",
+        "name": "Fetch Report Sections",
+        "credentials": {
+          "supabaseApi": {
+            "id": "0G7QiEV7evRjasbP",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nconst companyName = $('Supabase1').first().json.company_name;\nconst nseSymbol = $('Supabase1').first().json.nse_symbol;\n\nconst result = {\n  company_name: companyName,\n  nse_symbol: nseSymbol,\n  investment_rationale: '',\n  company_background: '',\n  business_model: '',\n  management_analysis: '',\n  corporate_governance: '',\n  industry_overview: '',\n  industry_tailwinds: '',\n  demand_drivers: '',\n  industry_risks: '',\n  saarthi_framework: '',\n  entry_review_exit_strategy: '',\n  scenario_analysis: '',\n  rating: '',\n  target_price: '',\n  upside_percentage: '',\n  current_market_price: ''\n};\n\nfor (const item of items) {\n  const key = item.json.section_key;\n  const content = item.json.content;\n  if (key in result) {\n    result[key] = content;\n  }\n}\n\nreturn [{ json: result }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          0
+        ],
+        "id": "87a4bcfc-4810-4f18-9c10-2ddd6a6cfe33",
+        "name": "Aggregate Sections"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4o",
+            "mode": "list",
+            "cachedResultName": "GPT-4O"
+          },
+          "responses": {
+            "values": [
+              {
+                "role": "system",
+                "content": "Act as a professional financial podcast script writer producing institutional equity-research content for professional investors and analysts — not consumer marketing or alcohol-brand advertising.\n\nWrite a comprehensive, detailed, and highly conversational 15-minute two-host podcast dialogue analyzing the specified company's business performance, financial results, strategy, competitive position, and investment outlook, based strictly on the research report content provided. The two hosts are Ayush (male) and Ananya (female), discussing the company the way two sell-side equity analysts would on a research desk.\n\nScope and tone:\n- Cover the company as a publicly listed business: revenue, margins, growth drivers, competitive dynamics, management strategy, risks, and valuation.\n- Discuss any products purely as revenue/business-segment drivers (e.g. \"the premium segment contributed X% of revenue\"), the way a financial analyst would — never describe taste, quality, or appeal of the products, and never use language that encourages or promotes consumption.\n- This is objective financial analysis for an investment audience, not a product review or advertisement.\n\nFormat requirements:\n- Natural, deep, back-and-forth conversation, ~1800-2000 words total.\n- Output ONLY raw conversational lines, each starting with exactly 'Host A:' or 'Host B:' (Host A = Ayush, Host B = Ananya). Do not use 'Ayush:' or 'Ananya:' as line prefixes — the downstream audio synthesizer requires the literal 'Host A:' / 'Host B:' tags to split voices.\n- Do NOT output JSON, markdown code blocks, headers, or any other formatting — plain dialogue lines only.\n"
+              },
+              {
+                "content": "=Create a detailed, 15-minute deep-dive podcast dialogue for {{ $json.company_name }} ({{ $json.nse_symbol }}).\nBase it strictly on this comprehensive data:\n- Target Price: {{ $json.target_price }} | Upside: {{ $json.upside_percentage }} | CMP: {{ $json.current_market_price }} | Rating: {{ $json.rating }}\n- Investment Rationale: {{ $json.investment_rationale }}\n- SAARTHI Scorecard: {{ $json.saarthi_framework }}\n- Company Background & Business Model: {{ $json.company_background }} | {{ $json.business_model }}\n- Management Quality & Corporate Governance: {{ $json.management_analysis }} | {{ $json.corporate_governance }}\n- Industry Dynamics & Tailwinds: {{ $json.industry_overview }} | {{ $json.industry_tailwinds }} | {{ $json.demand_drivers }}\n- Risks & Downsides: {{ $json.industry_risks }}\n- Scenario Analysis (Bull/Bear cases): {{ $json.scenario_analysis }}\n- Strategy (Entry/Exit): {{ $json.entry_review_exit_strategy }}\n\nStructure the dialogue naturally to cover:\n1. The Hook & Target Price: Open with an exciting hook and immediately discuss the target price, upside potential, and overall recommendation.\n2. Company Background & Business Model: Explain what the company does and how it makes money in simple terms.\n3. The SAARTHI Scorecard: Go through the SAARTHI scores in detail. Explain what each dimension represents and why the company scored the way it did.\n4. Management & Governance: Evaluate the leadership team and their execution capabilities.\n5. Industry Outlook & Tailwinds: Discuss market opportunity, indigenisation, order pipelines, etc.\n6. Key Risks & Scenario Analysis: Discuss what could go wrong (bear case) and the best-case potential (bull case).\n7. Verdict & Strategy: Give a clear, detailed wrap-up of the entry and exit strategy, concluding with a question for the listeners.\n\nREMEMBER: Output ONLY lines starting with 'Host A:' or 'Host B:'. Do not use any other text or prefixes. Make it very long, detailed, and substantive (1800+ words) to reach the 15-minute length.\n"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {
+            "maxTokens": 4000
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.1,
+        "position": [
+          896,
+          0
+        ],
+        "id": "d7a30d70-8f59-4f72-8d9b-306a522843a6",
+        "name": "Generates Podcast Script",
+        "credentials": {
+          "openAiApi": {
+            "id": "TMMS3pMqjiGuuWVj",
+            "name": "RAG 23-12-2025"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "research_reports",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "report_id",
+                "condition": "eq",
+                "keyValue": "={{ $('Webhook5').first().json.body.report_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "podcast_script",
+                "fieldValue": "={{ $('Generates Podcast Script').first().json.output[0].content[0].text }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1248,
+          0
+        ],
+        "id": "0c9413a2-7a53-48ff-89ad-e96b69868ab8",
+        "name": "Update a row2",
+        "credentials": {
+          "supabaseApi": {
+            "id": "0G7QiEV7evRjasbP",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "synthesize-podcast",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          272
+        ],
+        "id": "203d3e9a-c1aa-4282-b67e-462c1bc80750",
+        "name": "Webhook Podcast",
+        "webhookId": "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "research_reports",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "report_id",
+                "keyValue": "={{ $json.body.report_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          224,
+          272
+        ],
+        "id": "8d9517b9-c9b4-42ef-8fe3-c4625e12fb70",
+        "name": "Fetch Podcast Script",
+        "credentials": {
+          "supabaseApi": {
+            "id": "0G7QiEV7evRjasbP",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// ─── SARVAM SPEAKER NAMES ───────────────────────────────────────────────────\n// Male options:   anand, aditya, rahul, rohan, kabir, shubh\n// Female options: priya, ritu, neha, simran, kavya, ishita\nconst speakerA = 'anand';  // Host A — Male\nconst speakerB = 'priya';  // Host B — Female\n\n// ─── PARSE SCRIPT ───────────────────────────────────────────────────────────\nconst script = $input.first().json.podcast_script || '';\nif (!script || script.trim() === '') {\n  throw new Error('podcast_script is empty in research_reports. Run Script Generator workflow first.');\n}\n\nconst lines = script.split('\\n').filter(line => line.trim() !== '');\nconst audioSegments = [];\n\nfor (const line of lines) {\n  const trimmed = line.trim();\n  if (trimmed.startsWith('Host A:')) {\n    audioSegments.push({\n      text: trimmed.replace(/^Host A:/i, '').trim(),\n      speaker_name: speakerA,\n      speaker: 'Ananya'\n    });\n  } else if (trimmed.startsWith('Host B:')) {\n    audioSegments.push({\n      text: trimmed.replace(/^Host B:/i, '').trim(),\n      speaker_name: speakerB,\n      speaker: 'Ayush'\n    });\n  }\n}\n\nif (audioSegments.length === 0) {\n  throw new Error('No dialogue lines found. Script must have \"Host A:\" and \"Host B:\" prefixes. Preview: ' + script.substring(0, 200));\n}\n\nconsole.log('Parsed ' + audioSegments.length + ' dialogue segments.');\n\n// Return one item per segment so HTTP Request node processes each one\nreturn audioSegments;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          272
+        ],
+        "id": "9b205ebc-69af-426a-89a7-c94c6c9c6a8f",
+        "name": "Split Script"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.sarvam.ai/text-to-speech",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "api-subscription-key",
+                "value": "sk_zqejhnf6_nmGedfuqpv2iFRqSuoUgpu4o"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"inputs\": [\n    {{ JSON.stringify($json.text) }}\n  ],\n  \"target_language_code\": \"en-IN\",\n  \"speaker\": {{ JSON.stringify($json.speaker_name) }},\n  \"model\": \"bulbul:v3\",\n  \"pace\": 1.0,\n  \"enable_preprocessing\": true\n}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          672,
+          272
+        ],
+        "id": "11081902-730f-4bd1-8b28-97ef9a60541c",
+        "name": "Sarvam TTS"
+      },
+      {
+        "parameters": {
+          "jsCode": "const fs = require('fs');\n\nconst allItems = $input.all();\nif (!allItems || allItems.length === 0) {\n  throw new Error('No items received from Sarvam TTS node.');\n}\n\n// Extract base64 audio from each Sarvam response\nconst audioBuffers = allItems.map((item, i) => {\n  const audios = item.json.audios;\n  if (!audios || audios.length === 0) {\n    throw new Error('No audio in item ' + (i + 1) + '. Response: ' + JSON.stringify(item.json).substring(0, 200));\n  }\n  return Buffer.from(audios[0], 'base64');\n});\n\nconsole.log('Merging ' + audioBuffers.length + ' WAV segments in pure JS...');\n\n// WAV header is 44 bytes\n// Keep full first file, strip 44-byte header from all subsequent files\nconst WAV_HEADER_SIZE = 44;\nconst firstBuffer = audioBuffers[0];\n\n// Calculate total PCM data size (all files minus headers of files 2+)\nlet totalPcmSize = firstBuffer.length - WAV_HEADER_SIZE;\nfor (let i = 1; i < audioBuffers.length; i++) {\n  totalPcmSize += audioBuffers[i].length - WAV_HEADER_SIZE;\n}\n\n// Update the data chunk size in the WAV header (bytes 40-43)\nconst mergedBuffer = Buffer.concat(audioBuffers.map((buf, i) => {\n  return i === 0 ? buf : buf.slice(WAV_HEADER_SIZE);\n}));\n\n// Fix WAV header sizes\n// Byte 4-7: total file size - 8\nmergedBuffer.writeUInt32LE(mergedBuffer.length - 8, 4);\n// Byte 40-43: data chunk size\nmergedBuffer.writeUInt32LE(totalPcmSize, 40);\n\nconst mergedBase64 = mergedBuffer.toString('base64');\nconsole.log('Merged WAV size: ' + mergedBuffer.length + ' bytes');\n\nreturn [{\n  json: {\n    success: true,\n    segments_merged: audioBuffers.length,\n    file_size_bytes: mergedBuffer.length\n  },\n  binary: {\n    data: {\n      data: mergedBase64,\n      mimeType: 'audio/wav',\n      fileName: 'podcast_final.wav',\n      fileExtension: 'wav',\n      fileSize: mergedBuffer.length\n    }\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          896,
+          272
+        ],
+        "id": "749bb694-85bb-45f0-9ee6-4d2088d13e55",
+        "name": "FFmpeg Merge"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://bmpvcjbfeyvkkbvclwkb.supabase.co/storage/v1/object/media-assets/podcast_{{ $('Webhook Podcast').first().json.body.report_id }}.wav",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "[REDACTED_SECRET]"
+              },
+              {
+                "name": "Content-Type",
+                "value": "audio/wav"
+              },
+              {
+                "name": "x-upsert",
+                "value": "true"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "binaryData",
+          "inputDataFieldName": "data",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1120,
+          272
+        ],
+        "id": "0cfbe8b9-d594-4fa2-90bd-641eb4fe7c12",
+        "name": "Upload to Supabase Storage"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "research_sessions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "session_id",
+                "keyValue": "={{ $('Fetch Podcast Script').first().json.session_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1344,
+          272
+        ],
+        "id": "330955f0-6fbd-427d-a758-6fb3c1e6043a",
+        "name": "Fetch Session for Drive",
+        "credentials": {
+          "supabaseApi": {
+            "id": "0G7QiEV7evRjasbP",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "searchMethod": "query",
+          "queryString": "name = 'Podcast' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+          "filter": {
+            "driveId": {
+              "__rl": true,
+              "value": "0AEuW1s1xlgD1Uk9PVA",
+              "mode": "list",
+              "cachedResultName": "Tikona Capital Research & Automation OS",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+            },
+            "folderId": {
+              "__rl": true,
+              "value": "={{ $json.vault_folder_id }}",
+              "mode": "id"
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1568,
+          272
+        ],
+        "id": "bc2cee39-e0fc-4d44-9c35-8c62e2065d93",
+        "name": "Search Podcast Folder",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return {\n  json: $input.first().json,\n  binary: $('FFmpeg Merge').first().binary\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1792,
+          272
+        ],
+        "id": "6d3e4edd-e5eb-43e5-b83d-3aaf73ab7ad2",
+        "name": "Restore Podcast Binary"
+      },
+      {
+        "parameters": {
+          "name": "=podcast_{{ $('Webhook Podcast').first().json.body.report_id }}.wav",
+          "driveId": {
+            "__rl": true,
+            "value": "0AEuW1s1xlgD1Uk9PVA",
+            "mode": "list",
+            "cachedResultName": "Tikona Capital Research & Automation OS",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.id }}",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          2016,
+          272
+        ],
+        "id": "29d47e84-72b8-45f2-8468-4396e8f86757",
+        "name": "Upload Podcast to Drive",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "research_reports",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "report_id",
+                "condition": "eq",
+                "keyValue": "={{ $('Webhook Podcast').first().json.body.report_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "audio_file_url",
+                "fieldValue": "=https://bmpvcjbfeyvkkbvclwkb.supabase.co/storage/v1/object/public/media-assets/podcast_{{ $('Webhook Podcast').first().json.body.report_id }}.wav"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          2240,
+          272
+        ],
+        "id": "0f1e1045-6fe0-4bfc-b82d-33fb09ebea1d",
+        "name": "Update Podcast URL",
+        "credentials": {
+          "supabaseApi": {
+            "id": "0G7QiEV7evRjasbP",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"success\": true,\n  \"report_id\": \"{{ $('Webhook Podcast').first().json.body.report_id }}\",\n  \"podcast_audio_url\": \"https://bmpvcjbfeyvkkbvclwkb.supabase.co/storage/v1/object/public/media-assets/podcast_{{ $('Webhook Podcast').first().json.body.report_id }}.wav\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          2464,
+          272
+        ],
+        "id": "32f4ba4d-a0f5-408f-81eb-9e26a8fe72b6",
+        "name": "Respond to Webhook12"
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "searchMethod": "query",
+          "queryString": "name = 'Podcast' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+          "returnAll": true,
+          "filter": {
+            "driveId": {
+              "__rl": true,
+              "value": "0AEuW1s1xlgD1Uk9PVA",
+              "mode": "list",
+              "cachedResultName": "Tikona Capital Research & Automation OS",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+            },
+            "folderId": {
+              "__rl": true,
+              "value": "={{ $('Supabase1').first().json.vault_folder_id }}",
+              "mode": "id"
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1488,
+          0
+        ],
+        "id": "4af95b88-5e2a-4717-9c7c-362a1fdcfef3",
+        "name": "Search Podcast Subfolder",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Get the generated podcast script and company name\nconst scriptText = $('Generates Podcast Script').first().json.output[0].content[0].text || \"No script generated\";\nconst companyName = $('Supabase1').first().json.company_name || \"Company\";\n\nconst fileName = `${companyName} - Podcast Script.txt`;\n\n// 2. Create a raw data buffer from the script text\nconst scriptBuffer = Buffer.from(scriptText, 'utf8');\n\n// 3. Use n8n's internal helper to officially register the file\nconst properBinaryData = await this.helpers.prepareBinaryData(\n  scriptBuffer,\n  fileName,\n  'text/plain'\n);\n\n// 4. Output the properly formatted binary object\nreturn [{\n  json: {\n    status: \"success\",\n    fileName: fileName\n  },\n  binary: {\n    data: properBinaryData\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1696,
+          0
+        ],
+        "id": "640017a4-bc5b-403a-81da-c84f0576a41f",
+        "name": "Convert Podcast Script to File"
+      },
+      {
+        "parameters": {
+          "name": "=={{ $json.fileName }}",
+          "driveId": {
+            "__rl": true,
+            "value": "0AEuW1s1xlgD1Uk9PVA",
+            "mode": "list",
+            "cachedResultName": "Tikona Capital Research & Automation OS",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $('Search Podcast Subfolder').first().json.id }}",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1904,
+          0
+        ],
+        "id": "4335b208-f4cb-46e8-bbd5-39caffe8ce7f",
+        "name": "Upload Podcast Script",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook5": {
+        "main": [
+          [
+            {
+              "node": "Supabase1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase1": {
+        "main": [
+          [
+            {
+              "node": "Fetch Report Sections",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Report Sections": {
+        "main": [
+          [
+            {
+              "node": "Aggregate Sections",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate Sections": {
+        "main": [
+          [
+            {
+              "node": "Generates Podcast Script",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generates Podcast Script": {
+        "main": [
+          [
+            {
+              "node": "Update a row2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook Podcast": {
+        "main": [
+          [
+            {
+              "node": "Fetch Podcast Script",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Podcast Script": {
+        "main": [
+          [
+            {
+              "node": "Split Script",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Script": {
+        "main": [
+          [
+            {
+              "node": "Sarvam TTS",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sarvam TTS": {
+        "main": [
+          [
+            {
+              "node": "FFmpeg Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "FFmpeg Merge": {
+        "main": [
+          [
+            {
+              "node": "Upload to Supabase Storage",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload to Supabase Storage": {
+        "main": [
+          [
+            {
+              "node": "Fetch Session for Drive",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Session for Drive": {
+        "main": [
+          [
+            {
+              "node": "Search Podcast Folder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search Podcast Folder": {
+        "main": [
+          [
+            {
+              "node": "Restore Podcast Binary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Restore Podcast Binary": {
+        "main": [
+          [
+            {
+              "node": "Upload Podcast to Drive",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload Podcast to Drive": {
+        "main": [
+          [
+            {
+              "node": "Update Podcast URL",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Podcast URL": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook12",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update a row2": {
+        "main": [
+          [
+            {
+              "node": "Search Podcast Subfolder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search Podcast Subfolder": {
+        "main": [
+          [
+            {
+              "node": "Convert Podcast Script to File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Convert Podcast Script to File": {
+        "main": [
+          [
+            {
+              "node": "Upload Podcast Script",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version 1348c0d9",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
