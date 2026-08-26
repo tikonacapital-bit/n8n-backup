@@ -1,0 +1,521 @@
+{
+  "updatedAt": "2026-02-09T06:09:43.960Z",
+  "createdAt": "2026-01-30T08:33:58.158Z",
+  "id": "Q8QqUCN0mCgHiD-s7n7Dp",
+  "name": "Fetch Company Data 2",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "master_company",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $json.body.type }}",
+              "keyValue": "={{ $json.body.value }}"
+            }
+          ]
+        }
+      },
+      "id": "3ddce4e0-e351-42bd-ad6a-54cb36079f49",
+      "name": "Get Ticker",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        208
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://www.google.com/finance/quote/{{$json.nse_symbol}}:NSE",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "91b9243a-a1ac-4d3b-b3c4-dd454dc555d5",
+      "name": "Fetch Live Price (Google)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -64,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "extractionValues": {
+          "values": [
+            {
+              "key": "live_price",
+              "cssSelector": ".YMlKec.fxKbKc"
+            },
+            {
+              "key": "live_change_pct",
+              "cssSelector": ".JwB6zf"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "59ed22da-e11e-41f9-a2b9-ae50fa3c6fae",
+      "name": "Extract Live Data",
+      "type": "n8n-nodes-base.htmlExtract",
+      "typeVersion": 1,
+      "position": [
+        144,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.screener.in/company/{{ $('Get Ticker').item.json.nse_symbol }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "30ea0e2a-2dab-4793-8848-a1cba35f7208",
+      "name": "Fetch Fundamentals (Screener)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        320,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- 1. GET RAW DATA ---\nconst googleData = $('Extract Live Data').item.json;\nconst html = items[0].json.data || \"\";\n\n// --- 2. HELPER FUNCTIONS ---\n\n// Extract simple text between markers\nfunction extractBetween(startMarker, endMarker) {\n  const startIndex = html.indexOf(startMarker);\n  if (startIndex === -1) return null;\n  const substring = html.substring(startIndex + startMarker.length);\n  const endIndex = substring.indexOf(endMarker);\n  if (endIndex === -1) return null;\n  return substring.substring(0, endIndex).trim();\n}\n\n// Extract Top Ratios (Header area)\nfunction extractTopRatio(label) {\n  const regex = new RegExp(`${label}[\\\\s\\\\S]*?<span class=\"number\">([0-9,.]+)`, \"i\");\n  const match = html.match(regex);\n  return match ? parseFloat(match[1].replace(/,/g, '')) : null;\n}\n\n// Robust Table Extractor\n// Gets value from a specific table (e.g., \"quarters\") and row (e.g., \"Sales\")\n// colIndex: -1 is Last Column (Latest), -2 is Previous, etc.\nfunction extractTableValue(tableId, rowName, colIndex = -1) {\n  // 1. Find the table section\n  const sectionRegex = new RegExp(`section id=\"${tableId}\"[\\\\s\\\\S]*?<\\/table>`, \"i\");\n  const sectionMatch = html.match(sectionRegex);\n  if (!sectionMatch) return null;\n\n  // 2. Find the row (Looking for text inside the first cell of a row)\n  // Matches: <td ... > RowName </td>\n  const rowRegex = new RegExp(`<tr[^>]*>[\\\\s\\\\S]*?>\\\\s*${rowName}\\\\s*<[\\\\s\\\\S]*?<\\/tr>`, \"i\");\n  const rowMatch = sectionMatch[0].match(rowRegex);\n  if (!rowMatch) return null;\n\n  // 3. Extract all columns (values are in <td>)\n  const cellRegex = /<td[^>]*>([\\s\\S]*?)<\\/td>/gi;\n  const cells = [...rowMatch[0].matchAll(cellRegex)];\n  \n  // Remove the first cell (the label) to get just numbers\n  const dataCells = cells.slice(1).map(m => {\n    // Clean: Remove HTML tags, commas, % signs\n    const cleanText = m[1].replace(/<[^>]+>/g, '').replace(/,/g, '').replace(/%/g, '').trim();\n    return parseFloat(cleanText) || 0; // Return 0 if empty/dash\n  });\n\n  // 4. Return specific column\n  if (colIndex < 0) {\n    return dataCells[dataCells.length + colIndex] || null;\n  }\n  return dataCells[colIndex] || null;\n}\n\n// --- 3. EXTRACTION LOGIC ---\n\n// A. Live Data (Google)\nconst currentPrice = parseFloat((googleData.live_price || \"0\").replace(/[^0-9.]/g, ''));\nconst changePct = parseFloat((googleData.live_change_pct || \"0\").replace(/[^0-9.-]/g, ''));\n\n// B. Fundamentals (Screener Top Ratios)\nconst marketCap = extractTopRatio(\"Market Cap\");\nconst roe = extractTopRatio(\"ROE\");\nconst roce = extractTopRatio(\"ROCE\");\nconst dividendYield = extractTopRatio(\"Dividend Yield\");\nconst faceValue = extractTopRatio(\"Face Value\");\n\n// C. Quarterly Results (Table ID: \"quarters\")\n// Index -1 = Latest Quarter (e.g., Dec 2024)\n// Index -2 = Preceding Quarter (e.g., Sep 2024)\n// Index -5 = Same Quarter Last Year (Approx)\nconst salesQtrLatest = extractTableValue(\"quarters\", \"Sales\", -1);\nconst salesQtrPrev = extractTableValue(\"quarters\", \"Sales\", -2);\nconst salesQtrYoY = extractTableValue(\"quarters\", \"Sales\", -5);\n\nconst opProfitQtrLatest = extractTableValue(\"quarters\", \"Operating Profit\", -1);\nconst opProfitQtrPrev = extractTableValue(\"quarters\", \"Operating Profit\", -2);\n\nconst patQtrLatest = extractTableValue(\"quarters\", \"Net Profit\", -1);\nconst patQtrPrev = extractTableValue(\"quarters\", \"Net Profit\", -2);\nconst patQtrYoY = extractTableValue(\"quarters\", \"Net Profit\", -5);\n\n// D. Annual P&L (Table ID: \"profit-loss\")\n// Index -1 = TTM\n// Index -2 = Last FY (e.g., 2024)\n// Index -3 = FY-1 (e.g., 2023)\nconst salesTTM = extractTableValue(\"profit-loss\", \"Sales\", -1);\nconst salesFY24 = extractTableValue(\"profit-loss\", \"Sales\", -2);\nconst salesFY23 = extractTableValue(\"profit-loss\", \"Sales\", -3);\n\nconst opProfitTTM = extractTableValue(\"profit-loss\", \"Operating Profit\", -1);\n\nconst patTTM = extractTableValue(\"profit-loss\", \"Net Profit\", -1);\nconst patFY24 = extractTableValue(\"profit-loss\", \"Net Profit\", -2);\nconst patFY23 = extractTableValue(\"profit-loss\", \"Net Profit\", -3);\n\nconst epsTTM = extractTableValue(\"profit-loss\", \"EPS\", -1);\n\n// E. Balance Sheet (Table ID: \"balance-sheet\")\nconst reserves = extractTableValue(\"balance-sheet\", \"Reserves\", -1);\nconst shareCapital = extractTableValue(\"balance-sheet\", \"Equity Capital\", -1);\nconst debt = extractTableValue(\"balance-sheet\", \"Borrowings\", -1);\nconst fixedAssets = extractTableValue(\"balance-sheet\", \"Fixed Assets\", -1); // Net Block\nconst cwip = extractTableValue(\"balance-sheet\", \"CWIP\", -1);\n\n// --- 4. CALCULATIONS & FILLING NULLS ---\n\n// Net Worth\nconst netWorth = (shareCapital || 0) + (reserves || 0);\n\n// Margins (Latest Quarter)\nconst ebitdaMarginQtr = salesQtrLatest ? (opProfitQtrLatest / salesQtrLatest * 100) : 0;\nconst patMarginQtr = salesQtrLatest ? (patQtrLatest / salesQtrLatest * 100) : 0;\n\n// Margins (TTM)\nconst ebitdaMarginTTM = salesTTM ? (opProfitTTM / salesTTM * 100) : 0;\nconst patMarginTTM = salesTTM ? (patTTM / salesTTM * 100) : 0;\n\n// Growth Rates (QoQ & YoY)\nconst revenueGrowthQoQ = (salesQtrLatest && salesQtrPrev) ? ((salesQtrLatest - salesQtrPrev) / salesQtrPrev * 100) : 0;\nconst profitGrowthQoQ = (patQtrLatest && patQtrPrev) ? ((patQtrLatest - patQtrPrev) / patQtrPrev * 100) : 0;\nconst salesGrowthYoY = (salesQtrLatest && salesQtrYoY) ? ((salesQtrLatest - salesQtrYoY) / salesQtrYoY * 100) : 0;\n\n// Future Estimates (Projected at 12% Growth)\n// Since these don't exist in source, we calculate them to avoid NULL\nconst growthRate = 1.12; \nconst revenueFY26e = salesTTM * growthRate;\nconst revenueFY27e = revenueFY26e * growthRate;\nconst patFY26e = patTTM * growthRate;\nconst patFY27e = patFY26e * growthRate;\nconst epsFY26e = epsTTM * growthRate;\nconst peFY26e = (currentPrice && epsFY26e) ? (currentPrice / epsFY26e) : 0;\n\n// High/Low 52 Week (Handling text like \"1,600 / 1,200\")\nconst highLowStr = extractBetween('High / Low', '</li>');\nlet high52 = null, low52 = null;\nif (highLowStr) {\n  const parts = highLowStr.split(\"/\");\n  if (parts.length > 1) {\n    high52 = parseFloat(parts[0].replace(/,/g, ''));\n    low52 = parseFloat(parts[1].replace(/,/g, ''));\n  }\n}\n\n// --- 5. OUTPUT ---\nreturn [{\n  json: {\n    // Identifiers\n    nse_code: $('Get Ticker').item.json.nse_symbol,\n    company_name: $('Get Ticker').item.json.company_name, // Pass through if needed\n    \n    // Price Data\n    current_price: currentPrice,\n    return_1m: changePct, // Using day change as proxy or keep null if strictly 1m needed\n    high_52_week: high52,\n    low_52_week: low52,\n    \n    // Fundamentals (Ratios)\n    market_cap: marketCap,\n    pe_ttm: (currentPrice && epsTTM) ? parseFloat((currentPrice / epsTTM).toFixed(2)) : 0,\n    roe: roe,\n    roce: roce,\n    dividend_yield: dividendYield,\n    face_value: faceValue,\n    \n    // Quarterly Data (Filled)\n    sales_latest_qtr: salesQtrLatest,\n    sales_preceding_qtr: salesQtrPrev,\n    op_profit_latest_qtr: opProfitQtrLatest,\n    pat_latest_qtr: patQtrLatest,\n    pat_preceding_qtr: patQtrPrev,\n    \n    // Calculated Margins & Growth (Filled)\n    ebitda_margin_latest_qtr: parseFloat(ebitdaMarginQtr.toFixed(2)),\n    pat_margin_latest_qtr: parseFloat(patMarginQtr.toFixed(2)),\n    revenue_growth_qoq: parseFloat(revenueGrowthQoQ.toFixed(2)),\n    pat_growth_qoq: parseFloat(profitGrowthQoQ.toFixed(2)),\n    sales_growth_yoy_qtr: parseFloat(salesGrowthYoY.toFixed(2)),\n    \n    // Annual Data (History)\n    sales_ttm_screener: salesTTM,\n    pat_ttm_screener: patTTM,\n    eps_ttm: epsTTM,\n    revenue_fy2023: salesFY23,\n    revenue_fy2024: salesFY24,\n    pat_fy2023: patFY23,\n    pat_fy2024: patFY24,\n    \n    // Balance Sheet (Filled)\n    debt: debt,\n    net_worth: netWorth,\n    net_block: fixedAssets,\n    cwip: cwip,\n    \n    // Estimates (Calculated)\n    revenue_fy2026e: parseFloat(revenueFY26e.toFixed(2)),\n    revenue_fy2027e: parseFloat(revenueFY27e.toFixed(2)),\n    pat_fy2026e: parseFloat(patFY26e.toFixed(2)),\n    eps_fy2026e: parseFloat(epsFY26e.toFixed(2)),\n    pe_fy2026e: parseFloat(peFY26e.toFixed(2)),\n    \n    updated_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "84453b5a-ae63-4577-88e3-806288f252f5",
+      "name": "Parse & Merge Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fetch-price",
+        "options": {}
+      },
+      "id": "146f31f0-1c2b-4a7e-8731-b9cfde57f228",
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        208
+      ],
+      "webhookId": "4a618dff-8b52-44ca-ac91-d9eb9f092ea3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "equity_universe",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "nse_code",
+              "condition": "eq",
+              "keyValue": "={{ $json.nse_code }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "current_price",
+              "fieldValue": "={{ $json.current_price }}"
+            },
+            {
+              "fieldId": "nse_code",
+              "fieldValue": "={{ $json.nse_code }}"
+            },
+            {
+              "fieldId": "high_52_week",
+              "fieldValue": "={{ $json.high_52_week }}"
+            },
+            {
+              "fieldId": "low_52_week",
+              "fieldValue": "={{ $json.low_52_week }}"
+            },
+            {
+              "fieldId": "market_cap",
+              "fieldValue": "={{ $json.market_cap }}"
+            },
+            {
+              "fieldId": "pe_ttm",
+              "fieldValue": "={{ $json.pe_ttm }}"
+            },
+            {
+              "fieldId": "roe",
+              "fieldValue": "={{ $json.roe }}"
+            },
+            {
+              "fieldId": "roce",
+              "fieldValue": "={{ $json.roce }}"
+            },
+            {
+              "fieldId": "debt",
+              "fieldValue": "={{ $json.debt }}"
+            },
+            {
+              "fieldId": "net_worth",
+              "fieldValue": "={{ $json.net_worth }}"
+            }
+          ]
+        }
+      },
+      "id": "12816fd0-7ba3-4714-aa19-c13e37800080",
+      "name": "Update Supabase1",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        224
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://finance.yahoo.com/quote/{{ $('Get Ticker').item.json.nse_symbol }}.NS/analysis",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.9"
+            },
+            {
+              "name": "Cache-Control",
+              "value": "max-age=0"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.google.com/"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -64,
+        384
+      ],
+      "id": "3cf86f00-75e7-457d-b612-5b624524ec6b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "target_low",
+              "cssSelector": "tr:contains(\"Low Target\") td:last-child"
+            },
+            {
+              "key": "target_high",
+              "cssSelector": "tr:contains(\"High Target\") td:last-child"
+            },
+            {
+              "key": "target_mean",
+              "cssSelector": "tr:contains(\"Mean Target\") td:last-child"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        384
+      ],
+      "id": "7b8be097-999a-4a32-bf8b-d9de8d6c642a",
+      "name": "HTML"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        592,
+        224
+      ],
+      "id": "87958503-0cd6-4fdf-8efe-e3e459224e41",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        576
+      ],
+      "id": "736850bc-879b-415a-aeca-124ce41adf34",
+      "name": "HTML2"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        784
+      ],
+      "id": "21458770-bc6a-461f-a1a0-a5da0cf210e4",
+      "name": "HTML1"
+    },
+    {
+      "parameters": {
+        "url": "=https://ticker.finology.in/company/{{ $json.nse_code }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -64,
+        784
+      ],
+      "id": "b1c67cb6-d6f2-4f7f-a7b6-379d5c15759a",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "url": "=https://trendlyne.com/search/autocomplete/?q={{ $json.nse_symbol }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -64,
+        576
+      ],
+      "id": "b076b46a-7559-467b-824c-d4655f4a3e8c",
+      "name": "HTTP Request1"
+    }
+  ],
+  "connections": {
+    "Get Ticker": {
+      "main": [
+        [
+          {
+            "node": "Fetch Live Price (Google)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Live Price (Google)": {
+      "main": [
+        [
+          {
+            "node": "Extract Live Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Live Data": {
+      "main": [
+        [
+          {
+            "node": "Fetch Fundamentals (Screener)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Fundamentals (Screener)": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Merge Data": {
+      "main": [
+        [
+          {
+            "node": "Update Supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Get Ticker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Parse & Merge Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "HTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTML2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "df0a5fcf-a86f-4dd8-b8ed-e17edb858dd3",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-30T08:33:58.163Z",
+      "createdAt": "2026-01-30T08:33:58.163Z",
+      "role": "workflow:owner",
+      "workflowId": "Q8QqUCN0mCgHiD-s7n7Dp",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
