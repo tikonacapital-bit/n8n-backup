@@ -1,0 +1,388 @@
+{
+  "updatedAt": "2026-01-30T09:14:09.413Z",
+  "createdAt": "2025-12-22T11:22:09.850Z",
+  "id": "BXn9IAsArIMdVJVr",
+  "name": "AI video generation veo",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -128
+      ],
+      "id": "9eca20a5-4b58-4127-ba9f-287b7902985e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "model": "perplexity/sonar-reasoning-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -648,
+        320
+      ],
+      "id": "b6ff1ae6-459f-4624-84f2-0a02712b1b22",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "O9TUEIPHEYHKBEVk",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.idea }} ",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a Video Prompt Generator. Give only video prompt, no other text/word. and ensure no spelling mistake in the video give in the prompt that no spelling mistake in video"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        96
+      ],
+      "id": "f49efdb5-a33f-4c9c-82c5-9d8020766484",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1_GXwW5KEuToEl2aeUstFf9ktUoDWcI5Jh9eC3yfFMz4",
+          "mode": "list",
+          "cachedResultName": "Ai video",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_GXwW5KEuToEl2aeUstFf9ktUoDWcI5Jh9eC3yfFMz4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_GXwW5KEuToEl2aeUstFf9ktUoDWcI5Jh9eC3yfFMz4/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "generate video"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -496,
+        -128
+      ],
+      "id": "ab3957de-2107-4d6d-a7ae-0170af06cee1",
+      "name": "Get row(s) in sheet",
+      "executeOnce": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1qbVUsp0HQ5Uwe6J_Ouc4C_SEtdAetlyo",
+          "mode": "list",
+          "cachedResultName": " n8n AI video generation",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1qbVUsp0HQ5Uwe6J_Ouc4C_SEtdAetlyo"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -144,
+        200
+      ],
+      "id": "4be39d1a-7d55-4d17-9a4f-f03bcdd12598",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "modelId": {
+          "__rl": true,
+          "value": "models/veo-3.1-fast-generate-preview",
+          "mode": "list",
+          "cachedResultName": "models/veo-3.1-fast-generate-preview"
+        },
+        "prompt": "={{ $json.output }}",
+        "options": {
+          "durationSeconds": 8,
+          "aspectRatio": "16:9",
+          "personGeneration": "allow_all"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        528
+      ],
+      "id": "f3f0cde1-52c8-489a-868e-e627fd88cc91",
+      "name": "Generate a video",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "mNW7vrRVtmqdCRZR",
+          "name": "Google Gemini(PaLM) Tikona billing account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "modelId": {
+          "__rl": true,
+          "value": "sora-2",
+          "mode": "list",
+          "cachedResultName": "SORA-2"
+        },
+        "prompt": "= {{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        200
+      ],
+      "id": "f794df10-adfc-45a6-ad70-a3839d480fdc",
+      "name": "Generate a video1",
+      "credentials": {
+        "openAiApi": {
+          "id": "TMMS3pMqjiGuuWVj",
+          "name": "RAG 23-12-2025"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1_GXwW5KEuToEl2aeUstFf9ktUoDWcI5Jh9eC3yfFMz4",
+          "mode": "list",
+          "cachedResultName": "Ai video",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_GXwW5KEuToEl2aeUstFf9ktUoDWcI5Jh9eC3yfFMz4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_GXwW5KEuToEl2aeUstFf9ktUoDWcI5Jh9eC3yfFMz4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "final video ( link )": "={{ $('Get row(s) in sheet').item.json.idea }}",
+            "status": "video generated",
+            "idea": "={{ $('Get row(s) in sheet').item.json.idea }}",
+            "s no": "={{ $('Get row(s) in sheet').item.json[\"s no\"] }}"
+          },
+          "matchingColumns": [
+            "s no"
+          ],
+          "schema": [
+            {
+              "id": "s no",
+              "displayName": "s no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "idea",
+              "displayName": "idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "final video ( link )",
+              "displayName": "final video ( link )",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -272,
+        -128
+      ],
+      "id": "ed5213fd-db51-4a2b-bae7-f88e5f30025d",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Generate a video1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        []
+      ]
+    },
+    "Generate a video": {
+      "main": [
+        []
+      ]
+    },
+    "Generate a video1": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "694a6b16-1666-402e-88e6-05c3bbf2935f",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-22T11:22:09.853Z",
+      "createdAt": "2025-12-22T11:22:09.853Z",
+      "role": "workflow:owner",
+      "workflowId": "BXn9IAsArIMdVJVr",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
