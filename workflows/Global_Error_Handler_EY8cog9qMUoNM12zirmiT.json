@@ -1,0 +1,422 @@
+{
+  "updatedAt": "2026-02-11T10:45:12.392Z",
+  "createdAt": "2026-02-11T09:00:37.106Z",
+  "id": "EY8cog9qMUoNM12zirmiT",
+  "name": "Global Error Handler",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        128
+      ],
+      "id": "284e134b-a655-41a6-b59c-0b8b1ba3dc56",
+      "name": "Catch Workflow Failure"
+    },
+    {
+      "parameters": {
+        "sendTo": "tikonacapital@gmail.com",
+        "subject": "🚨 n8n WORKFLOW FAILED 🚨",
+        "message": "=<b>Workflow Name:</b> {{$json.workflow.name}}<br>\n<b>Failed Node:</b> {{$json.execution.lastNodeExecuted}}<br><br>\n\n<b>Error Details:</b><br>\n<span style=\"color: #d93025;\">{{$json.execution.error.message}}</span><br><br>\n\n<a href=\"{{$json.execution.url}}\" style=\"background-color: #1a73e8; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; display: inline-block;\">Debug Here</a>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -192,
+        -16
+      ],
+      "id": "91a24ed3-5bab-4ccf-bcf9-ac642f8ac45e",
+      "name": "Email Alert",
+      "webhookId": "94357691-d20b-4713-9b66-1df57456375d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mZmjo128EUktXn99",
+          "name": "Tikona Ops Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1XXXfhkfG7ltFltrwRVuxm6gVjtKETWFM5iOQoCRkFus",
+          "mode": "list",
+          "cachedResultName": "Automation Dashboard",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XXXfhkfG7ltFltrwRVuxm6gVjtKETWFM5iOQoCRkFus/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 68712824,
+          "mode": "list",
+          "cachedResultName": "n8n Operations Dashboard",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XXXfhkfG7ltFltrwRVuxm6gVjtKETWFM5iOQoCRkFus/edit#gid=68712824"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toFormat('dd/MM/yy HH:mm:ss') }}",
+            "Workflow Name": "={{ $('Catch Workflow Failure').item.json.workflow.name }}",
+            "Error Details": "={{ $('Catch Workflow Failure').item.json.execution.error.message }}",
+            "Execution Link": "={{$('Catch Workflow Failure').item.json.execution.url}}",
+            "Failed Node": "={{ $('Catch Workflow Failure').item.json.execution.lastNodeExecuted }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Workflow Name",
+              "displayName": "Workflow Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error Details",
+              "displayName": "Error Details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Failed Node",
+              "displayName": "Failed Node",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Execution Link",
+              "displayName": "Execution Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        176,
+        208
+      ],
+      "id": "7c8db5ed-ccda-4ce8-80cd-615fad459dbc",
+      "name": "Log to Automation Dashboard",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-1002262360602",
+        "text": "={{ '🚨 *n8n WORKFLOW FAILED* 🚨\\n\\n*Workflow Name:* ' + $json.workflow.name + '\\n*Failed Node:* ' + $json.execution.lastNodeExecuted + '\\n\\n*Error Message:* ' + $json.execution.error.message + '\\n\\n[🔍 Debug Here](' + $json.execution.url + ')' }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        64
+      ],
+      "id": "d939a542-7682-480a-a6cf-1f4d92c252a5",
+      "name": "Telegram Alert",
+      "webhookId": "0d1072e2-82e6-4722-a9f1-38ee733984eb",
+      "credentials": {
+        "telegramApi": {
+          "id": "I0rf76FsxPDgaIaQ",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Catch Workflow Failure": {
+      "main": [
+        [
+          {
+            "node": "Email Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log to Automation Dashboard",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Alert": {
+      "main": [
+        []
+      ]
+    },
+    "Telegram Alert": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "48c4783f-b6ef-4ab1-a096-35a38fde79cf",
+  "activeVersionId": "48c4783f-b6ef-4ab1-a096-35a38fde79cf",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-11T09:00:37.115Z",
+      "createdAt": "2026-02-11T09:00:37.115Z",
+      "role": "workflow:owner",
+      "workflowId": "EY8cog9qMUoNM12zirmiT",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-02-13T13:15:53.000Z",
+    "createdAt": "2026-02-11T10:45:12.394Z",
+    "versionId": "48c4783f-b6ef-4ab1-a096-35a38fde79cf",
+    "workflowId": "EY8cog9qMUoNM12zirmiT",
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          -384,
+          128
+        ],
+        "id": "284e134b-a655-41a6-b59c-0b8b1ba3dc56",
+        "name": "Catch Workflow Failure"
+      },
+      {
+        "parameters": {
+          "sendTo": "tikonacapital@gmail.com",
+          "subject": "🚨 n8n WORKFLOW FAILED 🚨",
+          "message": "=<b>Workflow Name:</b> {{$json.workflow.name}}<br>\n<b>Failed Node:</b> {{$json.execution.lastNodeExecuted}}<br><br>\n\n<b>Error Details:</b><br>\n<span style=\"color: #d93025;\">{{$json.execution.error.message}}</span><br><br>\n\n<a href=\"{{$json.execution.url}}\" style=\"background-color: #1a73e8; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; display: inline-block;\">Debug Here</a>",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          -192,
+          -16
+        ],
+        "id": "91a24ed3-5bab-4ccf-bcf9-ac642f8ac45e",
+        "name": "Email Alert",
+        "webhookId": "94357691-d20b-4713-9b66-1df57456375d",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "mZmjo128EUktXn99",
+            "name": "Tikona Ops Gmail"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1XXXfhkfG7ltFltrwRVuxm6gVjtKETWFM5iOQoCRkFus",
+            "mode": "list",
+            "cachedResultName": "Automation Dashboard",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XXXfhkfG7ltFltrwRVuxm6gVjtKETWFM5iOQoCRkFus/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 68712824,
+            "mode": "list",
+            "cachedResultName": "n8n Operations Dashboard",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XXXfhkfG7ltFltrwRVuxm6gVjtKETWFM5iOQoCRkFus/edit#gid=68712824"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Timestamp": "={{ $now.toFormat('dd/MM/yy HH:mm:ss') }}",
+              "Workflow Name": "={{ $('Catch Workflow Failure').item.json.workflow.name }}",
+              "Error Details": "={{ $('Catch Workflow Failure').item.json.execution.error.message }}",
+              "Execution Link": "={{$('Catch Workflow Failure').item.json.execution.url}}",
+              "Failed Node": "={{ $('Catch Workflow Failure').item.json.execution.lastNodeExecuted }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Timestamp",
+                "displayName": "Timestamp",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Workflow Name",
+                "displayName": "Workflow Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Error Details",
+                "displayName": "Error Details",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Failed Node",
+                "displayName": "Failed Node",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Execution Link",
+                "displayName": "Execution Link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          176,
+          208
+        ],
+        "id": "7c8db5ed-ccda-4ce8-80cd-615fad459dbc",
+        "name": "Log to Automation Dashboard",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "-1002262360602",
+          "text": "={{ '🚨 *n8n WORKFLOW FAILED* 🚨\\n\\n*Workflow Name:* ' + $json.workflow.name + '\\n*Failed Node:* ' + $json.execution.lastNodeExecuted + '\\n\\n*Error Message:* ' + $json.execution.error.message + '\\n\\n[🔍 Debug Here](' + $json.execution.url + ')' }}",
+          "additionalFields": {
+            "appendAttribution": false,
+            "parse_mode": "Markdown"
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          32,
+          64
+        ],
+        "id": "d939a542-7682-480a-a6cf-1f4d92c252a5",
+        "name": "Telegram Alert",
+        "webhookId": "0d1072e2-82e6-4722-a9f1-38ee733984eb",
+        "credentials": {
+          "telegramApi": {
+            "id": "I0rf76FsxPDgaIaQ",
+            "name": "Telegram account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Catch Workflow Failure": {
+        "main": [
+          [
+            {
+              "node": "Email Alert",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Log to Automation Dashboard",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Telegram Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Email Alert": {
+        "main": [
+          []
+        ]
+      },
+      "Telegram Alert": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version 48c4783f",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
