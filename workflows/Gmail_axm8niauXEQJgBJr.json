@@ -1,0 +1,1177 @@
+{
+  "updatedAt": "2026-08-20T05:44:41.727Z",
+  "createdAt": "2025-07-05T10:20:53.548Z",
+  "id": "axm8niauXEQJgBJr",
+  "name": "Gmail",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        624
+      ],
+      "id": "ce19b6ae-406d-45b1-a064-c72232ca7ea6",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fdxjEgUJK0aKR2Qh",
+          "name": "Sumit Poddar Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c30b38f8-4d18-4b95-ad3c-2c76ae923a97",
+              "leftValue": "={{ $json.hasPDF }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2208,
+        624
+      ],
+      "id": "43052b96-a42f-4c9a-9406-0b4039f2a3f8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "={{ $json.binaryKey }}",
+        "name": "={{ $json.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2",
+          "mode": "list",
+          "cachedResultName": "n8n Test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3424,
+        544
+      ],
+      "id": "347ebfd8-1d1b-44e3-9143-39cc894b8f98",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://gotenberg:3000/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3680,
+        736
+      ],
+      "id": "34f592c4-4553-4ae0-8ca1-79724a34d09f",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9765b529-1c58-4929-96e0-163e4c696ec5",
+              "name": "html",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2880,
+        736
+      ],
+      "id": "c977961d-f55c-483c-864d-c59429ebb661",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Code').item.json.subject }}.pdf",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2",
+          "mode": "list",
+          "cachedResultName": "n8n Test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3936,
+        736
+      ],
+      "id": "ebc0c2e0-f7de-419f-8521-9ef1cde59770",
+      "name": "Upload file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const outputItems = [];\n\nfor (const item of items) {\n  const binaryData = item.binary || {};\n  let pdfFound = false;\n\n  // 1. Check for physical email attachments\n  for (const key in binaryData) {\n    const bin = binaryData[key];\n    if (bin.mimeType === 'application/pdf' || (bin.fileName && bin.fileName.toLowerCase().endsWith('.pdf'))) {\n      pdfFound = true;\n      outputItems.push({\n        json: { \n          hasPDF: true, \n          isLink: false, \n          fileName: bin.fileName || `${key}.pdf`, \n          binaryKey: key \n        },\n        binary: { [key]: bin }\n      });\n    }\n  }\n\n  // 2. If no physical attachment, scan email body/HTML for PDF or download links\n  if (!pdfFound) {\n    let rawBody = item.json.textHtml || item.json.html || item.json.textPlain || item.json.snippet || '';\n    if (typeof rawBody === 'object') {\n      rawBody = JSON.stringify(rawBody);\n    }\n\n    let rawSubject = item.json.Subject || item.json.subject || item.json.snippet || 'No Subject';\n    let safeSubject = String(rawSubject).replace(/[\\/\\\\]/g, ' - ');\n\n    let foundUrl = null;\n\n    // Pattern A: Direct URL containing .pdf (including links with query parameters like .pdf?token=123)\n    const pdfUrlRegex = /(https?:\\/\\/[^\\s\"'<>]+\\.pdf(\\?[^\\s\"'<>]*)?)/i;\n    const pdfMatch = rawBody.match(pdfUrlRegex);\n\n    if (pdfMatch && pdfMatch[1]) {\n      foundUrl = pdfMatch[1];\n    } else {\n      // Pattern B: Look inside HTML <a href=\"...\"> tags\n      const hrefRegex = /<a\\s+(?:[^>]*?\\s+)?href=[\"'](https?:\\/\\/[^\"']+)[\"'][^>]*>(.*?)<\\/a>/gi;\n      let match;\n      while ((match = hrefRegex.exec(rawBody)) !== null) {\n        const url = match[1];\n        const anchorText = match[2].toLowerCase();\n        const urlLower = url.toLowerCase();\n\n        if (\n          urlLower.includes('.pdf') ||\n          urlLower.includes('download') ||\n          anchorText.includes('click here') ||\n          anchorText.includes('pdf') ||\n          anchorText.includes('presentation') ||\n          anchorText.includes('result') ||\n          anchorText.includes('report')\n        ) {\n          foundUrl = url;\n          break;\n        }\n      }\n    }\n\n    if (foundUrl) {\n      // UNWRAP TRACKING LINKS (e.g., awstrack.me, sendgrid, mandrill)\n      const nestedUrlMatch = foundUrl.match(/(https?:%2F%2F[^\\s\"'<>]+)/i);\n      if (nestedUrlMatch && nestedUrlMatch[1]) {\n        try {\n          foundUrl = decodeURIComponent(nestedUrlMatch[1]);\n        } catch (e) {}\n      }\n\n      outputItems.push({\n        json: {\n          hasPDF: true, \n          isLink: true, \n          pdfUrl: foundUrl,\n          subject: safeSubject\n        }\n      });\n    } else {\n      // 3. No attachment and no link found -> Send to AI Summarization path\n      outputItems.push({\n        json: {\n          hasPDF: false, \n          isLink: false,\n          emailBody: rawBody,\n          subject: safeSubject,\n        }\n      });\n    }\n  }\n}\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1888,
+        624
+      ],
+      "id": "6ae2c4ec-0dca-48ac-bffb-abb1dd39e2dc",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n\n<html>\n<head>\n  <meta charset=\"UTF-8\" />\n  <title>My HTML document</title>\n</head>\n<body>\n  <div class=\"container\">\n {{ $json.html }} \n  </div>\n</body>\n</html>\n\n\n\n"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        3104,
+        736
+      ],
+      "id": "23ba0630-f47e-475e-92a0-1cc77d4d9a3a",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "html",
+        "options": {
+          "dataIsBase64": false,
+          "encoding": "utf8",
+          "fileName": "index.html",
+          "mimeType": "text/html"
+        }
+      },
+      "id": "1ced15a8-728b-4901-ac13-108bf3255be2",
+      "name": "Convert to HTML",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1,
+      "position": [
+        3408,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dd32dd2a-5346-4277-8930-b77b4b4ea7a5",
+              "leftValue": "={{ $json.labelIds }}",
+              "rightValue": "Label_18",
+              "operator": {
+                "type": "array",
+                "operation": "contains",
+                "rightType": "any"
+              }
+            },
+            {
+              "id": "669ef9d8-9f7b-4d5b-ba45-2f0a79fbd37f",
+              "leftValue": "={{ $json.labelIds }}",
+              "rightValue": "Label_27",
+              "operator": {
+                "type": "array",
+                "operation": "contains",
+                "rightType": "any"
+              }
+            },
+            {
+              "id": "9cc96690-8db2-4a5d-accf-af7acb5caec0",
+              "leftValue": "={{ $json.labelIds }}",
+              "rightValue": "Label_26",
+              "operator": {
+                "type": "array",
+                "operation": "contains",
+                "rightType": "any"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1664,
+        624
+      ],
+      "id": "8bafc1ee-2d83-4b1b-8c36-401077bb6103",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2c27bcda-7e28-4ba0-b9ab-3199f9a70402",
+              "leftValue": "={{ $json.isLink }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2512,
+        528
+      ],
+      "id": "2e4f9344-cf7b-4e12-bebe-c5eaa251ecf0",
+      "name": "Is it a link?"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.pdfUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          },
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2784,
+        368
+      ],
+      "id": "146782b0-c4e9-48a0-bb51-a1420a883943",
+      "name": "Download",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "=data",
+        "name": "={{ $json.subject }}.pdf",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2",
+          "mode": "list",
+          "cachedResultName": "n8n Test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2992,
+        368
+      ],
+      "id": "86855f73-4450-4237-9d07-7cef0af2611d",
+      "name": "Upload file2",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an expert financial analyst. Convert the provided raw earnings concall email into a professional, structured HTML report.\n\nOutput ONLY valid HTML code. Do NOT wrap the output in markdown blocks (e.g., no ```html).\n\nUse inline CSS. Apply a clean, sans-serif font (Arial, Helvetica).\n\nCreate a professional header with a dark blue background and white text for the company name and report title.\n\nExtract all financial metrics (Revenue, EBITDA, PAT, Margins) and format them into a clean HTML <table> with borders, padding, and alternating row background colors.\n\nExtract the Management Commentary and Strategic Developments into concise, well-spaced bullet points.\n\nRAW EMAIL DATA:\n{{$json.emailBody}}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2512,
+        736
+      ],
+      "id": "3c8740a5-04a0-4547-a06f-94726627b21d",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nmcibSv4C4So3mQw",
+          "name": "Google Gemini(PaLM) Api account 0"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Is it a link?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Convert to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is it a link?": {
+      "main": [
+        [
+          {
+            "node": "Download",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download": {
+      "main": [
+        [
+          {
+            "node": "Upload file2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Gmail Trigger": {
+      "Gmail Trigger": {
+        "lastTimeChecked": 1787751339,
+        "possibleDuplicates": [
+          "1a03e4bf206ef49a",
+          "1a03e489be5055e7"
+        ]
+      }
+    },
+    "node:Gmail Trigger1": {
+      "Gmail Trigger1": {
+        "lastTimeChecked": 1787139944,
+        "possibleDuplicates": [
+          "1a019d7711dcdc0d",
+          "1a019bc44c6c26a8"
+        ]
+      }
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b3c40eeb-f2d7-453e-9c27-94d2c2943f5c",
+  "activeVersionId": "b3c40eeb-f2d7-453e-9c27-94d2c2943f5c",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-07-05T10:20:53.557Z",
+      "createdAt": "2025-07-05T10:20:53.557Z",
+      "role": "workflow:owner",
+      "workflowId": "axm8niauXEQJgBJr",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-08-20T05:44:44.000Z",
+    "createdAt": "2026-08-20T05:44:41.729Z",
+    "versionId": "b3c40eeb-f2d7-453e-9c27-94d2c2943f5c",
+    "workflowId": "axm8niauXEQJgBJr",
+    "nodes": [
+      {
+        "parameters": {
+          "pollTimes": {
+            "item": [
+              {
+                "mode": "everyMinute"
+              }
+            ]
+          },
+          "simple": false,
+          "filters": {},
+          "options": {
+            "downloadAttachments": true
+          }
+        },
+        "type": "n8n-nodes-base.gmailTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          1440,
+          624
+        ],
+        "id": "ce19b6ae-406d-45b1-a064-c72232ca7ea6",
+        "name": "Gmail Trigger",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "fdxjEgUJK0aKR2Qh",
+            "name": "Sumit Poddar Gmail"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "c30b38f8-4d18-4b95-ad3c-2c76ae923a97",
+                "leftValue": "={{ $json.hasPDF }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          2208,
+          624
+        ],
+        "id": "43052b96-a42f-4c9a-9406-0b4039f2a3f8",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "inputDataFieldName": "={{ $json.binaryKey }}",
+          "name": "={{ $json.fileName }}",
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2",
+            "mode": "list",
+            "cachedResultName": "n8n Test",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          3424,
+          544
+        ],
+        "id": "347ebfd8-1d1b-44e3-9143-39cc894b8f98",
+        "name": "Upload file",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://gotenberg:3000/forms/chromium/convert/html",
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "parameterType": "formBinaryData",
+                "name": "files",
+                "inputDataFieldName": "data"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          3680,
+          736
+        ],
+        "id": "34f592c4-4553-4ae0-8ca1-79724a34d09f",
+        "name": "HTTP Request",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 1000
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "9765b529-1c58-4929-96e0-163e4c696ec5",
+                "name": "html",
+                "value": "={{ $json.text }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2880,
+          736
+        ],
+        "id": "c977961d-f55c-483c-864d-c59429ebb661",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "name": "={{ $('Code').item.json.subject }}.pdf",
+          "driveId": {
+            "__rl": true,
+            "value": "My Drive",
+            "mode": "list",
+            "cachedResultName": "My Drive",
+            "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2",
+            "mode": "list",
+            "cachedResultName": "n8n Test",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          3936,
+          736
+        ],
+        "id": "ebc0c2e0-f7de-419f-8521-9ef1cde59770",
+        "name": "Upload file1",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const outputItems = [];\n\nfor (const item of items) {\n  const binaryData = item.binary || {};\n  let pdfFound = false;\n\n  // 1. Check for physical email attachments\n  for (const key in binaryData) {\n    const bin = binaryData[key];\n    if (bin.mimeType === 'application/pdf' || (bin.fileName && bin.fileName.toLowerCase().endsWith('.pdf'))) {\n      pdfFound = true;\n      outputItems.push({\n        json: { \n          hasPDF: true, \n          isLink: false, \n          fileName: bin.fileName || `${key}.pdf`, \n          binaryKey: key \n        },\n        binary: { [key]: bin }\n      });\n    }\n  }\n\n  // 2. If no physical attachment, scan email body/HTML for PDF or download links\n  if (!pdfFound) {\n    let rawBody = item.json.textHtml || item.json.html || item.json.textPlain || item.json.snippet || '';\n    if (typeof rawBody === 'object') {\n      rawBody = JSON.stringify(rawBody);\n    }\n\n    let rawSubject = item.json.Subject || item.json.subject || item.json.snippet || 'No Subject';\n    let safeSubject = String(rawSubject).replace(/[\\/\\\\]/g, ' - ');\n\n    let foundUrl = null;\n\n    // Pattern A: Direct URL containing .pdf (including links with query parameters like .pdf?token=123)\n    const pdfUrlRegex = /(https?:\\/\\/[^\\s\"'<>]+\\.pdf(\\?[^\\s\"'<>]*)?)/i;\n    const pdfMatch = rawBody.match(pdfUrlRegex);\n\n    if (pdfMatch && pdfMatch[1]) {\n      foundUrl = pdfMatch[1];\n    } else {\n      // Pattern B: Look inside HTML <a href=\"...\"> tags\n      const hrefRegex = /<a\\s+(?:[^>]*?\\s+)?href=[\"'](https?:\\/\\/[^\"']+)[\"'][^>]*>(.*?)<\\/a>/gi;\n      let match;\n      while ((match = hrefRegex.exec(rawBody)) !== null) {\n        const url = match[1];\n        const anchorText = match[2].toLowerCase();\n        const urlLower = url.toLowerCase();\n\n        if (\n          urlLower.includes('.pdf') ||\n          urlLower.includes('download') ||\n          anchorText.includes('click here') ||\n          anchorText.includes('pdf') ||\n          anchorText.includes('presentation') ||\n          anchorText.includes('result') ||\n          anchorText.includes('report')\n        ) {\n          foundUrl = url;\n          break;\n        }\n      }\n    }\n\n    if (foundUrl) {\n      // UNWRAP TRACKING LINKS (e.g., awstrack.me, sendgrid, mandrill)\n      const nestedUrlMatch = foundUrl.match(/(https?:%2F%2F[^\\s\"'<>]+)/i);\n      if (nestedUrlMatch && nestedUrlMatch[1]) {\n        try {\n          foundUrl = decodeURIComponent(nestedUrlMatch[1]);\n        } catch (e) {}\n      }\n\n      outputItems.push({\n        json: {\n          hasPDF: true, \n          isLink: true, \n          pdfUrl: foundUrl,\n          subject: safeSubject\n        }\n      });\n    } else {\n      // 3. No attachment and no link found -> Send to AI Summarization path\n      outputItems.push({\n        json: {\n          hasPDF: false, \n          isLink: false,\n          emailBody: rawBody,\n          subject: safeSubject,\n        }\n      });\n    }\n  }\n}\n\nreturn outputItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1888,
+          624
+        ],
+        "id": "6ae2c4ec-0dca-48ac-bffb-abb1dd39e2dc",
+        "name": "Code"
+      },
+      {
+        "parameters": {
+          "html": "<!DOCTYPE html>\n\n<html>\n<head>\n  <meta charset=\"UTF-8\" />\n  <title>My HTML document</title>\n</head>\n<body>\n  <div class=\"container\">\n {{ $json.html }} \n  </div>\n</body>\n</html>\n\n\n\n"
+        },
+        "type": "n8n-nodes-base.html",
+        "typeVersion": 1.2,
+        "position": [
+          3104,
+          736
+        ],
+        "id": "23ba0630-f47e-475e-92a0-1cc77d4d9a3a",
+        "name": "HTML"
+      },
+      {
+        "parameters": {
+          "operation": "toBinary",
+          "sourceProperty": "html",
+          "options": {
+            "dataIsBase64": false,
+            "encoding": "utf8",
+            "fileName": "index.html",
+            "mimeType": "text/html"
+          }
+        },
+        "id": "1ced15a8-728b-4901-ac13-108bf3255be2",
+        "name": "Convert to HTML",
+        "type": "n8n-nodes-base.convertToFile",
+        "typeVersion": 1,
+        "position": [
+          3408,
+          736
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "dd32dd2a-5346-4277-8930-b77b4b4ea7a5",
+                "leftValue": "={{ $json.labelIds }}",
+                "rightValue": "Label_18",
+                "operator": {
+                  "type": "array",
+                  "operation": "contains",
+                  "rightType": "any"
+                }
+              },
+              {
+                "id": "669ef9d8-9f7b-4d5b-ba45-2f0a79fbd37f",
+                "leftValue": "={{ $json.labelIds }}",
+                "rightValue": "Label_27",
+                "operator": {
+                  "type": "array",
+                  "operation": "contains",
+                  "rightType": "any"
+                }
+              },
+              {
+                "id": "9cc96690-8db2-4a5d-accf-af7acb5caec0",
+                "leftValue": "={{ $json.labelIds }}",
+                "rightValue": "Label_26",
+                "operator": {
+                  "type": "array",
+                  "operation": "contains",
+                  "rightType": "any"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.2,
+        "position": [
+          1664,
+          624
+        ],
+        "id": "8bafc1ee-2d83-4b1b-8c36-401077bb6103",
+        "name": "Filter"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "2c27bcda-7e28-4ba0-b9ab-3199f9a70402",
+                "leftValue": "={{ $json.isLink }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          2512,
+          528
+        ],
+        "id": "2e4f9344-cf7b-4e12-bebe-c5eaa251ecf0",
+        "name": "Is it a link?"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.pdfUrl }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+              }
+            ]
+          },
+          "options": {
+            "redirect": {
+              "redirect": {}
+            },
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          2784,
+          368
+        ],
+        "id": "146782b0-c4e9-48a0-bb51-a1420a883943",
+        "name": "Download",
+        "retryOnFail": true,
+        "waitBetweenTries": 3000
+      },
+      {
+        "parameters": {
+          "inputDataFieldName": "=data",
+          "name": "={{ $json.subject }}.pdf",
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2",
+            "mode": "list",
+            "cachedResultName": "n8n Test",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          2992,
+          368
+        ],
+        "id": "86855f73-4450-4237-9d07-7cef0af2611d",
+        "name": "Upload file2",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3.1-flash-lite",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3.1-flash-lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=You are an expert financial analyst. Convert the provided raw earnings concall email into a professional, structured HTML report.\n\nOutput ONLY valid HTML code. Do NOT wrap the output in markdown blocks (e.g., no ```html).\n\nUse inline CSS. Apply a clean, sans-serif font (Arial, Helvetica).\n\nCreate a professional header with a dark blue background and white text for the company name and report title.\n\nExtract all financial metrics (Revenue, EBITDA, PAT, Margins) and format them into a clean HTML <table> with borders, padding, and alternating row background colors.\n\nExtract the Management Commentary and Strategic Developments into concise, well-spaced bullet points.\n\nRAW EMAIL DATA:\n{{$json.emailBody}}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          2512,
+          736
+        ],
+        "id": "3c8740a5-04a0-4547-a06f-94726627b21d",
+        "name": "Message a model",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "nmcibSv4C4So3mQw",
+            "name": "Google Gemini(PaLM) Api account 0"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Gmail Trigger": {
+        "main": [
+          [
+            {
+              "node": "Filter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Is it a link?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "HTML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Upload file1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTML": {
+        "main": [
+          [
+            {
+              "node": "Convert to HTML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Convert to HTML": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter": {
+        "main": [
+          [
+            {
+              "node": "Code",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Is it a link?": {
+        "main": [
+          [
+            {
+              "node": "Download",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Upload file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Download": {
+        "main": [
+          [
+            {
+              "node": "Upload file2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version b3c40eeb",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": [
+    {
+      "updatedAt": "2025-07-07T02:47:29.277Z",
+      "createdAt": "2025-07-07T02:47:29.277Z",
+      "id": "usBpWvKJ18XVI8DB",
+      "name": "🟢 Done"
+    }
+  ]
+}
