@@ -1,0 +1,392 @@
+{
+  "updatedAt": "2025-11-08T13:44:55.000Z",
+  "createdAt": "2025-10-27T03:28:45.377Z",
+  "id": "05YVK4TWjZ3OYyeP",
+  "name": "Screener Fundamental",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "46935c8a-55b4-4687-9bdc-8545b0b66737",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9c4ff3c2-8976-4bf0-9bbc-38d5bf7bba3a",
+              "name": "screener_username",
+              "value": "sumitpoddar@tikonacapital.com",
+              "type": "string"
+            },
+            {
+              "id": "6509ab03-1722-4cb6-a37d-b2cbef327208",
+              "name": "password",
+              "value": "Tikona@2022",
+              "type": "string"
+            },
+            {
+              "id": "ea77a448-ff5e-47ee-bea5-4f13b2f3810f",
+              "name": "link",
+              "value": "https://www.screener.in/watchlist/5968121/",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "111503e5-6ac2-4c08-a857-d6fdd7ae17e2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "runCustomScript",
+        "scriptCode": "const { screener_username, password, link } = $input.first().json \n\nawait $page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');\nawait $page.setViewport({ width: 1920, height: 1080 });\n\n// Login to Screener.in\nawait $page.goto('https://www.screener.in/login/', { waitUntil: 'networkidle2', timeout: 30000 });\nawait $page.waitForSelector('#id_username', { timeout: 10000 });\nawait $page.type('#id_username', screener_username);\nawait $page.type('#id_password', password);\n// await $page.click('button[type=\"submit\"]');  // Update if XPath needed\n// await $page.waitForSelector('.flex-grow', { timeout: 50000 });  // Wait for post-login element\n  await Promise.all([\n        $page.waitForNavigation({ waitUntil: 'networkidle2' }),\n        $page.click('button[type=\"submit\"]')\n    ]);\nawait $page.goto(link, {waitUntil: 'networkidle2'})\nconst csrfToken = await $page.$eval('input[name=\"csrfmiddlewaretoken\"]', el => el.value);\nconst finalCookies = await $page.cookies();\n\n\n\nconsole.log('Logins completed');\nreturn [{ ...$input.first().json,csrfToken, finalCookies  }];  // Pass data forward",
+        "options": {}
+      },
+      "type": "n8n-nodes-puppeteer.puppeteer",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "58ede19e-00aa-42e2-9d82-0c4dcee7488e",
+      "name": "Puppeteer"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.screener.in/api/export/screen/?url_name=goto_sublist&sublist_id=5968121",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Cookie",
+              "value": "={{ $json.finalCookies.map(c => c.name + '=' + c.value).join('; ') }}"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.screener.in/watchlist/5968121/"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "csrfmiddlewaretoken",
+              "value": "={{ $json.finalCookies[1].value }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 20000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -16
+      ],
+      "id": "5844f530-81e4-4189-832f-c6b958e49750",
+      "name": "HTTP Request",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "b8d416e5-dfb0-40a6-8966-d9c3a8db786e",
+      "name": "Wait",
+      "webhookId": "5062621c-523d-432f-af90-d5eb0e5cbae7"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        -16
+      ],
+      "id": "a1dc238e-c8fd-41b6-97ea-2f46c39d47a5",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1CENxKQlPdPJiIpwmuA0D02PG2vSFdwXH0ckoggKZZb8",
+          "mode": "list",
+          "cachedResultName": "Sector Idea Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1CENxKQlPdPJiIpwmuA0D02PG2vSFdwXH0ckoggKZZb8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1563236577,
+          "mode": "list",
+          "cachedResultName": "Screener Data ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1CENxKQlPdPJiIpwmuA0D02PG2vSFdwXH0ckoggKZZb8/edit#gid=1563236577"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1760,
+        -432
+      ],
+      "id": "9be963b1-7d9e-4c8e-a9fc-8dde2d10e7eb",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n gives: items = [{json: {...}}, {json: {...}}, ...]\nconst data = items.map(item => item.json);\n\nconst firstPart = [];\nconst secondPart = [];\n\nfor (const row of data) {\n  // --- Part 1: Name, BSE Code, NSE Code (A4:C)\n  firstPart.push([\n    row[\"Name\"] || \"\",\n    row[\"BSE Code\"] || \"\",\n    row[\"NSE Code\"] || \"\"\n  ]);\n\n  // --- Part 2: Industry Group + rest (skip Industry, Name, BSE Code, NSE Code)\n  const {\n    \"Industry Group\": industryGroup,\n    \"Industry\": _,\n    \"Name\": __,\n    \"BSE Code\": ___,\n    \"NSE Code\": ____,\n    ...rest\n  } = row;\n\n  // Ensure Industry Group is first\n  const ordered = { \"Industry Group\": industryGroup, ...rest };\n  secondPart.push(Object.values(ordered));\n}\n\n// Return both datasets\nreturn [\n  { json: { valuesAtoC: firstPart } },\n  { json: { valuesEtoBI: secondPart } }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1296,
+        0
+      ],
+      "id": "3c9170a9-d859-4d26-a1d8-d0c42c9a2c02",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1CENxKQlPdPJiIpwmuA0D02PG2vSFdwXH0ckoggKZZb8/values/'Screener%20Data'!A4:C?valueInputOption=USER_ENTERED",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"values\": $json.valuesAtoC }) }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1552,
+        -16
+      ],
+      "id": "8419e5d7-0004-410d-9dbc-e06bf95b654e",
+      "name": "HTTP Request1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1CENxKQlPdPJiIpwmuA0D02PG2vSFdwXH0ckoggKZZb8/values/'Screener%20Data'!E4:BI?valueInputOption=USER_ENTERED",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"values\": $('Code in JavaScript').item.json.valuesEtoBI }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1872,
+        -32
+      ],
+      "id": "a342bddf-f5ec-41f8-84d9-729a3f489335",
+      "name": "HTTP Request2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1CENxKQlPdPJiIpwmuA0D02PG2vSFdwXH0ckoggKZZb8/values/Screener%20Data!A4",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        144
+      ],
+      "id": "bfcd5b29-2ac1-4526-b179-3a13681db43a",
+      "name": "HTTP Request3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Puppeteer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Puppeteer": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "1d4ad09f-c852-4c5a-8fc9-64a0ee8bec8c",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T03:28:45.382Z",
+      "createdAt": "2025-10-27T03:28:45.382Z",
+      "role": "workflow:owner",
+      "workflowId": "05YVK4TWjZ3OYyeP",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2025-07-20T07:40:28.334Z",
+      "createdAt": "2025-07-20T07:40:28.334Z",
+      "id": "qPqFNHTQy5850MBa",
+      "name": "🔵 In Progress"
+    }
+  ]
+}
