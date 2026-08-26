@@ -1,0 +1,3801 @@
+{
+  "updatedAt": "2026-08-24T06:17:50.316Z",
+  "createdAt": "2025-11-19T05:50:49.437Z",
+  "id": "8RkbE2HPG3lpqOXP",
+  "name": "Weekly Newsletter Automation",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const date = new Date();\nreturn {\n  json: {\n    currentDate: date.toISOString().split('T')[0], // Returns YYYY-MM-DD\n    readableDate: date.toDateString() // Returns \"Fri Nov 14 2025\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1968,
+        1088
+      ],
+      "id": "31a61232-75df-42de-aa23-1ecb8782f110",
+      "name": "set dates"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1WtzUgwg78gWlpm7_MrexAieDYHUJ557m6DBTbph57f0",
+          "mode": "list",
+          "cachedResultName": "Newsletter Master Template",
+          "cachedResultUrl": "https://docs.google.com/document/d/1WtzUgwg78gWlpm7_MrexAieDYHUJ557m6DBTbph57f0/edit?usp=drivesdk"
+        },
+        "name": "=Draft: Newsletter {{ $('set dates').item.json.readableDate }}",
+        "sameFolder": false,
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1VhCfDX3D-zQyP50fEjMD4I2by2SK-P87",
+          "mode": "list",
+          "cachedResultName": "Draft Newsletters",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1VhCfDX3D-zQyP50fEjMD4I2by2SK-P87"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1776,
+        1088
+      ],
+      "id": "8e1fd876-63c3-44d2-9aa0-2b7ac1623947",
+      "name": "create draft doc",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "TIpmKaW2fqyCTBN8",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.capitalmarket.com/markets/news/the-week-that-was-news",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1472,
+        416
+      ],
+      "id": "bd0aa007-9c98-4e88-ab30-9505d4b5610c",
+      "name": "fetch market news page"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "link",
+              "cssSelector": "td a",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            },
+            {
+              "key": "text",
+              "cssSelector": "td a"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -1280,
+        416
+      ],
+      "id": "fb4c12bc-e19f-4522-90dd-f918aad829b5",
+      "name": "extract market links"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This code combines restructuring (making the URL absolute) and filtering\n// (keeping only the newest article, which is at index 0).\n\nconst links = $json.link;\nconst itemsToReturn = [];\n\n// 1. Check if the 'links' array exists and has at least one item.\nif (links && links.length > 0) {\n    // 2. The links are typically sorted newest-to-oldest, so we only select the first one (index 0).\n    const newestRelativeLink = links[0];\n    \n    // 3. Convert the relative link to an absolute link.\n    const absoluteLink = \"https://www.capitalmarket.com\" + newestRelativeLink;\n    \n    // 4. Return ONLY this single, newest link as a single item in the correct format.\n    itemsToReturn.push({\n        json: {\n            link: absoluteLink\n        }\n    });\n}\n\nreturn itemsToReturn;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        416
+      ],
+      "id": "4fa553be-b401-4158-934f-451fd272ea18",
+      "name": "filter latest market link"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.link }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -912,
+        416
+      ],
+      "id": "d38faaf8-fa05-4d45-b1ed-a9e99d792f31",
+      "name": "fetch market article"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "article_html",
+              "cssSelector": "div.memo-content",
+              "returnValue": "html"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -720,
+        416
+      ],
+      "id": "ba409369-cd63-4288-a7db-ade5db761853",
+      "name": "extract market HTML"
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.article_html }}",
+        "destinationKey": "clean_text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        416
+      ],
+      "id": "a20d0b3e-01bd-4e4c-b9bf-2b8b53d28ebb",
+      "name": "convert market HTML to markdown"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('create draft doc').item.json.id }}",
+        "simple": false,
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{MARKET_SUMMARY}}",
+              "replaceText": "={{ $json.content.parts[0].text.replace(/\\n\\n/g, '\\n') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        32,
+        320
+      ],
+      "id": "32815d9c-f917-43c9-9c9a-8023ccd7d3c2",
+      "name": "write market summary",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "EOX38dISLsdJVkoT",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('create draft doc').item.json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{ECONOMY}}",
+              "replaceText": "={{ $json.content.parts[0].text.replace(/\\n\\n/g, '\\n') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        128,
+        512
+      ],
+      "id": "7a568ef2-8bda-4b24-891d-f81af82c2525",
+      "name": "write economy summary",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "EOX38dISLsdJVkoT",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.capitalmarket.com/markets/news/week-ahead-news",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1488,
+        672
+      ],
+      "id": "946b357b-f05d-404d-9209-6c3ec19fb803",
+      "name": "fetch week ahead page"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "link",
+              "cssSelector": "td a",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            },
+            {
+              "key": "text",
+              "cssSelector": "td a"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -1280,
+        672
+      ],
+      "id": "57ff63a6-d670-4d0f-a9f3-e7b0716bce06",
+      "name": "extract week ahead links"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This code combines restructuring (making the URL absolute) and filtering\n// (keeping only the newest article, which is at index 0).\n\nconst links = $json.link;\nconst itemsToReturn = [];\n\n// 1. Check if the 'links' array exists and has at least one item.\nif (links && links.length > 0) {\n    // 2. The links are typically sorted newest-to-oldest, so we only select the first one (index 0).\n    const newestRelativeLink = links[0];\n    \n    // 3. Convert the relative link to an absolute link.\n    const absoluteLink = \"https://www.capitalmarket.com\" + newestRelativeLink;\n    \n    // 4. Return ONLY this single, newest link as a single item in the correct format.\n    itemsToReturn.push({\n        json: {\n            link: absoluteLink\n        }\n    });\n}\n\nreturn itemsToReturn;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1072,
+        672
+      ],
+      "id": "0b32b6d5-fcb8-4be7-be42-24a6896f43cb",
+      "name": "filter latest weak ahead link"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.link }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -864,
+        672
+      ],
+      "id": "7f06bcd8-8bbf-4f26-8fcf-f46abd8556f3",
+      "name": "fetch week ahead article"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "article_html",
+              "cssSelector": "div.memo-content",
+              "returnValue": "html"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -656,
+        672
+      ],
+      "id": "641a646a-fef5-4e5e-a53e-a0ee68cf2e30",
+      "name": "extract week ahead HTML"
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.article_html }}",
+        "destinationKey": "clean_text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        672
+      ],
+      "id": "1ede6519-fe9e-4df4-af87-63bea6f1f9ab",
+      "name": "convert week ahead HTML to markdown"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('create draft doc').item.json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{WEEK_AHEAD}}",
+              "replaceText": "={{ $json.content.parts[0].text.replace(/\\n\\n/g, '\\n') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        48,
+        704
+      ],
+      "id": "b0ec82bf-54a3-4099-89fe-7466b594f9a7",
+      "name": "write week ahead",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "EOX38dISLsdJVkoT",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://unlistedzone.com/blog",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1456,
+        880
+      ],
+      "id": "3f0a7073-841e-4f4b-81e5-a5c0458eef2a",
+      "name": "fetch unlisted blog"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "link",
+              "cssSelector": ".section-41 .left-side a[href*=\"unlistedzone\"]",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            },
+            {
+              "key": "title_raw",
+              "cssSelector": ".popular .main-card .blog-content h2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -1280,
+        880
+      ],
+      "id": "ecd3d460-2cbf-42c6-b2e1-edd2fc729d0a",
+      "name": "extract unlisted links"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = items;\n\nconst cleanItems = [];\nconst baseUrl = \"https://unlistedzone.com\";\n\nfor (const item of allItems) {\n  const rawLink = item.json.link || \"\";\n  const rawTitle = item.json.title_raw || \"\";\n\n  if (rawTitle.trim() === \"\") {\n    continue;\n  }\n\n  const title = rawTitle.trim();\n\n  if (title.toLowerCase().includes(\"ncdex\")) {\n    continue;\n  }\n\n  // 🔹 FIXED: Safely convert to string before using startsWith\n  let link = String(rawLink || \"\").trim();\n\n  if (link !== \"\" && !link.startsWith(\"http\")) {\n    link = baseUrl + link;\n  }\n\n  cleanItems.push({\n    json: {\n      title: title,\n      link: link,\n    },\n  });\n}\n\nreturn cleanItems.slice(0, 2);\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        880
+      ],
+      "id": "4e545d48-9bcc-4be0-978d-2a94d82b810e",
+      "name": "filter unlisted links"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('create draft doc').item.json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{UNLISTED_EQUITY}}",
+              "replaceText": "={{ $json.content.parts[0].text.replace(/\\n\\n/g, '\\n') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        880
+      ],
+      "id": "79f45a7b-2df3-4ed8-b1b4-2946ca7c4d6f",
+      "name": "write unlisted update",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "EOX38dISLsdJVkoT",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1bU2IN__jC-JKkFoHwiKNLJfZo-FR9iC6xCAFfqPD5y8",
+          "mode": "list",
+          "cachedResultName": "Gainers and Losers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bU2IN__jC-JKkFoHwiKNLJfZo-FR9iC6xCAFfqPD5y8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1961684631,
+          "mode": "list",
+          "cachedResultName": "Dashboard",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bU2IN__jC-JKkFoHwiKNLJfZo-FR9iC6xCAFfqPD5y8/edit#gid=1961684631"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A2:B5"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1552,
+        1088
+      ],
+      "id": "43c265da-6554-4f76-9c6e-965bf7d4c2e8",
+      "name": "get sheet gainers",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1bU2IN__jC-JKkFoHwiKNLJfZo-FR9iC6xCAFfqPD5y8",
+          "mode": "list",
+          "cachedResultName": "Gainers and Losers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bU2IN__jC-JKkFoHwiKNLJfZo-FR9iC6xCAFfqPD5y8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1961684631,
+          "mode": "list",
+          "cachedResultName": "Dashboard",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bU2IN__jC-JKkFoHwiKNLJfZo-FR9iC6xCAFfqPD5y8/edit#gid=1961684631"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "D2:E5"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1392,
+        1088
+      ],
+      "id": "19cd2ac8-4548-4930-b8b1-45c38535191a",
+      "name": "get sheet losers",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {// Get data from the Gainers node\n// Replace 'Google Sheets Gainers' with the EXACT name of your gainers node\nconst gainers = $('get sheet gainers').all().map(item => item.json);\n\n// Get data from the Losers node\n// Replace 'Google Sheets Losers' with the EXACT name of your losers node\nconst losers = $('get sheet losers').all().map(item => item.json);\n\n// Return them as a single combined object\nreturn {\n  json: {\n    gainers_list: gainers,\n    losers_list: losers\n  }\n};\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1216,
+        1088
+      ],
+      "id": "2afe758e-fa3c-443b-b878-30a1dce563ff",
+      "name": "merge gainer loser data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the JSON data automatically from the previous node\nconst json = $input.item.json;\n\n// 2. Extract the text using the specific path for Gemini\n// Path: content -> parts -> [0] -> text\nlet text;\n\ntry {\n  text = json.content.parts[0].text;\n} catch (error) {\n  // If the path fails, try finding standard output fields\n  text = json.output || json.text;\n}\n\n// 3. Safety Check: Stop if text is missing\nif (!text || typeof text !== 'string') {\n  throw new Error(\"Text not found. Incoming data: \" + JSON.stringify(json));\n}\n\n// 4. Split the text into Gainers and Losers sections\nconst parts = text.split(/SECTION 2: LOSERS/i);\n\nconst gainers = parts[0] ? parts[0].replace(/SECTION 1: GAINERS/i, \"\").trim() : \"No Gainers\";\nconst losers = parts[1] ? parts[1].trim() : \"No Losers\";\n\n// 5. Return the clean results\nreturn {\n  json: {\n    gainers_clean: gainers,\n    losers_clean: losers\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -752,
+        1088
+      ],
+      "id": "ff8504f6-0832-4eb0-a83f-302774133fe5",
+      "name": "parse reasons JSON"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('create draft doc').first().json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{Gainers}}",
+              "replaceText": "={{ $json.gainers_clean }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Losers}}",
+              "replaceText": "={{ $json.losers_clean }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        1088
+      ],
+      "id": "4869865b-3704-425e-8f5d-4c3f181ef886",
+      "name": "write gainers losers",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "EOX38dISLsdJVkoT",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('create draft doc').item.json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{Poll}}",
+              "replaceText": "={{ $json.content.parts[0].text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        320,
+        896
+      ],
+      "id": "c3334bef-7dad-4ef8-8a2c-1c6c125e06a5",
+      "name": "write poll",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "EOX38dISLsdJVkoT",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "={{ $json.documentId }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        1088
+      ],
+      "id": "0776de1d-f0f5-4911-804c-98a46ac5c218",
+      "name": "read full draft",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "EOX38dISLsdJVkoT",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('create draft doc').first().json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{DATE}}",
+              "replaceText": "={{ $('set dates').first().json.readableDate }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{TITLE}}",
+              "replaceText": "={{ $json.content.parts[0].text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        64,
+        1072
+      ],
+      "id": "63819d9f-b5a6-40ff-a0b6-3bdbfb1a2556",
+      "name": "write date and title",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "EOX38dISLsdJVkoT",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "-1002262360602",
+        "message": "={{ 'Weekly Newsletter draft is ready for review.\\n\\n[Open Newsletter Draft](https://docs.google.com/document/d/' + $json.documentId + ')\\n\\nPlease review the content and approve or reject below.' }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        1072
+      ],
+      "id": "4bfd8416-cbd0-412a-aed1-964ea6663ad0",
+      "name": "wait for approval",
+      "webhookId": "23028beb-158d-414d-84ed-e33ca24f6c16",
+      "credentials": {
+        "telegramApi": {
+          "id": "I0rf76FsxPDgaIaQ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "caf3ed76-5eac-4349-8623-dbf860bf4291",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "YES",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        1072
+      ],
+      "id": "ae33b7be-dfaf-4e2d-b28d-d4545253cf0b",
+      "name": "check approval status"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the raw text from Gemini\n// Handle different output paths (output, text, or message.content)\nconst json = $input.item.json;\nconst rawContent = json.output || json.text || json.message?.content || json.content?.parts?.[0]?.text;\n\nif (!rawContent) {\n  throw new Error(\"No content found in AI response.\");\n}\n\n// 2. Sanitize the output (Remove markdown ```json fences if AI adds them)\nconst cleanJsonString = rawContent.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\n\n// 3. Parse the JSON\nlet captions;\ntry {\n  captions = JSON.parse(cleanJsonString);\n} catch (e) {\n  throw new Error(\"AI output was not valid JSON. Output: \" + rawContent);\n}\n\n// 4. Return clear variables for the next node\nreturn {\n  json: {\n    linkedin_final: captions.linkedin,\n    facebook_final: captions.facebook,\n    instagram_final: captions.instagram,\n    twitter_final: captions.twitter\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        1280
+      ],
+      "id": "88a7572e-797f-424f-92d0-e13ac58b566b",
+      "name": "parse social JSON"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('create draft doc').first().json.id }}",
+        "simple": false,
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{Linkedin Caption}}",
+              "replaceText": "={{ $json.linkedin_final }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Instagram Caption}}",
+              "replaceText": "={{ $json.instagram_final }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{X Caption}}",
+              "replaceText": "={{ $json.twitter_final }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{Facebook Caption}}",
+              "replaceText": "={{ $json.facebook_final }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        1280
+      ],
+      "id": "756e5a92-f9c6-4a70-b967-6786383334f1",
+      "name": "write social captions",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "EOX38dISLsdJVkoT",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get raw text\nconst rawContent = $input.item.json.content.parts[0].text;\n\n// 2. Extract JSON payload between outer braces\nconst jsonMatch = rawContent.match(/\\{[\\s\\S]*\\}/);\n\nif (!jsonMatch) {\n  throw new Error(\"No JSON object found in LLM output\");\n}\n\nlet cleanJsonString = jsonMatch[0];\n\n// 3. Parse JSON\ntry {\n  const data = JSON.parse(cleanJsonString);\n  return [{ json: data }];\n} catch (e) {\n  // Helpful log to see the exact invalid slice in execution logs\n  console.log(\"Failed JSON payload around error:\", cleanJsonString.slice(4500, 4700));\n  throw new Error(`AI output was not valid JSON: ${e.message}`);\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        1280
+      ],
+      "id": "4a4d10d6-4d36-48b4-922d-d779c39f9ec9",
+      "name": "parse presentation & script JSON"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('create draft doc').first().json.id }}",
+        "simple": false,
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{SLIDE_WEEK_GONE_BY}}",
+              "replaceText": "={{ $json.slide_week_gone_by.replace(/\\n\\n/g, '\\n') }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SCRIPT_WEEK_GONE_BY}}",
+              "replaceText": "={{ $json.script_week_gone_by }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SLIDE_DOMESTIC_ECO}}",
+              "replaceText": "={{ $json.slide_domestic_eco.replace(/\\n\\n/g, '\\n') }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SCRIPT_DOMESTIC_ECO}}",
+              "replaceText": "={{ $json.script_domestic_eco }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SLIDE_GLOBAL_ECO}}",
+              "replaceText": "={{ $json.slide_global_eco.replace(/\\n\\n/g, '\\n') }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SCRIPT_GLOBAL_ECO}}",
+              "replaceText": "={{ $json.script_global_eco }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SLIDE_GAINERS}}",
+              "replaceText": "={{ $json.slide_gainers.replace(/\\n\\n/g, '\\n') }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SCRIPT_GAINERS}}",
+              "replaceText": "={{ $json.script_gainers }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SLIDE_LOSERS}}",
+              "replaceText": "={{ $json.slide_losers.replace(/\\n\\n/g, '\\n') }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SCRIPT_LOSERS}}",
+              "replaceText": "={{ $json.script_losers }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SLIDE_UNLISTED}}",
+              "replaceText": "={{ $json.slide_unlisted.replace(/\\n\\n/g, '\\n') }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SCRIPT_UNLISTED}}",
+              "replaceText": "={{ $json.script_unlisted }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SLIDE_WEEK_AHEAD}}",
+              "replaceText": "={{ $json.slide_week_ahead.replace(/\\n\\n/g, '\\n') }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{SCRIPT_WEEK_AHEAD}}",
+              "replaceText": "={{ $json.script_week_ahead }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        448,
+        1280
+      ],
+      "id": "3036fefe-b9bc-4465-9c1a-2aab31d3c3d8",
+      "name": "write presentation content & script",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "EOX38dISLsdJVkoT",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-1002262360602",
+        "text": "✅ Draft Approved! Starting the generation of social captions and presentation content...",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -992,
+        1280
+      ],
+      "id": "55f910ae-572a-4338-b2ed-6e4b61aafc19",
+      "name": "notify approval",
+      "webhookId": "b981da4f-3a7a-47e0-b47c-df50520093f7",
+      "credentials": {
+        "telegramApi": {
+          "id": "I0rf76FsxPDgaIaQ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-1002262360602",
+        "text": "❌ Draft Rejected. The automation has been paused.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        608,
+        1088
+      ],
+      "id": "fd994ba2-ce76-421e-a277-ee76e0ad20ea",
+      "name": "notify decline",
+      "webhookId": "b981da4f-3a7a-47e0-b47c-df50520093f7",
+      "credentials": {
+        "telegramApi": {
+          "id": "I0rf76FsxPDgaIaQ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-1002262360602",
+        "text": "={{ '✅ Newsletter Automation Complete!\\n\\nYou can see the final newsletter here: [Open Final Newsletter](https://docs.google.com/document/d/' + $('create draft doc').first().json.id + '/edit)' }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        608,
+        1280
+      ],
+      "id": "8c6de6aa-24e5-4894-8419-b29b44916073",
+      "name": "notify completion",
+      "webhookId": "b981da4f-3a7a-47e0-b47c-df50520093f7",
+      "credentials": {
+        "telegramApi": {
+          "id": "I0rf76FsxPDgaIaQ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "={{ $('create draft doc').first().json.id }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -832,
+        1280
+      ],
+      "id": "e95c59f3-06ba-4ded-bf42-6482d820ac64",
+      "name": "read approved draft",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "EOX38dISLsdJVkoT",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Role: You are the Social Media Manager for Tikona Capital.\n\n**Task:** Based on the provided Weekly Newsletter content, generate 4 distinct social media captions tailored to specific platforms.\n\n**Input Content:**\n{{ $('read approved draft').item.json.content }}\n\n**Mandatory Links (Append to every caption):**\n• YouTube: [YOUR_YOUTUBE_LINK]\n• LinkedIn: [LINKEDIN_POST_LINK]\n• Smallcase: https://tikonacapital.smallcase.com\n\n**Strict Output Format:**\nReturn ONLY a valid JSON object. Do not include markdown formatting (like ```json).\n{\n  \"linkedin\": \"Professional, bullet-point heavy analysis. High emojis.\",\n  \"facebook\": \"Engaging but corporate. Moderate emojis.\",\n  \"instagram\": \"Visual-first, punchy, very high emoji usage.\",\n  \"twitter\": \"Concise, data-heavy, strictly under 280 characters.\"\n}\n\n**Style Guides:**\n1. **LinkedIn:** Structure as Headline -> Summary -> 📊 Performance -> 🌍 Outlook -> CTA.\n2. **Facebook:** 2-3 short paragraphs, conversational but data-backed.\n3. **X (Twitter):** Focus on the single biggest number/stat. No fluff.\n\n**NUMERICAL CONSTRAINT:**\nRound ALL percentage figures to exactly one decimal place. (Example: Convert 5.21% → 5.2% and 3.39% → 3.4%). Never use two decimal places."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -672,
+        1280
+      ],
+      "id": "9b7dc77d-4ebb-4db1-ad85-02ea2db4695d",
+      "name": "gen social captions",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GaCvOMdqQCMm3lhY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                5
+              ],
+              "triggerAtHour": 18,
+              "triggerAtMinute": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -2304,
+        1120
+      ],
+      "id": "37d3e36e-522b-4952-8f0a-2d080a7f8c7b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a Financial Editor for Tikona Capital.\n\n**Task:** Synthesize the \"Market Overview\" section based on the provided text.\n\n**Input Data:**\n{{ $json.clean_text }}\n\n**Core Objective:**\nProduce a high-density market summary that retains strict factual accuracy but **completely reconstructs the phrasing** to ensure originality. Do not simply rearrange words; synthesize the \"whys\" and \"hows\" into a fresh narrative.\n\n**Style Constraints:**\n* **Tone:** Clinical, precise, and institutional.\n* **Banned Vocabulary:** Do not use flowery adjectives like \"buoyant,\" \"confluence,\" \"tempered,\" or \"skyrocketed.\"\n* **Structure:** Strictly 3 paragraphs.\n\n**Drafting Instructions:**\n\n**Paragraph 1: The Narrative Drivers (Qualitative)**\n* **Opening:** You MUST start with: \"Domestic equities ended the week on a [strong/weak/flat] footing...\"\n* **Content:** Integrated into 2-3 sentences, explain the primary drivers identified in the text (e.g., inflation dynamics, global yield movements, political outcomes, or earnings results).\n* **Constraint:** Focus solely on the macro catalysts. **Do not** mention specific index values or stock prices in this paragraph.\n\n**Paragraph 2: The Hard Numbers (Quantitative)**\n* **Opening:** You MUST start with: \"For the week ended Friday, [Date]...\"\n* **Content:** Report the final standing of the S&P BSE Sensex and Nifty 50 (listing both points changed and percentage change). Briefly characterize the performance of the broader markets (MidCap/SmallCap).\n* **Ending:** Conclude with a short sentiment check (e.g., \"reflecting a cautious yet resilient undertone\").\n\n**Paragraph 3: The Weekly Trajectory (Chronological)**\n* **Content:** Trace the market's movement from Monday to Friday.\n* **Paraphrasing Requirement:** Instead of listing days (\"Monday was up, Tuesday was down\"), describe the *flow* of price action.\n* **Example phrasing to mimic:** \"Trading commenced with [Trend], which extended into mid-week. Volatility emerged by Thursday, before giving way to [Final Trend] on Friday.\"\n* **Constraint:** Focus purely on price action (gains, losses, consolidation, recovery).\n\n**Output:**\nReturn ONLY the 3 paragraphs as a single text block. Do not use bold text.\n\n**NUMERICAL CONSTRAINT:**\nRound ALL percentage figures to exactly one decimal place. (Example: Convert 5.21% → 5.2% and 3.39% → 3.4%). Never use two decimal places."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -304,
+        320
+      ],
+      "id": "84d6afb6-bf38-41a9-8519-985bf392d1de",
+      "name": "gen market summary",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GaCvOMdqQCMm3lhY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a Financial Editor for Tikona Capital.\n\n**Task:** Synthesize the \"Economy\" section based on the provided text.\n\n**Input Data:**\n{{ $('convert market HTML to markdown').item.json.clean_text }}\n\n**Core Objective:**\nCreate a high-density summary that retains 100% of the data accuracy but **completely rewrites the sentence structures** to ensure originality. Do not simply rearrange words; digest the information and reconstruct the sentences.\n\n**Style Guide:**\n* **Tone:** Institutional, direct, and concise.\n* **Length:** Strictly 3 paragraphs (Max 3 sentences per paragraph).\n* **Banned:** Flowery transitions (\"In a decisive move,\" \"Conversely\"), adverbs (\"significantly\"), and generic filler (\"The market witnessed\").\n* **Paraphrasing Rule:** Active voice and data synthesis are preferred over listing facts. (e.g., Instead of \"Inflation fell to 5% and reserves fell to $600b,\" write \"While inflation moderated to 5%, forex reserves contracted to $600b.\")\n\n**Structure & Content:**\n\n**Paragraph 1: Macro Indicators**\n* **Action:** Synthesize Forex Reserve data and Inflation figures (CPI/WPI).\n* **Instruction:** Combine these distinct data points into a cohesive narrative regarding the macro environment. Use contrast words (e.g., \"despite,\" \"amid\") to link the movement of reserves with inflation trends.\n* **Constraint:** Do not copy phrases like \"stood at\" or \"was recorded at.\"\n\n**Paragraph 2: Fiscal Policy**\n* **Action:** Summarize government interventions or packages.\n* **Instruction:** State the package amount and its specific target (sectors/goal) immediately. Rephrase the *purpose* of the policy (e.g., change \"to help exports\" to \"bolstering export competitiveness\").\n* **Constraint:** Ensure the sector names (Textiles, Leather, etc.) are accurate but integrated naturally.\n\n**Paragraph 3: Geopolitics & Trade**\n* **Action:** Report on Global/US/Trade specific news.\n* **Instruction:** Convert direct quotes into reported speech where possible to improve flow and uniqueness. Focus on the *implication* of the statements (e.g., tariff adjustments, trade deal proximity).\n* **Constraint:** Stick strictly to the facts provided in the text regarding Trump/Trade.\n\n**Output:**\nReturn ONLY the 3 paragraphs. Do not use bold text.\n\n**NUMERICAL CONSTRAINT:**\nRound ALL percentage figures to exactly one decimal place. (Example: Convert 5.21% → 5.2% and 3.39% → 3.4%). Never use two decimal places."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        512
+      ],
+      "id": "e7c18a0d-9cfc-4812-8fb9-fc0fd64e1ed2",
+      "name": "gen economy summary",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GaCvOMdqQCMm3lhY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a Market Strategist for Tikona Capital.\n\n**Task:** Synthesize a \"Week Ahead\" market outlook based on the provided news text.\n\n**Input Text:**\n{{ $json.clean_text }}\n\n**Core Objective:**\nCreate a forward-looking analysis that preserves all specific data points (dates, percentages) but **completely reconstructs the sentence structures** to ensure originality. Do not simply rearrange the input text; digest the information and write it in a fresh, institutional voice.\n\n**Style Constraints:**\n* **Length:** Strictly 150–180 words total.\n* **Tone:** Analytical, fluid, and professional.\n* **Structure:** Exactly 4 paragraphs.\n\n**Drafting Instructions:**\n\n**Paragraph 1: Underlying Catalysts (approx. 40 words)**\n* **Opening:** You MUST start with: \"Indian equities start the week with a [positive/negative/cautious] bias...\"\n* **Action:** Synthesize the primary market drivers (e.g., inflation trends, global sentiment).\n* **Paraphrasing Rule:** Instead of listing headlines, explain *why* these numbers matter. (e.g., \"Cooling CPI data is fueling rate-cut bets\" rather than \"CPI was low\"). Use key data points from the text to back this up.\n\n**Paragraph 2: Domestic Monitorables (approx. 45 words)**\n* **Opening:** You MUST start with: \"Back home, markets will track...\"\n* **Action:** Outline the key economic releases scheduled for India.\n* **Data Integration:** Seamlessly weave specific dates and **previous** data figures into the narrative flow. Avoid robotic listing; use connectors like \"following,\" \"expected to,\" or \"after.\"\n\n**Paragraph 3: International Cues (approx. 45 words)**\n* **Opening:** You MUST start with: \"Globally, [Country A] and [Country B]...\"\n* **Action:** Detail the critical data points from China and the US.\n* **Format:** Ensure dates are included in parentheses (e.g., \"(20 Nov)\"). Use active verbs to describe the expected impact of these events (e.g., \"will guide sentiment,\" \"is likely to influence\").\n\n**Paragraph 4: Strategic Implications (approx. 35 words)**\n* **Opening:** You MUST start with: \"With key macro data from...\"\n* **Action:** Assess the potential for volatility vs. stability.\n* **Conclusion:** End with a forward-looking strategic note on earnings or macro-trends. Rephrase the source text's conclusion to sound like an independent strategic assessment.\n\n**Output:**\nReturn ONLY the 4 paragraphs as a single text block.\n\n**NUMERICAL CONSTRAINT:**\nRound ALL percentage figures to exactly one decimal place. (Example: Convert 5.21% → 5.2% and 3.39% → 3.4%). Never use two decimal places.\n\n**STRICTLY FORBIDDEN: Do not include any bracketed citations, source numbers (e.g., [1][2]), or references in the text. Remove them completely.**"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -288,
+        672
+      ],
+      "id": "2af7eaf8-6b31-47da-b951-b1a35538a934",
+      "name": "gen week ahead",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GaCvOMdqQCMm3lhY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an expert financial content writer.\n\n**Task:**\nI will provide you with a weekly market-outlook paragraph. Your task is to generate a concise 4-option poll summarizing what will drive markets in the upcoming week.\n\n**Input:**\n{{ $json.content.parts[0].text }}\n\n**Instructions:**\n1. **Analyze:** Read the weekly market summary I provide.\n2. **Identify:** Pick the 4 most important drivers across regions such as India, US, China, Europe, Global, Commodities, or any other mentioned.\n3. **Format:** Convert them into a poll format with:\n    * A main question.\n    * Four short options, each 2–5 words.\n    * Each option begins with a region label (e.g., India, US, China, Global).\n4. **Style:** Keep wording simple, impactful, and suitable for social media polls.\n5. **Constraint:** Do not rewrite the original text—only extract major themes.\n\n**Output Format:**\n\nWhat will drive markets in the upcoming week of (date)?\nIndia: <2–5 word driver>\nUS: <2–5 word driver>\nChina: <2–5 word driver>\nGlobal: <2–5 word driver>\n\n**Note on Date:**\nFor \"(date)\", calculate and use the date that is exactly 3 days after: {{ $today }}\n\n**Fallback Rule:**\nIf any region is not mentioned in the input, replace it with whichever major region or theme is mentioned."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        896
+      ],
+      "id": "3899f9fe-1a7d-4f51-9c87-1c6fe6c1d2c9",
+      "name": "gen weekly poll",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GaCvOMdqQCMm3lhY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a Financial Markets Editor at Tikona Capital.\n\n**Task:** Synthesize the provided financial news into a strictly formatted 3-paragraph update.\n\n**Input Text:**\n{{ $json.link }}\n\n**Core Objective:**\nProduce a concise unlisted market update.\n**CRITICAL:** You must completely rewrite and paraphrase the input text. Do not copy phrases or sentence structures from the source. Retain all facts (names, numbers, deal types) but express them in your own fresh, institutional voice.\n\n**Structure & Content Rules:**\n\n**Paragraph 1 (The Synthesis):**\n* **Length:** Strictly 1 sentence.\n* **Content:** Construct a broad summary statement indicating that unlisted market activity is [active/steady/robust].\n* **Requirement:** Attribute this momentum to the specific *types* of events found in the text (e.g., \"buoyed by a surge in pre-IPO placements\" or \"driven by fresh acquisition interest\").\n* **Anti-Plagiarism:** Do not use the article's headline or opening sentence.\n\n**Paragraph 2 (The Hard News):**\n* **Length:** 2-3 sentences maximum.\n* **Content:** Report the specific deal details found in the text.\n* **Style:** Use active verbs (e.g., \"filed,\" \"secured,\" \"pursued\").\n* **Format:** \"[Company A] has [Action/Amount]. Simultaneously/Meanwhile, [Company B] is [Action].\"\n* **Constraint:** Digest the details and write them from scratch. Do not simply splice parts of the original text together.\n\n**Paragraph 3 (The Fixed Template):**\n* **CRITICAL:** You must use the EXACT sentence structure below. Do not change the words, only update the list of companies based on the names found in the input text.\n* **Template:** \"Unlisted names like [Insert 3-5 Company Names found in text] continue to see steady investor demand as private-market appetite remains firm. Reach out to explore more opportunities in the emerging unlisted space.\"\n\n**Negative Constraints:**\n* NO analysis or fluff (e.g., \"broadly,\" \"market weighs,\" \"strategic maneuvering\").\n* NO corporate jargon.\n* Do not add a conclusion or summary beyond Paragraph 3.\n* **STRICTLY FORBIDDEN: Do not include any bracketed citations, source numbers (e.g., [1][2]), or references in the text. Remove them completely.**\n\n**Output:**\nReturn exactly 3 paragraphs."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -896,
+        880
+      ],
+      "id": "e1a1c6e3-fd0c-4350-8285-48c6b4418613",
+      "name": "gen unlisted update",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GaCvOMdqQCMm3lhY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Role: You are a Senior Financial Analyst.\n\n**Task:** Analyze the provided \"Gainers\" and \"Losers\" lists to generate concise explanations for their stock price movements.\n\n**Input Data:**\n{{ JSON.stringify($json) }}\n\n**Instructions:**\n1. **Data Conversion:** The percentage values may be in decimals (e.g., 0.42 = 42%, -0.28 = -28%). You must convert them to percentages.\n2. **Analysis:** Generate a strictly 1-sentence reason for EACH stock explaining the move (e.g., earnings, sector rally, profit booking).\n\n**Strict Output Format:**\nYou must use the exact format below:\n\nSECTION 1: GAINERS\n#StockName (+XX.X%): Reason.\n\nSECTION 2: LOSERS\n#StockName (-XX.X%): Reason.\n\n**NUMERICAL CONSTRAINT:**\nRound ALL percentage figures to exactly one decimal place. (Example: Convert 5.21% → 5.2% and 3.39% → 3.4%). Never use two decimal places."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -1056,
+        1024
+      ],
+      "id": "ced3bf50-5c54-420f-9af0-f27309e0f5af",
+      "name": "gen gainer loser reasons",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GaCvOMdqQCMm3lhY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a Senior Financial Editor at Tikona Capital.\n\n**Task:** Generate **one single** high-impact title for the weekly newsletter.\n\n**Input Data:**\n{{ $('read full draft').item.json.content }}\n\n**Core Objective:**\nSynthesize the newsletter content into a professional, headline-style title that captures the primary market sentiment and the key driving forces.\n\n**Structure & Style:**\n* **Format:** `[Market Action] + [Connector] + [Driver A] + [and/amid] + [Driver B]`\n* **Tone:** Professional, objective, and journalistic.\n* **Examples of approved style:**\n    * Markets Rally on Cooling Inflation and Strong Macro Signals\n    * Markets Turn Volatile Amid Mixed Earnings and Growth Signals\n    * Markets Turn Cautious as Global Signals Weigh on Sentiment\n    * Mixed Trends as Earnings Offset Weak Macro Cues\n\n**Strict Constraints:**\n* **Quantity:** Provide exactly **ONE** best title.\n* **Formatting:** Do **NOT** use bold text. Do **NOT** use quotation marks.\n* **Content:** Do **NOT** include specific dates or years.\n* **Length:** Keep it concise (under 12 words).\n\n**Output:**\nReturn ONLY the title string."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        1024
+      ],
+      "id": "f7b46607-5c0b-4190-ba9f-b85847fef832",
+      "name": "gen newsletter title",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GaCvOMdqQCMm3lhY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=# Role\nYou are a **Senior Investment Strategist at Tikona Capital**, preparing an institutional-grade weekly market presentation for clients, distributors, and internal investment committees.\n\n# Task\nCreate a professional presentation deck strictly based on the provided newsletter data.\n\n# Input Data\n{{ $('read approved draft').item.json.content }}\n\n# Important Guidelines\n* **Source Material:** All slide bullet points and narration must be created **ONLY** from the newsletter content provided above.\n* **No Hallucinations:** Do **NOT** introduce any new data, assumptions, interpretations, or external information beyond what is explicitly mentioned in the newsletter.\n\n---\n\n# Output Structure (MANDATORY)\nFor each of the 7 slides, generate two outputs:\n\n### 1. Slide Content (Bullet-Based, Institutional Style)\n* Use **5–7 concise bullet points** per slide.\n* Bullets must be short, crisp, and information-dense.\n* Each bullet should capture one clear data point, insight, or conclusion directly derived from the newsletter content.\n* Do **NOT** write long bullets or paragraphs.\n* Do **NOT** use vague statements.\n\n### 2. Script (Narration – ~60 seconds per slide)\n* Write a professional voiceover script.\n* Expand on the slide bullet points using **ONLY** the newsletter content.\n* Add context and explanation but do **NOT** add new facts or opinions.\n* Explain why the data matters for investors in a neutral, research-driven manner.\n* **Tone:** Calm, confident, institutional, and professional.\n* Do **NOT** repeat bullet points verbatim.\n\n---\n\n# Data Precision Rules (STRICT)\n* Every market move must include the **final level**, **absolute change**, and **percentage change** exactly as stated or derived from the newsletter.\n* **ALL** data mentioned in the newsletter must be covered.\n* Do **NOT** skip macro numbers, sectoral data, stock-specific moves, or commentary.\n\n**Examples:**\n* **Correct:** \"Sensex closed at 88,400, up 300 points, gaining 0.5% WoW.\"\n* **Incorrect:** \"Sensex gained during the week.\"\n\n---\n\n# Slides Required\n\n1.  **Week Gone By**\n    * Cover Sensex, Nifty, Midcap, Smallcap with levels, points, and percentage changes.\n    * Include sectoral performance, FII/DII flows, and key domestic and global triggers mentioned in the newsletter.\n\n2.  **Domestic Economic Update**\n    * Cover inflation, IIP, PMI, fiscal data, and RBI commentary mentioned in the newsletter.\n    * Include bond yields, currency, liquidity trends, and India-specific macro signals if present.\n\n3.  **Global Economic Update**\n    * Cover US, Europe, and China macro data mentioned in the newsletter.\n    * Include central bank commentary, dollar index movement, bond yields, and commodities if provided.\n\n4.  **Gainers for the Week**\n    * Cover top gaining stocks or sectors mentioned in the newsletter.\n    * Include exact price move and percentage change.\n    * Explain earnings-led, policy-led, or event-driven reasons exactly as stated.\n\n5.  **Losers for the Week**\n    * Cover stocks or sectors under pressure mentioned in the newsletter.\n    * Include exact downside in points and percentage.\n    * Explain selling pressure using reasons explicitly mentioned in the newsletter.\n\n6.  **Unlisted Equities Update**\n    * Cover deal activity, pricing trends, and transaction data mentioned in the newsletter.\n    * Explain investor demand-supply dynamics and sectoral preference only if stated.\n\n7.  **Week Ahead**\n    * Cover upcoming macro data, earnings, and events explicitly mentioned in the newsletter.\n    * Highlight risks, triggers, and market setup strictly based on the provided content.\n\n---\n\n# Numerical Constraint (NON-NEGOTIABLE)\nRound **ALL** percentage figures to exactly **ONE** decimal place.\n* **Correct:** 5.2%, 3.4%\n* **Incorrect:** 5.21%, 3.39%, 5%\n\n# Quality Benchmark\nThe output must resemble a sell-side institutional weekly note, a mutual fund or PMS client presentation, or a CIO office market briefing.\n* No storytelling.\n* No generic commentary.\n* Only precise, data-backed, professional insights.\n\n---\n\n# Strict Output Format (JSON ONLY)\nPlease output the response in the following JSON structure:\n\n```json\n{\n  \"slide_week_gone_by\": [\n    \"• Bullet 1\",\n    \"• Bullet 2\",\n    \"• Bullet 3\",\n    \"• Bullet 4\",\n    \"• Bullet 5\"\n  ],\n  \"script_week_gone_by\": \"...\",\n  \"slide_domestic_eco\": [\"...\"],\n  \"script_domestic_eco\": \"...\",\n  \"slide_global_eco\": [\"...\"],\n  \"script_global_eco\": \"...\",\n  \"slide_gainers\": [\"...\"],\n  \"script_gainers\": \"...\",\n  \"slide_losers\": [\"...\"],\n  \"script_losers\": \"...\",\n  \"slide_unlisted\": [\"...\"],\n  \"script_unlisted\": \"...\",\n  \"slide_week_ahead\": [\"...\"],\n  \"script_week_ahead\": \"...\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        1280
+      ],
+      "id": "87bfb943-6a8a-4c2b-b75c-d7e0ce5ca273",
+      "name": "gen presentation content & script",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GaCvOMdqQCMm3lhY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2240,
+        944
+      ],
+      "id": "bc89edd6-34c1-4a2a-994d-bd33e447a6b4",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "connections": {
+    "set dates": {
+      "main": [
+        [
+          {
+            "node": "create draft doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create draft doc": {
+      "main": [
+        [
+          {
+            "node": "fetch market news page",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "fetch week ahead page",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "fetch unlisted blog",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "get sheet gainers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch market news page": {
+      "main": [
+        [
+          {
+            "node": "extract market links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract market links": {
+      "main": [
+        [
+          {
+            "node": "filter latest market link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter latest market link": {
+      "main": [
+        [
+          {
+            "node": "fetch market article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch market article": {
+      "main": [
+        [
+          {
+            "node": "extract market HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract market HTML": {
+      "main": [
+        [
+          {
+            "node": "convert market HTML to markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "convert market HTML to markdown": {
+      "main": [
+        [
+          {
+            "node": "gen market summary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "gen economy summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "write market summary": {
+      "main": [
+        []
+      ]
+    },
+    "fetch week ahead page": {
+      "main": [
+        [
+          {
+            "node": "extract week ahead links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract week ahead links": {
+      "main": [
+        [
+          {
+            "node": "filter latest weak ahead link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter latest weak ahead link": {
+      "main": [
+        [
+          {
+            "node": "fetch week ahead article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch week ahead article": {
+      "main": [
+        [
+          {
+            "node": "extract week ahead HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract week ahead HTML": {
+      "main": [
+        [
+          {
+            "node": "convert week ahead HTML to markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "convert week ahead HTML to markdown": {
+      "main": [
+        [
+          {
+            "node": "gen week ahead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch unlisted blog": {
+      "main": [
+        [
+          {
+            "node": "extract unlisted links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract unlisted links": {
+      "main": [
+        [
+          {
+            "node": "filter unlisted links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter unlisted links": {
+      "main": [
+        [
+          {
+            "node": "gen unlisted update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get sheet gainers": {
+      "main": [
+        [
+          {
+            "node": "get sheet losers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get sheet losers": {
+      "main": [
+        [
+          {
+            "node": "merge gainer loser data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge gainer loser data": {
+      "main": [
+        [
+          {
+            "node": "gen gainer loser reasons",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse reasons JSON": {
+      "main": [
+        [
+          {
+            "node": "write gainers losers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "write gainers losers": {
+      "main": [
+        [
+          {
+            "node": "read full draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read full draft": {
+      "main": [
+        [
+          {
+            "node": "gen newsletter title",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "write date and title": {
+      "main": [
+        [
+          {
+            "node": "wait for approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait for approval": {
+      "main": [
+        [
+          {
+            "node": "check approval status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check approval status": {
+      "main": [
+        [
+          {
+            "node": "notify approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "notify decline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse social JSON": {
+      "main": [
+        [
+          {
+            "node": "write social captions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse presentation & script JSON": {
+      "main": [
+        [
+          {
+            "node": "write presentation content & script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "write social captions": {
+      "main": [
+        [
+          {
+            "node": "gen presentation content & script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "notify approval": {
+      "main": [
+        [
+          {
+            "node": "read approved draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "write presentation content & script": {
+      "main": [
+        [
+          {
+            "node": "notify completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read approved draft": {
+      "main": [
+        [
+          {
+            "node": "gen social captions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gen social captions": {
+      "main": [
+        [
+          {
+            "node": "parse social JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "set dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gen market summary": {
+      "main": [
+        [
+          {
+            "node": "write market summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gen economy summary": {
+      "main": [
+        [
+          {
+            "node": "write economy summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gen week ahead": {
+      "main": [
+        [
+          {
+            "node": "write week ahead",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "gen weekly poll",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gen weekly poll": {
+      "main": [
+        [
+          {
+            "node": "write poll",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gen unlisted update": {
+      "main": [
+        [
+          {
+            "node": "write unlisted update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gen gainer loser reasons": {
+      "main": [
+        [
+          {
+            "node": "parse reasons JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gen newsletter title": {
+      "main": [
+        [
+          {
+            "node": "write date and title",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gen presentation content & script": {
+      "main": [
+        [
+          {
+            "node": "parse presentation & script JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "set dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "EY8cog9qMUoNM12zirmiT"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-07-03T18:02:51.013+05:30",
+          "Readable date": "July 3rd 2026, 6:02:51 pm",
+          "Readable time": "6:02:51 pm",
+          "Day of week": "Friday",
+          "Year": "2026",
+          "Month": "July",
+          "Day of month": "03",
+          "Hour": "18",
+          "Minute": "02",
+          "Second": "51",
+          "Timezone": "Asia/Kolkata (UTC+05:30)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "f39519b2-de9a-42fc-b4b1-226f2db57c44",
+  "activeVersionId": "f39519b2-de9a-42fc-b4b1-226f2db57c44",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-11-19T05:50:49.446Z",
+      "createdAt": "2025-11-19T05:50:49.446Z",
+      "role": "workflow:owner",
+      "workflowId": "8RkbE2HPG3lpqOXP",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-08-24T06:17:51.000Z",
+    "createdAt": "2026-08-24T06:17:50.318Z",
+    "versionId": "f39519b2-de9a-42fc-b4b1-226f2db57c44",
+    "workflowId": "8RkbE2HPG3lpqOXP",
+    "nodes": [
+      {
+        "parameters": {
+          "jsCode": "const date = new Date();\nreturn {\n  json: {\n    currentDate: date.toISOString().split('T')[0], // Returns YYYY-MM-DD\n    readableDate: date.toDateString() // Returns \"Fri Nov 14 2025\"\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1968,
+          1088
+        ],
+        "id": "31a61232-75df-42de-aa23-1ecb8782f110",
+        "name": "set dates"
+      },
+      {
+        "parameters": {
+          "operation": "copy",
+          "fileId": {
+            "__rl": true,
+            "value": "1WtzUgwg78gWlpm7_MrexAieDYHUJ557m6DBTbph57f0",
+            "mode": "list",
+            "cachedResultName": "Newsletter Master Template",
+            "cachedResultUrl": "https://docs.google.com/document/d/1WtzUgwg78gWlpm7_MrexAieDYHUJ557m6DBTbph57f0/edit?usp=drivesdk"
+          },
+          "name": "=Draft: Newsletter {{ $('set dates').item.json.readableDate }}",
+          "sameFolder": false,
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1VhCfDX3D-zQyP50fEjMD4I2by2SK-P87",
+            "mode": "list",
+            "cachedResultName": "Draft Newsletters",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1VhCfDX3D-zQyP50fEjMD4I2by2SK-P87"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          -1776,
+          1088
+        ],
+        "id": "8e1fd876-63c3-44d2-9aa0-2b7ac1623947",
+        "name": "create draft doc",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "TIpmKaW2fqyCTBN8",
+            "name": "Google Drive account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "https://www.capitalmarket.com/markets/news/the-week-that-was-news",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "Mozilla/5.0"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1472,
+          416
+        ],
+        "id": "bd0aa007-9c98-4e88-ab30-9505d4b5610c",
+        "name": "fetch market news page"
+      },
+      {
+        "parameters": {
+          "operation": "extractHtmlContent",
+          "extractionValues": {
+            "values": [
+              {
+                "key": "link",
+                "cssSelector": "td a",
+                "returnValue": "attribute",
+                "attribute": "href",
+                "returnArray": true
+              },
+              {
+                "key": "text",
+                "cssSelector": "td a"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.html",
+        "typeVersion": 1.2,
+        "position": [
+          -1280,
+          416
+        ],
+        "id": "fb4c12bc-e19f-4522-90dd-f918aad829b5",
+        "name": "extract market links"
+      },
+      {
+        "parameters": {
+          "jsCode": "// This code combines restructuring (making the URL absolute) and filtering\n// (keeping only the newest article, which is at index 0).\n\nconst links = $json.link;\nconst itemsToReturn = [];\n\n// 1. Check if the 'links' array exists and has at least one item.\nif (links && links.length > 0) {\n    // 2. The links are typically sorted newest-to-oldest, so we only select the first one (index 0).\n    const newestRelativeLink = links[0];\n    \n    // 3. Convert the relative link to an absolute link.\n    const absoluteLink = \"https://www.capitalmarket.com\" + newestRelativeLink;\n    \n    // 4. Return ONLY this single, newest link as a single item in the correct format.\n    itemsToReturn.push({\n        json: {\n            link: absoluteLink\n        }\n    });\n}\n\nreturn itemsToReturn;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1088,
+          416
+        ],
+        "id": "4fa553be-b401-4158-934f-451fd272ea18",
+        "name": "filter latest market link"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.link }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -912,
+          416
+        ],
+        "id": "d38faaf8-fa05-4d45-b1ed-a9e99d792f31",
+        "name": "fetch market article"
+      },
+      {
+        "parameters": {
+          "operation": "extractHtmlContent",
+          "extractionValues": {
+            "values": [
+              {
+                "key": "article_html",
+                "cssSelector": "div.memo-content",
+                "returnValue": "html"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.html",
+        "typeVersion": 1.2,
+        "position": [
+          -720,
+          416
+        ],
+        "id": "ba409369-cd63-4288-a7db-ade5db761853",
+        "name": "extract market HTML"
+      },
+      {
+        "parameters": {
+          "html": "={{ $json.article_html }}",
+          "destinationKey": "clean_text",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.markdown",
+        "typeVersion": 1,
+        "position": [
+          -512,
+          416
+        ],
+        "id": "a20d0b3e-01bd-4e4c-b9bf-2b8b53d28ebb",
+        "name": "convert market HTML to markdown"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentURL": "={{ $('create draft doc').item.json.id }}",
+          "simple": false,
+          "actionsUi": {
+            "actionFields": [
+              {
+                "action": "replaceAll",
+                "text": "{{MARKET_SUMMARY}}",
+                "replaceText": "={{ $json.content.parts[0].text.replace(/\\n\\n/g, '\\n') }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          32,
+          320
+        ],
+        "id": "32815d9c-f917-43c9-9c9a-8023ccd7d3c2",
+        "name": "write market summary",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "EOX38dISLsdJVkoT",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentURL": "={{ $('create draft doc').item.json.id }}",
+          "actionsUi": {
+            "actionFields": [
+              {
+                "action": "replaceAll",
+                "text": "{{ECONOMY}}",
+                "replaceText": "={{ $json.content.parts[0].text.replace(/\\n\\n/g, '\\n') }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          128,
+          512
+        ],
+        "id": "7a568ef2-8bda-4b24-891d-f81af82c2525",
+        "name": "write economy summary",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "EOX38dISLsdJVkoT",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "https://www.capitalmarket.com/markets/news/week-ahead-news",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "Mozilla/5.0"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1488,
+          672
+        ],
+        "id": "946b357b-f05d-404d-9209-6c3ec19fb803",
+        "name": "fetch week ahead page"
+      },
+      {
+        "parameters": {
+          "operation": "extractHtmlContent",
+          "extractionValues": {
+            "values": [
+              {
+                "key": "link",
+                "cssSelector": "td a",
+                "returnValue": "attribute",
+                "attribute": "href",
+                "returnArray": true
+              },
+              {
+                "key": "text",
+                "cssSelector": "td a"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.html",
+        "typeVersion": 1.2,
+        "position": [
+          -1280,
+          672
+        ],
+        "id": "57ff63a6-d670-4d0f-a9f3-e7b0716bce06",
+        "name": "extract week ahead links"
+      },
+      {
+        "parameters": {
+          "jsCode": "// This code combines restructuring (making the URL absolute) and filtering\n// (keeping only the newest article, which is at index 0).\n\nconst links = $json.link;\nconst itemsToReturn = [];\n\n// 1. Check if the 'links' array exists and has at least one item.\nif (links && links.length > 0) {\n    // 2. The links are typically sorted newest-to-oldest, so we only select the first one (index 0).\n    const newestRelativeLink = links[0];\n    \n    // 3. Convert the relative link to an absolute link.\n    const absoluteLink = \"https://www.capitalmarket.com\" + newestRelativeLink;\n    \n    // 4. Return ONLY this single, newest link as a single item in the correct format.\n    itemsToReturn.push({\n        json: {\n            link: absoluteLink\n        }\n    });\n}\n\nreturn itemsToReturn;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1072,
+          672
+        ],
+        "id": "0b32b6d5-fcb8-4be7-be42-24a6896f43cb",
+        "name": "filter latest weak ahead link"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.link }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -864,
+          672
+        ],
+        "id": "7f06bcd8-8bbf-4f26-8fcf-f46abd8556f3",
+        "name": "fetch week ahead article"
+      },
+      {
+        "parameters": {
+          "operation": "extractHtmlContent",
+          "extractionValues": {
+            "values": [
+              {
+                "key": "article_html",
+                "cssSelector": "div.memo-content",
+                "returnValue": "html"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.html",
+        "typeVersion": 1.2,
+        "position": [
+          -656,
+          672
+        ],
+        "id": "641a646a-fef5-4e5e-a53e-a0ee68cf2e30",
+        "name": "extract week ahead HTML"
+      },
+      {
+        "parameters": {
+          "html": "={{ $json.article_html }}",
+          "destinationKey": "clean_text",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.markdown",
+        "typeVersion": 1,
+        "position": [
+          -464,
+          672
+        ],
+        "id": "1ede6519-fe9e-4df4-af87-63bea6f1f9ab",
+        "name": "convert week ahead HTML to markdown"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentURL": "={{ $('create draft doc').item.json.id }}",
+          "actionsUi": {
+            "actionFields": [
+              {
+                "action": "replaceAll",
+                "text": "{{WEEK_AHEAD}}",
+                "replaceText": "={{ $json.content.parts[0].text.replace(/\\n\\n/g, '\\n') }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          48,
+          704
+        ],
+        "id": "b0ec82bf-54a3-4099-89fe-7466b594f9a7",
+        "name": "write week ahead",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "EOX38dISLsdJVkoT",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "https://unlistedzone.com/blog",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "Mozilla/5.0"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1456,
+          880
+        ],
+        "id": "3f0a7073-841e-4f4b-81e5-a5c0458eef2a",
+        "name": "fetch unlisted blog"
+      },
+      {
+        "parameters": {
+          "operation": "extractHtmlContent",
+          "extractionValues": {
+            "values": [
+              {
+                "key": "link",
+                "cssSelector": ".section-41 .left-side a[href*=\"unlistedzone\"]",
+                "returnValue": "attribute",
+                "attribute": "href",
+                "returnArray": true
+              },
+              {
+                "key": "title_raw",
+                "cssSelector": ".popular .main-card .blog-content h2"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.html",
+        "typeVersion": 1.2,
+        "position": [
+          -1280,
+          880
+        ],
+        "id": "ecd3d460-2cbf-42c6-b2e1-edd2fc729d0a",
+        "name": "extract unlisted links"
+      },
+      {
+        "parameters": {
+          "jsCode": "const allItems = items;\n\nconst cleanItems = [];\nconst baseUrl = \"https://unlistedzone.com\";\n\nfor (const item of allItems) {\n  const rawLink = item.json.link || \"\";\n  const rawTitle = item.json.title_raw || \"\";\n\n  if (rawTitle.trim() === \"\") {\n    continue;\n  }\n\n  const title = rawTitle.trim();\n\n  if (title.toLowerCase().includes(\"ncdex\")) {\n    continue;\n  }\n\n  // 🔹 FIXED: Safely convert to string before using startsWith\n  let link = String(rawLink || \"\").trim();\n\n  if (link !== \"\" && !link.startsWith(\"http\")) {\n    link = baseUrl + link;\n  }\n\n  cleanItems.push({\n    json: {\n      title: title,\n      link: link,\n    },\n  });\n}\n\nreturn cleanItems.slice(0, 2);\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1088,
+          880
+        ],
+        "id": "4e545d48-9bcc-4be0-978d-2a94d82b810e",
+        "name": "filter unlisted links"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentURL": "={{ $('create draft doc').item.json.id }}",
+          "actionsUi": {
+            "actionFields": [
+              {
+                "action": "replaceAll",
+                "text": "{{UNLISTED_EQUITY}}",
+                "replaceText": "={{ $json.content.parts[0].text.replace(/\\n\\n/g, '\\n') }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          -592,
+          880
+        ],
+        "id": "79f45a7b-2df3-4ed8-b1b4-2946ca7c4d6f",
+        "name": "write unlisted update",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "EOX38dISLsdJVkoT",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1bU2IN__jC-JKkFoHwiKNLJfZo-FR9iC6xCAFfqPD5y8",
+            "mode": "list",
+            "cachedResultName": "Gainers and Losers",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bU2IN__jC-JKkFoHwiKNLJfZo-FR9iC6xCAFfqPD5y8/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1961684631,
+            "mode": "list",
+            "cachedResultName": "Dashboard",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bU2IN__jC-JKkFoHwiKNLJfZo-FR9iC6xCAFfqPD5y8/edit#gid=1961684631"
+          },
+          "options": {
+            "dataLocationOnSheet": {
+              "values": {
+                "rangeDefinition": "specifyRangeA1",
+                "range": "A2:B5"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -1552,
+          1088
+        ],
+        "id": "43c265da-6554-4f76-9c6e-965bf7d4c2e8",
+        "name": "get sheet gainers",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1bU2IN__jC-JKkFoHwiKNLJfZo-FR9iC6xCAFfqPD5y8",
+            "mode": "list",
+            "cachedResultName": "Gainers and Losers",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bU2IN__jC-JKkFoHwiKNLJfZo-FR9iC6xCAFfqPD5y8/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1961684631,
+            "mode": "list",
+            "cachedResultName": "Dashboard",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bU2IN__jC-JKkFoHwiKNLJfZo-FR9iC6xCAFfqPD5y8/edit#gid=1961684631"
+          },
+          "options": {
+            "dataLocationOnSheet": {
+              "values": {
+                "rangeDefinition": "specifyRangeA1",
+                "range": "D2:E5"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -1392,
+          1088
+        ],
+        "id": "19cd2ac8-4548-4930-b8b1-45c38535191a",
+        "name": "get sheet losers",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {// Get data from the Gainers node\n// Replace 'Google Sheets Gainers' with the EXACT name of your gainers node\nconst gainers = $('get sheet gainers').all().map(item => item.json);\n\n// Get data from the Losers node\n// Replace 'Google Sheets Losers' with the EXACT name of your losers node\nconst losers = $('get sheet losers').all().map(item => item.json);\n\n// Return them as a single combined object\nreturn {\n  json: {\n    gainers_list: gainers,\n    losers_list: losers\n  }\n};\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1216,
+          1088
+        ],
+        "id": "2afe758e-fa3c-443b-b878-30a1dce563ff",
+        "name": "merge gainer loser data"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Get the JSON data automatically from the previous node\nconst json = $input.item.json;\n\n// 2. Extract the text using the specific path for Gemini\n// Path: content -> parts -> [0] -> text\nlet text;\n\ntry {\n  text = json.content.parts[0].text;\n} catch (error) {\n  // If the path fails, try finding standard output fields\n  text = json.output || json.text;\n}\n\n// 3. Safety Check: Stop if text is missing\nif (!text || typeof text !== 'string') {\n  throw new Error(\"Text not found. Incoming data: \" + JSON.stringify(json));\n}\n\n// 4. Split the text into Gainers and Losers sections\nconst parts = text.split(/SECTION 2: LOSERS/i);\n\nconst gainers = parts[0] ? parts[0].replace(/SECTION 1: GAINERS/i, \"\").trim() : \"No Gainers\";\nconst losers = parts[1] ? parts[1].trim() : \"No Losers\";\n\n// 5. Return the clean results\nreturn {\n  json: {\n    gainers_clean: gainers,\n    losers_clean: losers\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -752,
+          1088
+        ],
+        "id": "ff8504f6-0832-4eb0-a83f-302774133fe5",
+        "name": "parse reasons JSON"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentURL": "={{ $('create draft doc').first().json.id }}",
+          "actionsUi": {
+            "actionFields": [
+              {
+                "action": "replaceAll",
+                "text": "{{Gainers}}",
+                "replaceText": "={{ $json.gainers_clean }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{Losers}}",
+                "replaceText": "={{ $json.losers_clean }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          -576,
+          1088
+        ],
+        "id": "4869865b-3704-425e-8f5d-4c3f181ef886",
+        "name": "write gainers losers",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "EOX38dISLsdJVkoT",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentURL": "={{ $('create draft doc').item.json.id }}",
+          "actionsUi": {
+            "actionFields": [
+              {
+                "action": "replaceAll",
+                "text": "{{Poll}}",
+                "replaceText": "={{ $json.content.parts[0].text }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          320,
+          896
+        ],
+        "id": "c3334bef-7dad-4ef8-8a2c-1c6c125e06a5",
+        "name": "write poll",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "EOX38dISLsdJVkoT",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "documentURL": "={{ $json.documentId }}"
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          -384,
+          1088
+        ],
+        "id": "0776de1d-f0f5-4911-804c-98a46ac5c218",
+        "name": "read full draft",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "EOX38dISLsdJVkoT",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentURL": "={{ $('create draft doc').first().json.id }}",
+          "actionsUi": {
+            "actionFields": [
+              {
+                "action": "replaceAll",
+                "text": "{{DATE}}",
+                "replaceText": "={{ $('set dates').first().json.readableDate }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{TITLE}}",
+                "replaceText": "={{ $json.content.parts[0].text }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          64,
+          1072
+        ],
+        "id": "63819d9f-b5a6-40ff-a0b6-3bdbfb1a2556",
+        "name": "write date and title",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "EOX38dISLsdJVkoT",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "sendAndWait",
+          "chatId": "-1002262360602",
+          "message": "={{ 'Weekly Newsletter draft is ready for review.\\n\\n[Open Newsletter Draft](https://docs.google.com/document/d/' + $json.documentId + ')\\n\\nPlease review the content and approve or reject below.' }}",
+          "approvalOptions": {
+            "values": {
+              "approvalType": "double"
+            }
+          },
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          240,
+          1072
+        ],
+        "id": "4bfd8416-cbd0-412a-aed1-964ea6663ad0",
+        "name": "wait for approval",
+        "webhookId": "23028beb-158d-414d-84ed-e33ca24f6c16",
+        "credentials": {
+          "telegramApi": {
+            "id": "I0rf76FsxPDgaIaQ",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "caf3ed76-5eac-4349-8623-dbf860bf4291",
+                "leftValue": "={{ $json.data.approved }}",
+                "rightValue": "YES",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          416,
+          1072
+        ],
+        "id": "ae33b7be-dfaf-4e2d-b28d-d4545253cf0b",
+        "name": "check approval status"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Get the raw text from Gemini\n// Handle different output paths (output, text, or message.content)\nconst json = $input.item.json;\nconst rawContent = json.output || json.text || json.message?.content || json.content?.parts?.[0]?.text;\n\nif (!rawContent) {\n  throw new Error(\"No content found in AI response.\");\n}\n\n// 2. Sanitize the output (Remove markdown ```json fences if AI adds them)\nconst cleanJsonString = rawContent.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\n\n// 3. Parse the JSON\nlet captions;\ntry {\n  captions = JSON.parse(cleanJsonString);\n} catch (e) {\n  throw new Error(\"AI output was not valid JSON. Output: \" + rawContent);\n}\n\n// 4. Return clear variables for the next node\nreturn {\n  json: {\n    linkedin_final: captions.linkedin,\n    facebook_final: captions.facebook,\n    instagram_final: captions.instagram,\n    twitter_final: captions.twitter\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -384,
+          1280
+        ],
+        "id": "88a7572e-797f-424f-92d0-e13ac58b566b",
+        "name": "parse social JSON"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentURL": "={{ $('create draft doc').first().json.id }}",
+          "simple": false,
+          "actionsUi": {
+            "actionFields": [
+              {
+                "action": "replaceAll",
+                "text": "{{Linkedin Caption}}",
+                "replaceText": "={{ $json.linkedin_final }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{Instagram Caption}}",
+                "replaceText": "={{ $json.instagram_final }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{X Caption}}",
+                "replaceText": "={{ $json.twitter_final }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{Facebook Caption}}",
+                "replaceText": "={{ $json.facebook_final }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          -208,
+          1280
+        ],
+        "id": "756e5a92-f9c6-4a70-b967-6786383334f1",
+        "name": "write social captions",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "EOX38dISLsdJVkoT",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Get raw text\nconst rawContent = $input.item.json.content.parts[0].text;\n\n// 2. Extract JSON payload between outer braces\nconst jsonMatch = rawContent.match(/\\{[\\s\\S]*\\}/);\n\nif (!jsonMatch) {\n  throw new Error(\"No JSON object found in LLM output\");\n}\n\nlet cleanJsonString = jsonMatch[0];\n\n// 3. Parse JSON\ntry {\n  const data = JSON.parse(cleanJsonString);\n  return [{ json: data }];\n} catch (e) {\n  // Helpful log to see the exact invalid slice in execution logs\n  console.log(\"Failed JSON payload around error:\", cleanJsonString.slice(4500, 4700));\n  throw new Error(`AI output was not valid JSON: ${e.message}`);\n}"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          272,
+          1280
+        ],
+        "id": "4a4d10d6-4d36-48b4-922d-d779c39f9ec9",
+        "name": "parse presentation & script JSON"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentURL": "={{ $('create draft doc').first().json.id }}",
+          "simple": false,
+          "actionsUi": {
+            "actionFields": [
+              {
+                "action": "replaceAll",
+                "text": "{{SLIDE_WEEK_GONE_BY}}",
+                "replaceText": "={{ $json.slide_week_gone_by.replace(/\\n\\n/g, '\\n') }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SCRIPT_WEEK_GONE_BY}}",
+                "replaceText": "={{ $json.script_week_gone_by }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SLIDE_DOMESTIC_ECO}}",
+                "replaceText": "={{ $json.slide_domestic_eco.replace(/\\n\\n/g, '\\n') }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SCRIPT_DOMESTIC_ECO}}",
+                "replaceText": "={{ $json.script_domestic_eco }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SLIDE_GLOBAL_ECO}}",
+                "replaceText": "={{ $json.slide_global_eco.replace(/\\n\\n/g, '\\n') }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SCRIPT_GLOBAL_ECO}}",
+                "replaceText": "={{ $json.script_global_eco }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SLIDE_GAINERS}}",
+                "replaceText": "={{ $json.slide_gainers.replace(/\\n\\n/g, '\\n') }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SCRIPT_GAINERS}}",
+                "replaceText": "={{ $json.script_gainers }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SLIDE_LOSERS}}",
+                "replaceText": "={{ $json.slide_losers.replace(/\\n\\n/g, '\\n') }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SCRIPT_LOSERS}}",
+                "replaceText": "={{ $json.script_losers }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SLIDE_UNLISTED}}",
+                "replaceText": "={{ $json.slide_unlisted.replace(/\\n\\n/g, '\\n') }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SCRIPT_UNLISTED}}",
+                "replaceText": "={{ $json.script_unlisted }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SLIDE_WEEK_AHEAD}}",
+                "replaceText": "={{ $json.slide_week_ahead.replace(/\\n\\n/g, '\\n') }}"
+              },
+              {
+                "action": "replaceAll",
+                "text": "{{SCRIPT_WEEK_AHEAD}}",
+                "replaceText": "={{ $json.script_week_ahead }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          448,
+          1280
+        ],
+        "id": "3036fefe-b9bc-4465-9c1a-2aab31d3c3d8",
+        "name": "write presentation content & script",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "EOX38dISLsdJVkoT",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "-1002262360602",
+          "text": "✅ Draft Approved! Starting the generation of social captions and presentation content...",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          -992,
+          1280
+        ],
+        "id": "55f910ae-572a-4338-b2ed-6e4b61aafc19",
+        "name": "notify approval",
+        "webhookId": "b981da4f-3a7a-47e0-b47c-df50520093f7",
+        "credentials": {
+          "telegramApi": {
+            "id": "I0rf76FsxPDgaIaQ",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "-1002262360602",
+          "text": "❌ Draft Rejected. The automation has been paused.",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          608,
+          1088
+        ],
+        "id": "fd994ba2-ce76-421e-a277-ee76e0ad20ea",
+        "name": "notify decline",
+        "webhookId": "b981da4f-3a7a-47e0-b47c-df50520093f7",
+        "credentials": {
+          "telegramApi": {
+            "id": "I0rf76FsxPDgaIaQ",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "-1002262360602",
+          "text": "={{ '✅ Newsletter Automation Complete!\\n\\nYou can see the final newsletter here: [Open Final Newsletter](https://docs.google.com/document/d/' + $('create draft doc').first().json.id + '/edit)' }}",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          608,
+          1280
+        ],
+        "id": "8c6de6aa-24e5-4894-8419-b29b44916073",
+        "name": "notify completion",
+        "webhookId": "b981da4f-3a7a-47e0-b47c-df50520093f7",
+        "credentials": {
+          "telegramApi": {
+            "id": "I0rf76FsxPDgaIaQ",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "documentURL": "={{ $('create draft doc').first().json.id }}"
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          -832,
+          1280
+        ],
+        "id": "e95c59f3-06ba-4ded-bf42-6482d820ac64",
+        "name": "read approved draft",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "EOX38dISLsdJVkoT",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3.1-flash-lite",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3.1-flash-lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=Role: You are the Social Media Manager for Tikona Capital.\n\n**Task:** Based on the provided Weekly Newsletter content, generate 4 distinct social media captions tailored to specific platforms.\n\n**Input Content:**\n{{ $('read approved draft').item.json.content }}\n\n**Mandatory Links (Append to every caption):**\n• YouTube: [YOUR_YOUTUBE_LINK]\n• LinkedIn: [LINKEDIN_POST_LINK]\n• Smallcase: https://tikonacapital.smallcase.com\n\n**Strict Output Format:**\nReturn ONLY a valid JSON object. Do not include markdown formatting (like ```json).\n{\n  \"linkedin\": \"Professional, bullet-point heavy analysis. High emojis.\",\n  \"facebook\": \"Engaging but corporate. Moderate emojis.\",\n  \"instagram\": \"Visual-first, punchy, very high emoji usage.\",\n  \"twitter\": \"Concise, data-heavy, strictly under 280 characters.\"\n}\n\n**Style Guides:**\n1. **LinkedIn:** Structure as Headline -> Summary -> 📊 Performance -> 🌍 Outlook -> CTA.\n2. **Facebook:** 2-3 short paragraphs, conversational but data-backed.\n3. **X (Twitter):** Focus on the single biggest number/stat. No fluff.\n\n**NUMERICAL CONSTRAINT:**\nRound ALL percentage figures to exactly one decimal place. (Example: Convert 5.21% → 5.2% and 3.39% → 3.4%). Never use two decimal places."
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          -672,
+          1280
+        ],
+        "id": "9b7dc77d-4ebb-4db1-ad85-02ea2db4695d",
+        "name": "gen social captions",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GaCvOMdqQCMm3lhY",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "weeks",
+                "triggerAtDay": [
+                  5
+                ],
+                "triggerAtHour": 18,
+                "triggerAtMinute": 2
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -2304,
+          1120
+        ],
+        "id": "37d3e36e-522b-4952-8f0a-2d080a7f8c7b",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3.1-flash-lite",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3.1-flash-lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=You are a Financial Editor for Tikona Capital.\n\n**Task:** Synthesize the \"Market Overview\" section based on the provided text.\n\n**Input Data:**\n{{ $json.clean_text }}\n\n**Core Objective:**\nProduce a high-density market summary that retains strict factual accuracy but **completely reconstructs the phrasing** to ensure originality. Do not simply rearrange words; synthesize the \"whys\" and \"hows\" into a fresh narrative.\n\n**Style Constraints:**\n* **Tone:** Clinical, precise, and institutional.\n* **Banned Vocabulary:** Do not use flowery adjectives like \"buoyant,\" \"confluence,\" \"tempered,\" or \"skyrocketed.\"\n* **Structure:** Strictly 3 paragraphs.\n\n**Drafting Instructions:**\n\n**Paragraph 1: The Narrative Drivers (Qualitative)**\n* **Opening:** You MUST start with: \"Domestic equities ended the week on a [strong/weak/flat] footing...\"\n* **Content:** Integrated into 2-3 sentences, explain the primary drivers identified in the text (e.g., inflation dynamics, global yield movements, political outcomes, or earnings results).\n* **Constraint:** Focus solely on the macro catalysts. **Do not** mention specific index values or stock prices in this paragraph.\n\n**Paragraph 2: The Hard Numbers (Quantitative)**\n* **Opening:** You MUST start with: \"For the week ended Friday, [Date]...\"\n* **Content:** Report the final standing of the S&P BSE Sensex and Nifty 50 (listing both points changed and percentage change). Briefly characterize the performance of the broader markets (MidCap/SmallCap).\n* **Ending:** Conclude with a short sentiment check (e.g., \"reflecting a cautious yet resilient undertone\").\n\n**Paragraph 3: The Weekly Trajectory (Chronological)**\n* **Content:** Trace the market's movement from Monday to Friday.\n* **Paraphrasing Requirement:** Instead of listing days (\"Monday was up, Tuesday was down\"), describe the *flow* of price action.\n* **Example phrasing to mimic:** \"Trading commenced with [Trend], which extended into mid-week. Volatility emerged by Thursday, before giving way to [Final Trend] on Friday.\"\n* **Constraint:** Focus purely on price action (gains, losses, consolidation, recovery).\n\n**Output:**\nReturn ONLY the 3 paragraphs as a single text block. Do not use bold text.\n\n**NUMERICAL CONSTRAINT:**\nRound ALL percentage figures to exactly one decimal place. (Example: Convert 5.21% → 5.2% and 3.39% → 3.4%). Never use two decimal places."
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          -304,
+          320
+        ],
+        "id": "84d6afb6-bf38-41a9-8519-985bf392d1de",
+        "name": "gen market summary",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GaCvOMdqQCMm3lhY",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3.1-flash-lite",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3.1-flash-lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=You are a Financial Editor for Tikona Capital.\n\n**Task:** Synthesize the \"Economy\" section based on the provided text.\n\n**Input Data:**\n{{ $('convert market HTML to markdown').item.json.clean_text }}\n\n**Core Objective:**\nCreate a high-density summary that retains 100% of the data accuracy but **completely rewrites the sentence structures** to ensure originality. Do not simply rearrange words; digest the information and reconstruct the sentences.\n\n**Style Guide:**\n* **Tone:** Institutional, direct, and concise.\n* **Length:** Strictly 3 paragraphs (Max 3 sentences per paragraph).\n* **Banned:** Flowery transitions (\"In a decisive move,\" \"Conversely\"), adverbs (\"significantly\"), and generic filler (\"The market witnessed\").\n* **Paraphrasing Rule:** Active voice and data synthesis are preferred over listing facts. (e.g., Instead of \"Inflation fell to 5% and reserves fell to $600b,\" write \"While inflation moderated to 5%, forex reserves contracted to $600b.\")\n\n**Structure & Content:**\n\n**Paragraph 1: Macro Indicators**\n* **Action:** Synthesize Forex Reserve data and Inflation figures (CPI/WPI).\n* **Instruction:** Combine these distinct data points into a cohesive narrative regarding the macro environment. Use contrast words (e.g., \"despite,\" \"amid\") to link the movement of reserves with inflation trends.\n* **Constraint:** Do not copy phrases like \"stood at\" or \"was recorded at.\"\n\n**Paragraph 2: Fiscal Policy**\n* **Action:** Summarize government interventions or packages.\n* **Instruction:** State the package amount and its specific target (sectors/goal) immediately. Rephrase the *purpose* of the policy (e.g., change \"to help exports\" to \"bolstering export competitiveness\").\n* **Constraint:** Ensure the sector names (Textiles, Leather, etc.) are accurate but integrated naturally.\n\n**Paragraph 3: Geopolitics & Trade**\n* **Action:** Report on Global/US/Trade specific news.\n* **Instruction:** Convert direct quotes into reported speech where possible to improve flow and uniqueness. Focus on the *implication* of the statements (e.g., tariff adjustments, trade deal proximity).\n* **Constraint:** Stick strictly to the facts provided in the text regarding Trump/Trade.\n\n**Output:**\nReturn ONLY the 3 paragraphs. Do not use bold text.\n\n**NUMERICAL CONSTRAINT:**\nRound ALL percentage figures to exactly one decimal place. (Example: Convert 5.21% → 5.2% and 3.39% → 3.4%). Never use two decimal places."
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          -176,
+          512
+        ],
+        "id": "e7c18a0d-9cfc-4812-8fb9-fc0fd64e1ed2",
+        "name": "gen economy summary",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GaCvOMdqQCMm3lhY",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3.1-flash-lite",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3.1-flash-lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=You are a Market Strategist for Tikona Capital.\n\n**Task:** Synthesize a \"Week Ahead\" market outlook based on the provided news text.\n\n**Input Text:**\n{{ $json.clean_text }}\n\n**Core Objective:**\nCreate a forward-looking analysis that preserves all specific data points (dates, percentages) but **completely reconstructs the sentence structures** to ensure originality. Do not simply rearrange the input text; digest the information and write it in a fresh, institutional voice.\n\n**Style Constraints:**\n* **Length:** Strictly 150–180 words total.\n* **Tone:** Analytical, fluid, and professional.\n* **Structure:** Exactly 4 paragraphs.\n\n**Drafting Instructions:**\n\n**Paragraph 1: Underlying Catalysts (approx. 40 words)**\n* **Opening:** You MUST start with: \"Indian equities start the week with a [positive/negative/cautious] bias...\"\n* **Action:** Synthesize the primary market drivers (e.g., inflation trends, global sentiment).\n* **Paraphrasing Rule:** Instead of listing headlines, explain *why* these numbers matter. (e.g., \"Cooling CPI data is fueling rate-cut bets\" rather than \"CPI was low\"). Use key data points from the text to back this up.\n\n**Paragraph 2: Domestic Monitorables (approx. 45 words)**\n* **Opening:** You MUST start with: \"Back home, markets will track...\"\n* **Action:** Outline the key economic releases scheduled for India.\n* **Data Integration:** Seamlessly weave specific dates and **previous** data figures into the narrative flow. Avoid robotic listing; use connectors like \"following,\" \"expected to,\" or \"after.\"\n\n**Paragraph 3: International Cues (approx. 45 words)**\n* **Opening:** You MUST start with: \"Globally, [Country A] and [Country B]...\"\n* **Action:** Detail the critical data points from China and the US.\n* **Format:** Ensure dates are included in parentheses (e.g., \"(20 Nov)\"). Use active verbs to describe the expected impact of these events (e.g., \"will guide sentiment,\" \"is likely to influence\").\n\n**Paragraph 4: Strategic Implications (approx. 35 words)**\n* **Opening:** You MUST start with: \"With key macro data from...\"\n* **Action:** Assess the potential for volatility vs. stability.\n* **Conclusion:** End with a forward-looking strategic note on earnings or macro-trends. Rephrase the source text's conclusion to sound like an independent strategic assessment.\n\n**Output:**\nReturn ONLY the 4 paragraphs as a single text block.\n\n**NUMERICAL CONSTRAINT:**\nRound ALL percentage figures to exactly one decimal place. (Example: Convert 5.21% → 5.2% and 3.39% → 3.4%). Never use two decimal places.\n\n**STRICTLY FORBIDDEN: Do not include any bracketed citations, source numbers (e.g., [1][2]), or references in the text. Remove them completely.**"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          -288,
+          672
+        ],
+        "id": "2af7eaf8-6b31-47da-b951-b1a35538a934",
+        "name": "gen week ahead",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GaCvOMdqQCMm3lhY",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3.1-flash-lite",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3.1-flash-lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=You are an expert financial content writer.\n\n**Task:**\nI will provide you with a weekly market-outlook paragraph. Your task is to generate a concise 4-option poll summarizing what will drive markets in the upcoming week.\n\n**Input:**\n{{ $json.content.parts[0].text }}\n\n**Instructions:**\n1. **Analyze:** Read the weekly market summary I provide.\n2. **Identify:** Pick the 4 most important drivers across regions such as India, US, China, Europe, Global, Commodities, or any other mentioned.\n3. **Format:** Convert them into a poll format with:\n    * A main question.\n    * Four short options, each 2–5 words.\n    * Each option begins with a region label (e.g., India, US, China, Global).\n4. **Style:** Keep wording simple, impactful, and suitable for social media polls.\n5. **Constraint:** Do not rewrite the original text—only extract major themes.\n\n**Output Format:**\n\nWhat will drive markets in the upcoming week of (date)?\nIndia: <2–5 word driver>\nUS: <2–5 word driver>\nChina: <2–5 word driver>\nGlobal: <2–5 word driver>\n\n**Note on Date:**\nFor \"(date)\", calculate and use the date that is exactly 3 days after: {{ $today }}\n\n**Fallback Rule:**\nIf any region is not mentioned in the input, replace it with whichever major region or theme is mentioned."
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          896
+        ],
+        "id": "3899f9fe-1a7d-4f51-9c87-1c6fe6c1d2c9",
+        "name": "gen weekly poll",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GaCvOMdqQCMm3lhY",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3.1-flash-lite",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3.1-flash-lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=You are a Financial Markets Editor at Tikona Capital.\n\n**Task:** Synthesize the provided financial news into a strictly formatted 3-paragraph update.\n\n**Input Text:**\n{{ $json.link }}\n\n**Core Objective:**\nProduce a concise unlisted market update.\n**CRITICAL:** You must completely rewrite and paraphrase the input text. Do not copy phrases or sentence structures from the source. Retain all facts (names, numbers, deal types) but express them in your own fresh, institutional voice.\n\n**Structure & Content Rules:**\n\n**Paragraph 1 (The Synthesis):**\n* **Length:** Strictly 1 sentence.\n* **Content:** Construct a broad summary statement indicating that unlisted market activity is [active/steady/robust].\n* **Requirement:** Attribute this momentum to the specific *types* of events found in the text (e.g., \"buoyed by a surge in pre-IPO placements\" or \"driven by fresh acquisition interest\").\n* **Anti-Plagiarism:** Do not use the article's headline or opening sentence.\n\n**Paragraph 2 (The Hard News):**\n* **Length:** 2-3 sentences maximum.\n* **Content:** Report the specific deal details found in the text.\n* **Style:** Use active verbs (e.g., \"filed,\" \"secured,\" \"pursued\").\n* **Format:** \"[Company A] has [Action/Amount]. Simultaneously/Meanwhile, [Company B] is [Action].\"\n* **Constraint:** Digest the details and write them from scratch. Do not simply splice parts of the original text together.\n\n**Paragraph 3 (The Fixed Template):**\n* **CRITICAL:** You must use the EXACT sentence structure below. Do not change the words, only update the list of companies based on the names found in the input text.\n* **Template:** \"Unlisted names like [Insert 3-5 Company Names found in text] continue to see steady investor demand as private-market appetite remains firm. Reach out to explore more opportunities in the emerging unlisted space.\"\n\n**Negative Constraints:**\n* NO analysis or fluff (e.g., \"broadly,\" \"market weighs,\" \"strategic maneuvering\").\n* NO corporate jargon.\n* Do not add a conclusion or summary beyond Paragraph 3.\n* **STRICTLY FORBIDDEN: Do not include any bracketed citations, source numbers (e.g., [1][2]), or references in the text. Remove them completely.**\n\n**Output:**\nReturn exactly 3 paragraphs."
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          -896,
+          880
+        ],
+        "id": "e1a1c6e3-fd0c-4350-8285-48c6b4418613",
+        "name": "gen unlisted update",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GaCvOMdqQCMm3lhY",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3.1-flash-lite",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3.1-flash-lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=Role: You are a Senior Financial Analyst.\n\n**Task:** Analyze the provided \"Gainers\" and \"Losers\" lists to generate concise explanations for their stock price movements.\n\n**Input Data:**\n{{ JSON.stringify($json) }}\n\n**Instructions:**\n1. **Data Conversion:** The percentage values may be in decimals (e.g., 0.42 = 42%, -0.28 = -28%). You must convert them to percentages.\n2. **Analysis:** Generate a strictly 1-sentence reason for EACH stock explaining the move (e.g., earnings, sector rally, profit booking).\n\n**Strict Output Format:**\nYou must use the exact format below:\n\nSECTION 1: GAINERS\n#StockName (+XX.X%): Reason.\n\nSECTION 2: LOSERS\n#StockName (-XX.X%): Reason.\n\n**NUMERICAL CONSTRAINT:**\nRound ALL percentage figures to exactly one decimal place. (Example: Convert 5.21% → 5.2% and 3.39% → 3.4%). Never use two decimal places."
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          -1056,
+          1024
+        ],
+        "id": "ced3bf50-5c54-420f-9af0-f27309e0f5af",
+        "name": "gen gainer loser reasons",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GaCvOMdqQCMm3lhY",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3.1-flash-lite",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3.1-flash-lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=You are a Senior Financial Editor at Tikona Capital.\n\n**Task:** Generate **one single** high-impact title for the weekly newsletter.\n\n**Input Data:**\n{{ $('read full draft').item.json.content }}\n\n**Core Objective:**\nSynthesize the newsletter content into a professional, headline-style title that captures the primary market sentiment and the key driving forces.\n\n**Structure & Style:**\n* **Format:** `[Market Action] + [Connector] + [Driver A] + [and/amid] + [Driver B]`\n* **Tone:** Professional, objective, and journalistic.\n* **Examples of approved style:**\n    * Markets Rally on Cooling Inflation and Strong Macro Signals\n    * Markets Turn Volatile Amid Mixed Earnings and Growth Signals\n    * Markets Turn Cautious as Global Signals Weigh on Sentiment\n    * Mixed Trends as Earnings Offset Weak Macro Cues\n\n**Strict Constraints:**\n* **Quantity:** Provide exactly **ONE** best title.\n* **Formatting:** Do **NOT** use bold text. Do **NOT** use quotation marks.\n* **Content:** Do **NOT** include specific dates or years.\n* **Length:** Keep it concise (under 12 words).\n\n**Output:**\nReturn ONLY the title string."
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          -224,
+          1024
+        ],
+        "id": "f7b46607-5c0b-4190-ba9f-b85847fef832",
+        "name": "gen newsletter title",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GaCvOMdqQCMm3lhY",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3.1-flash-lite",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3.1-flash-lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=# Role\nYou are a **Senior Investment Strategist at Tikona Capital**, preparing an institutional-grade weekly market presentation for clients, distributors, and internal investment committees.\n\n# Task\nCreate a professional presentation deck strictly based on the provided newsletter data.\n\n# Input Data\n{{ $('read approved draft').item.json.content }}\n\n# Important Guidelines\n* **Source Material:** All slide bullet points and narration must be created **ONLY** from the newsletter content provided above.\n* **No Hallucinations:** Do **NOT** introduce any new data, assumptions, interpretations, or external information beyond what is explicitly mentioned in the newsletter.\n\n---\n\n# Output Structure (MANDATORY)\nFor each of the 7 slides, generate two outputs:\n\n### 1. Slide Content (Bullet-Based, Institutional Style)\n* Use **5–7 concise bullet points** per slide.\n* Bullets must be short, crisp, and information-dense.\n* Each bullet should capture one clear data point, insight, or conclusion directly derived from the newsletter content.\n* Do **NOT** write long bullets or paragraphs.\n* Do **NOT** use vague statements.\n\n### 2. Script (Narration – ~60 seconds per slide)\n* Write a professional voiceover script.\n* Expand on the slide bullet points using **ONLY** the newsletter content.\n* Add context and explanation but do **NOT** add new facts or opinions.\n* Explain why the data matters for investors in a neutral, research-driven manner.\n* **Tone:** Calm, confident, institutional, and professional.\n* Do **NOT** repeat bullet points verbatim.\n\n---\n\n# Data Precision Rules (STRICT)\n* Every market move must include the **final level**, **absolute change**, and **percentage change** exactly as stated or derived from the newsletter.\n* **ALL** data mentioned in the newsletter must be covered.\n* Do **NOT** skip macro numbers, sectoral data, stock-specific moves, or commentary.\n\n**Examples:**\n* **Correct:** \"Sensex closed at 88,400, up 300 points, gaining 0.5% WoW.\"\n* **Incorrect:** \"Sensex gained during the week.\"\n\n---\n\n# Slides Required\n\n1.  **Week Gone By**\n    * Cover Sensex, Nifty, Midcap, Smallcap with levels, points, and percentage changes.\n    * Include sectoral performance, FII/DII flows, and key domestic and global triggers mentioned in the newsletter.\n\n2.  **Domestic Economic Update**\n    * Cover inflation, IIP, PMI, fiscal data, and RBI commentary mentioned in the newsletter.\n    * Include bond yields, currency, liquidity trends, and India-specific macro signals if present.\n\n3.  **Global Economic Update**\n    * Cover US, Europe, and China macro data mentioned in the newsletter.\n    * Include central bank commentary, dollar index movement, bond yields, and commodities if provided.\n\n4.  **Gainers for the Week**\n    * Cover top gaining stocks or sectors mentioned in the newsletter.\n    * Include exact price move and percentage change.\n    * Explain earnings-led, policy-led, or event-driven reasons exactly as stated.\n\n5.  **Losers for the Week**\n    * Cover stocks or sectors under pressure mentioned in the newsletter.\n    * Include exact downside in points and percentage.\n    * Explain selling pressure using reasons explicitly mentioned in the newsletter.\n\n6.  **Unlisted Equities Update**\n    * Cover deal activity, pricing trends, and transaction data mentioned in the newsletter.\n    * Explain investor demand-supply dynamics and sectoral preference only if stated.\n\n7.  **Week Ahead**\n    * Cover upcoming macro data, earnings, and events explicitly mentioned in the newsletter.\n    * Highlight risks, triggers, and market setup strictly based on the provided content.\n\n---\n\n# Numerical Constraint (NON-NEGOTIABLE)\nRound **ALL** percentage figures to exactly **ONE** decimal place.\n* **Correct:** 5.2%, 3.4%\n* **Incorrect:** 5.21%, 3.39%, 5%\n\n# Quality Benchmark\nThe output must resemble a sell-side institutional weekly note, a mutual fund or PMS client presentation, or a CIO office market briefing.\n* No storytelling.\n* No generic commentary.\n* Only precise, data-backed, professional insights.\n\n---\n\n# Strict Output Format (JSON ONLY)\nPlease output the response in the following JSON structure:\n\n```json\n{\n  \"slide_week_gone_by\": [\n    \"• Bullet 1\",\n    \"• Bullet 2\",\n    \"• Bullet 3\",\n    \"• Bullet 4\",\n    \"• Bullet 5\"\n  ],\n  \"script_week_gone_by\": \"...\",\n  \"slide_domestic_eco\": [\"...\"],\n  \"script_domestic_eco\": \"...\",\n  \"slide_global_eco\": [\"...\"],\n  \"script_global_eco\": \"...\",\n  \"slide_gainers\": [\"...\"],\n  \"script_gainers\": \"...\",\n  \"slide_losers\": [\"...\"],\n  \"script_losers\": \"...\",\n  \"slide_unlisted\": [\"...\"],\n  \"script_unlisted\": \"...\",\n  \"slide_week_ahead\": [\"...\"],\n  \"script_week_ahead\": \"...\"\n}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          -32,
+          1280
+        ],
+        "id": "87bfb943-6a8a-4c2b-b75c-d7e0ce5ca273",
+        "name": "gen presentation content & script",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GaCvOMdqQCMm3lhY",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -2240,
+          944
+        ],
+        "id": "bc89edd6-34c1-4a2a-994d-bd33e447a6b4",
+        "name": "When Executed by Another Workflow"
+      }
+    ],
+    "connections": {
+      "set dates": {
+        "main": [
+          [
+            {
+              "node": "create draft doc",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create draft doc": {
+        "main": [
+          [
+            {
+              "node": "fetch market news page",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "fetch week ahead page",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "fetch unlisted blog",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "get sheet gainers",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "fetch market news page": {
+        "main": [
+          [
+            {
+              "node": "extract market links",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "extract market links": {
+        "main": [
+          [
+            {
+              "node": "filter latest market link",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "filter latest market link": {
+        "main": [
+          [
+            {
+              "node": "fetch market article",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "fetch market article": {
+        "main": [
+          [
+            {
+              "node": "extract market HTML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "extract market HTML": {
+        "main": [
+          [
+            {
+              "node": "convert market HTML to markdown",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "convert market HTML to markdown": {
+        "main": [
+          [
+            {
+              "node": "gen market summary",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "gen economy summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "write market summary": {
+        "main": [
+          []
+        ]
+      },
+      "fetch week ahead page": {
+        "main": [
+          [
+            {
+              "node": "extract week ahead links",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "extract week ahead links": {
+        "main": [
+          [
+            {
+              "node": "filter latest weak ahead link",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "filter latest weak ahead link": {
+        "main": [
+          [
+            {
+              "node": "fetch week ahead article",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "fetch week ahead article": {
+        "main": [
+          [
+            {
+              "node": "extract week ahead HTML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "extract week ahead HTML": {
+        "main": [
+          [
+            {
+              "node": "convert week ahead HTML to markdown",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "convert week ahead HTML to markdown": {
+        "main": [
+          [
+            {
+              "node": "gen week ahead",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "fetch unlisted blog": {
+        "main": [
+          [
+            {
+              "node": "extract unlisted links",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "extract unlisted links": {
+        "main": [
+          [
+            {
+              "node": "filter unlisted links",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "filter unlisted links": {
+        "main": [
+          [
+            {
+              "node": "gen unlisted update",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "get sheet gainers": {
+        "main": [
+          [
+            {
+              "node": "get sheet losers",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "get sheet losers": {
+        "main": [
+          [
+            {
+              "node": "merge gainer loser data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "merge gainer loser data": {
+        "main": [
+          [
+            {
+              "node": "gen gainer loser reasons",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "parse reasons JSON": {
+        "main": [
+          [
+            {
+              "node": "write gainers losers",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "write gainers losers": {
+        "main": [
+          [
+            {
+              "node": "read full draft",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "read full draft": {
+        "main": [
+          [
+            {
+              "node": "gen newsletter title",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "write date and title": {
+        "main": [
+          [
+            {
+              "node": "wait for approval",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "wait for approval": {
+        "main": [
+          [
+            {
+              "node": "check approval status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "check approval status": {
+        "main": [
+          [
+            {
+              "node": "notify approval",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "notify decline",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "parse social JSON": {
+        "main": [
+          [
+            {
+              "node": "write social captions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "parse presentation & script JSON": {
+        "main": [
+          [
+            {
+              "node": "write presentation content & script",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "write social captions": {
+        "main": [
+          [
+            {
+              "node": "gen presentation content & script",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "notify approval": {
+        "main": [
+          [
+            {
+              "node": "read approved draft",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "write presentation content & script": {
+        "main": [
+          [
+            {
+              "node": "notify completion",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "read approved draft": {
+        "main": [
+          [
+            {
+              "node": "gen social captions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gen social captions": {
+        "main": [
+          [
+            {
+              "node": "parse social JSON",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "set dates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gen market summary": {
+        "main": [
+          [
+            {
+              "node": "write market summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gen economy summary": {
+        "main": [
+          [
+            {
+              "node": "write economy summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gen week ahead": {
+        "main": [
+          [
+            {
+              "node": "write week ahead",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "gen weekly poll",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gen weekly poll": {
+        "main": [
+          [
+            {
+              "node": "write poll",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gen unlisted update": {
+        "main": [
+          [
+            {
+              "node": "write unlisted update",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gen gainer loser reasons": {
+        "main": [
+          [
+            {
+              "node": "parse reasons JSON",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gen newsletter title": {
+        "main": [
+          [
+            {
+              "node": "write date and title",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gen presentation content & script": {
+        "main": [
+          [
+            {
+              "node": "parse presentation & script JSON",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "set dates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version f39519b2",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": [
+    {
+      "updatedAt": "2025-07-07T02:47:29.277Z",
+      "createdAt": "2025-07-07T02:47:29.277Z",
+      "id": "usBpWvKJ18XVI8DB",
+      "name": "🟢 Done"
+    }
+  ]
+}
