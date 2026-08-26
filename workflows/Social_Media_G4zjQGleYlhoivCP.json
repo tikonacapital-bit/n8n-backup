@@ -1,0 +1,1785 @@
+{
+  "updatedAt": "2026-02-18T12:02:53.245Z",
+  "createdAt": "2026-01-13T08:15:19.847Z",
+  "id": "G4zjQGleYlhoivCP",
+  "name": "Social Media",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "graphApiVersion": "v23.0",
+        "node": "me",
+        "edge": "feed",
+        "options": {
+          "fields": {
+            "field": [
+              {
+                "name": "id"
+              },
+              {
+                "name": "created_time"
+              },
+              {
+                "name": "message"
+              },
+              {
+                "name": "permalink_url"
+              },
+              {
+                "name": "full_picture"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -448
+      ],
+      "id": "8fa3ed5f-68db-4253-aac7-654a78f7bb7e",
+      "name": "Facebook Graph API",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "dMEGTwKgnbmuQHcu",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the raw response from the Facebook node\n// We use '|| []' to safely handle cases where 'data' might be missing\nconst rawPosts = $input.first().json.data || [];\n\n// 2. Map the Facebook fields to your Google Sheet headers\nconst cleanData = rawPosts.map(post => ({\n  post_id: post.id,\n  published_at: post.created_time,\n  // Use '|| \"\"' to provide a default empty string if the field is missing\n  caption: post.message || \"\", \n  media_url: post.full_picture || \"\", \n  permalink: post.permalink_url || \"\",\n  platform: \"Facebook\"\n}));\n\n// 3. Return the cleaned list\nreturn cleanData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -448
+      ],
+      "id": "67d6398f-41a9-489a-9187-edd686c8d849",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "graphApiVersion": "v23.0",
+        "node": "17841453247289885",
+        "edge": "media",
+        "options": {
+          "fields": {
+            "field": [
+              {
+                "name": "id"
+              },
+              {
+                "name": "caption"
+              },
+              {
+                "name": "media_type"
+              },
+              {
+                "name": "media_url"
+              },
+              {
+                "name": "permalink"
+              },
+              {
+                "name": "timestamp"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -256
+      ],
+      "id": "e3bd4d72-517e-4a2b-9fbb-6780fc8e2ef6",
+      "name": "Facebook Graph API2",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "dMEGTwKgnbmuQHcu",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the raw Instagram data\nconst rawPosts = $input.first().json.data || [];\n\n// 2. Map Instagram fields to Google Sheet headers\nconst cleanData = rawPosts.map(post => ({\n  post_id: post.id,\n  published_at: post.timestamp, // Instagram uses 'timestamp'\n  caption: post.caption || \"\",\n  media_url: post.media_url || \"\",\n  permalink: post.permalink,\n  platform: \"Instagram\"\n}));\n\n// 3. Return the cleaned list\nreturn cleanData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -256
+      ],
+      "id": "a1f31702-ed31-4187-9fc2-12087bfef03f",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "url": "https://api.linkedin.com/rest/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "author"
+            },
+            {
+              "name": "author",
+              "value": "urn:li:organization:79035911"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "LinkedIn-Version",
+              "value": "202510"
+            },
+            {
+              "name": "X-Restli-Protocol-Version",
+              "value": "2.0.0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        -64
+      ],
+      "id": "c363ad9f-9fc1-4c31-bf35-b9705900230e",
+      "name": "HTTP Request",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "sKkZblfqoZhLXccm",
+          "name": "LinkedIn account"
+        },
+        "oAuth2Api": {
+          "id": "mcQHUJyIiBKeN546",
+          "name": "Unnamed credential 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the list of posts (they are inside \"elements\")\nconst rawPosts = $input.first().json.elements || [];\n\n// 2. Map LinkedIn data to your Google Sheet format\nconst cleanData = rawPosts.map(post => {\n  // Convert timestamp (milliseconds) to readable Date\n  const dateObj = new Date(post.publishedAt);\n  \n  // Create the Permalink\n  // The ID looks like \"urn:li:share:741...\", we use the whole thing for the link\n  const permalink = `https://www.linkedin.com/feed/update/${post.id}`;\n\n  return {\n    post_id: post.id,\n    published_at: dateObj.toISOString(),\n    caption: post.commentary || \"\",\n    // Note: The new LinkedIn API gives a \"Media URN\" (ID) instead of a direct JPG link.\n    // We will save this ID for now so the column isn't empty.\n    media_url: post.content?.media?.id || \"\",\n    permalink: permalink,\n    platform: \"LinkedIn\"\n  };\n});\n\n// 3. Return the cleaned list\nreturn cleanData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -64
+      ],
+      "id": "faa4e054-eb9c-4b57-9709-827a411490cc",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://strapi_cms:1337/api/upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1552,
+        -448
+      ],
+      "id": "56fc1f95-9cda-4a3f-abbe-707e01401a35",
+      "name": "upload image",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q0YZrcH36CqB75YB",
+          "name": "Strapi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.media_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1328,
+        -448
+      ],
+      "id": "93d70f74-1659-403f-b4b3-7e7e558d5e85",
+      "name": "get image"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://strapi_cms:1337/api/social-posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"data\": {\n      \"platform\": $('split in batches1').item.json.platform.toLowerCase(),\n      \"caption\": $('split in batches1').item.json.caption,\n      \"publishedDate\": $('split in batches1').item.json.strapi_date_final,\n      \"image\": $json.id || null,\n      \"originalPostUrl\": $('split in batches1').item.json.permalink\n    }\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1776,
+        -256
+      ],
+      "id": "c76407f9-faca-4fad-8aff-9f4918cce113",
+      "name": "create blog1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q0YZrcH36CqB75YB",
+          "name": "Strapi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://strapi_cms:1337/api/upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1552,
+        -256
+      ],
+      "id": "3c17f3d5-990f-40f6-ad0b-dba814e2e94b",
+      "name": "upload image1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q0YZrcH36CqB75YB",
+          "name": "Strapi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.media_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1328,
+        -256
+      ],
+      "id": "19fa7a76-5f8f-47e7-89df-07b793d0f9e3",
+      "name": "get image1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://strapi_cms:1337/api/social-posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"data\": {\n      \"platform\": $('split in batches3').item.json.platform.toLowerCase(),\n      \"caption\": $('split in batches3').item.json.caption,\n      \"publishedDate\": $('split in batches3').item.json.strapi_date_final,\n      \"image\": $json.id || null,\n      \"originalPostUrl\": $('split in batches3').item.json.permalink\n    }\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2000,
+        -64
+      ],
+      "id": "3823c12d-28aa-4e38-ab1c-84a917a53673",
+      "name": "create blog2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q0YZrcH36CqB75YB",
+          "name": "Strapi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://strapi_cms:1337/api/upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1776,
+        -64
+      ],
+      "id": "9ecf2f8f-c948-43c1-9488-508789f109ce",
+      "name": "upload image2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q0YZrcH36CqB75YB",
+          "name": "Strapi API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://strapi_cms:1337/api/social-posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"data\": {\n      \"platform\": $('split in batches').item.json.platform.toLowerCase(),\n      \"caption\": $('split in batches').item.json.caption,\n      \"publishedDate\": $('split in batches').item.json.strapi_date_final,\n      \"image\": $json.id || null,\n      \"originalPostUrl\": $('split in batches').item.json.permalink\n    }\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1776,
+        -448
+      ],
+      "id": "4fefcd01-363f-413b-b7e8-201b1904fc5e",
+      "name": "create post",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q0YZrcH36CqB75YB",
+          "name": "Strapi API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop through all incoming items\nconst results = $input.all().map(item => {\n  // 1. Get the incoming date (from Facebook, Instagram, or LinkedIn)\n  const rawDate = item.json.published_at;\n\n  // 2. Create a Javascript Date Object\n  // This automatically handles the \"+0000\" or ISO formats\n  const dateObj = new Date(rawDate);\n\n  // 3. Format for Strapi \"Date\" field (YYYY-MM-DD)\n  // We split the ISO string at 'T' and take the first part\n  const dateOnly = dateObj.toISOString().split('T')[0]; \n\n  // 4. Format for Strapi \"DateTime\" field (Full ISO)\n  const dateTime = dateObj.toISOString();\n\n  // 5. Return the item with these new specific fields attached\n  return {\n    json: {\n      ...item.json, // Keep all original data\n      strapi_date_final: dateOnly,      // Use this if your field is type \"Date\"\n      strapi_datetime_final: dateTime   // Use this if your field is type \"DateTime\"\n    }\n  };\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        -448
+      ],
+      "id": "3ea7862b-25a7-4304-91cf-b1b529dcb312",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop through all incoming items\nconst results = $input.all().map(item => {\n  // 1. Get the incoming date (from Facebook, Instagram, or LinkedIn)\n  const rawDate = item.json.published_at;\n\n  // 2. Create a Javascript Date Object\n  // This automatically handles the \"+0000\" or ISO formats\n  const dateObj = new Date(rawDate);\n\n  // 3. Format for Strapi \"Date\" field (YYYY-MM-DD)\n  // We split the ISO string at 'T' and take the first part\n  const dateOnly = dateObj.toISOString().split('T')[0]; \n\n  // 4. Format for Strapi \"DateTime\" field (Full ISO)\n  const dateTime = dateObj.toISOString();\n\n  // 5. Return the item with these new specific fields attached\n  return {\n    json: {\n      ...item.json, // Keep all original data\n      strapi_date_final: dateOnly,      // Use this if your field is type \"Date\"\n      strapi_datetime_final: dateTime   // Use this if your field is type \"DateTime\"\n    }\n  };\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        -256
+      ],
+      "id": "af05e95f-d96a-4257-87ac-4dd492501443",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop through all incoming items\nconst results = $input.all().map(item => {\n  // 1. Get the incoming date (from Facebook, Instagram, or LinkedIn)\n  const rawDate = item.json.published_at;\n\n  // 2. Create a Javascript Date Object\n  // This automatically handles the \"+0000\" or ISO formats\n  const dateObj = new Date(rawDate);\n\n  // 3. Format for Strapi \"Date\" field (YYYY-MM-DD)\n  // We split the ISO string at 'T' and take the first part\n  const dateOnly = dateObj.toISOString().split('T')[0]; \n\n  // 4. Format for Strapi \"DateTime\" field (Full ISO)\n  const dateTime = dateObj.toISOString();\n\n  // 5. Return the item with these new specific fields attached\n  return {\n    json: {\n      ...item.json, // Keep all original data\n      strapi_date_final: dateOnly,      // Use this if your field is type \"Date\"\n      strapi_datetime_final: dateTime   // Use this if your field is type \"DateTime\"\n    }\n  };\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        -64
+      ],
+      "id": "b8be69c3-d3ae-4ae5-8824-3fb0e452d576",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "batchSize": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1104,
+        -448
+      ],
+      "id": "c0716bb5-f8e1-4e8b-a78a-c5525b1402ec",
+      "name": "split in batches"
+    },
+    {
+      "parameters": {
+        "batchSize": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1104,
+        -256
+      ],
+      "id": "98e77aa8-db58-4502-8aa7-767e43d76815",
+      "name": "split in batches1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.downloadUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1552,
+        -64
+      ],
+      "id": "ef983f93-706c-4ff5-bbc2-e78f733047b3",
+      "name": "get image2",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.linkedin.com/rest/images/{{ encodeURIComponent($json.media_url) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "LinkedIn-Version",
+              "value": "202510"
+            },
+            {
+              "name": "X-Restli-Protocol-Version",
+              "value": "2.0.0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1328,
+        -64
+      ],
+      "id": "5c0734b7-59eb-4811-9f67-639aa74bea03",
+      "name": "Get LinkedIn URL",
+      "alwaysOutputData": false,
+      "credentials": {
+        "oAuth2Api": {
+          "id": "mcQHUJyIiBKeN546",
+          "name": "Unnamed credential 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "batchSize": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1104,
+        -64
+      ],
+      "id": "032ceef1-2804-4812-b1c1-75560b931c16",
+      "name": "split in batches3"
+    },
+    {
+      "parameters": {
+        "maxItems": 3
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -448
+      ],
+      "id": "1b1314f0-a255-4171-b93f-c93c5c3e43b3",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "maxItems": 3
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -256
+      ],
+      "id": "4ae20c5e-2acf-4bd2-ad3a-f164b914a8ef",
+      "name": "Limit1"
+    },
+    {
+      "parameters": {
+        "maxItems": 3
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -64
+      ],
+      "id": "425eed80-c2d7-42e2-849f-2ecf23105852",
+      "name": "Limit2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 23
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        -256
+      ],
+      "id": "521be0e5-4c8d-4607-972d-af4c2c938584",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "connections": {
+    "Facebook Graph API": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Graph API2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upload image": {
+      "main": [
+        [
+          {
+            "node": "create post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get image": {
+      "main": [
+        [
+          {
+            "node": "upload image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upload image1": {
+      "main": [
+        [
+          {
+            "node": "create blog1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get image1": {
+      "main": [
+        [
+          {
+            "node": "upload image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upload image2": {
+      "main": [
+        [
+          {
+            "node": "create blog2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Limit1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Limit2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split in batches": {
+      "main": [
+        [],
+        [
+          {
+            "node": "get image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split in batches1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "get image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get image2": {
+      "main": [
+        [
+          {
+            "node": "upload image2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get LinkedIn URL": {
+      "main": [
+        [
+          {
+            "node": "get image2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split in batches3": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get LinkedIn URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create post": {
+      "main": [
+        []
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "split in batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit1": {
+      "main": [
+        [
+          {
+            "node": "split in batches1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit2": {
+      "main": [
+        [
+          {
+            "node": "split in batches3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Facebook Graph API2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "f28c7a5c-8e8c-4375-8908-8301ddc3bca9",
+  "activeVersionId": "f28c7a5c-8e8c-4375-8908-8301ddc3bca9",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-13T08:15:19.852Z",
+      "createdAt": "2026-01-13T08:15:19.852Z",
+      "role": "workflow:owner",
+      "workflowId": "G4zjQGleYlhoivCP",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-06-16T09:21:40.000Z",
+    "createdAt": "2026-02-18T12:02:53.246Z",
+    "versionId": "f28c7a5c-8e8c-4375-8908-8301ddc3bca9",
+    "workflowId": "G4zjQGleYlhoivCP",
+    "nodes": [
+      {
+        "parameters": {
+          "graphApiVersion": "v23.0",
+          "node": "me",
+          "edge": "feed",
+          "options": {
+            "fields": {
+              "field": [
+                {
+                  "name": "id"
+                },
+                {
+                  "name": "created_time"
+                },
+                {
+                  "name": "message"
+                },
+                {
+                  "name": "permalink_url"
+                },
+                {
+                  "name": "full_picture"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.facebookGraphApi",
+        "typeVersion": 1,
+        "position": [
+          208,
+          -448
+        ],
+        "id": "8fa3ed5f-68db-4253-aac7-654a78f7bb7e",
+        "name": "Facebook Graph API",
+        "credentials": {
+          "facebookGraphApi": {
+            "id": "dMEGTwKgnbmuQHcu",
+            "name": "Facebook Graph account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Get the raw response from the Facebook node\n// We use '|| []' to safely handle cases where 'data' might be missing\nconst rawPosts = $input.first().json.data || [];\n\n// 2. Map the Facebook fields to your Google Sheet headers\nconst cleanData = rawPosts.map(post => ({\n  post_id: post.id,\n  published_at: post.created_time,\n  // Use '|| \"\"' to provide a default empty string if the field is missing\n  caption: post.message || \"\", \n  media_url: post.full_picture || \"\", \n  permalink: post.permalink_url || \"\",\n  platform: \"Facebook\"\n}));\n\n// 3. Return the cleaned list\nreturn cleanData;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          432,
+          -448
+        ],
+        "id": "67d6398f-41a9-489a-9187-edd686c8d849",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "graphApiVersion": "v23.0",
+          "node": "17841453247289885",
+          "edge": "media",
+          "options": {
+            "fields": {
+              "field": [
+                {
+                  "name": "id"
+                },
+                {
+                  "name": "caption"
+                },
+                {
+                  "name": "media_type"
+                },
+                {
+                  "name": "media_url"
+                },
+                {
+                  "name": "permalink"
+                },
+                {
+                  "name": "timestamp"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.facebookGraphApi",
+        "typeVersion": 1,
+        "position": [
+          208,
+          -256
+        ],
+        "id": "e3bd4d72-517e-4a2b-9fbb-6780fc8e2ef6",
+        "name": "Facebook Graph API2",
+        "credentials": {
+          "facebookGraphApi": {
+            "id": "dMEGTwKgnbmuQHcu",
+            "name": "Facebook Graph account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Get the raw Instagram data\nconst rawPosts = $input.first().json.data || [];\n\n// 2. Map Instagram fields to Google Sheet headers\nconst cleanData = rawPosts.map(post => ({\n  post_id: post.id,\n  published_at: post.timestamp, // Instagram uses 'timestamp'\n  caption: post.caption || \"\",\n  media_url: post.media_url || \"\",\n  permalink: post.permalink,\n  platform: \"Instagram\"\n}));\n\n// 3. Return the cleaned list\nreturn cleanData;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          432,
+          -256
+        ],
+        "id": "a1f31702-ed31-4187-9fc2-12087bfef03f",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "url": "https://api.linkedin.com/rest/posts",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "q",
+                "value": "author"
+              },
+              {
+                "name": "author",
+                "value": "urn:li:organization:79035911"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "LinkedIn-Version",
+                "value": "202510"
+              },
+              {
+                "name": "X-Restli-Protocol-Version",
+                "value": "2.0.0"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          208,
+          -64
+        ],
+        "id": "c363ad9f-9fc1-4c31-bf35-b9705900230e",
+        "name": "HTTP Request",
+        "credentials": {
+          "linkedInOAuth2Api": {
+            "id": "sKkZblfqoZhLXccm",
+            "name": "LinkedIn account"
+          },
+          "oAuth2Api": {
+            "id": "mcQHUJyIiBKeN546",
+            "name": "Unnamed credential 3"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Get the list of posts (they are inside \"elements\")\nconst rawPosts = $input.first().json.elements || [];\n\n// 2. Map LinkedIn data to your Google Sheet format\nconst cleanData = rawPosts.map(post => {\n  // Convert timestamp (milliseconds) to readable Date\n  const dateObj = new Date(post.publishedAt);\n  \n  // Create the Permalink\n  // The ID looks like \"urn:li:share:741...\", we use the whole thing for the link\n  const permalink = `https://www.linkedin.com/feed/update/${post.id}`;\n\n  return {\n    post_id: post.id,\n    published_at: dateObj.toISOString(),\n    caption: post.commentary || \"\",\n    // Note: The new LinkedIn API gives a \"Media URN\" (ID) instead of a direct JPG link.\n    // We will save this ID for now so the column isn't empty.\n    media_url: post.content?.media?.id || \"\",\n    permalink: permalink,\n    platform: \"LinkedIn\"\n  };\n});\n\n// 3. Return the cleaned list\nreturn cleanData;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          432,
+          -64
+        ],
+        "id": "faa4e054-eb9c-4b57-9709-827a411490cc",
+        "name": "Code in JavaScript2"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://strapi_cms:1337/api/upload",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "parameterType": "formBinaryData",
+                "name": "files",
+                "inputDataFieldName": "data"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1552,
+          -448
+        ],
+        "id": "56fc1f95-9cda-4a3f-abbe-707e01401a35",
+        "name": "upload image",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "Q0YZrcH36CqB75YB",
+            "name": "Strapi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.media_url }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1328,
+          -448
+        ],
+        "id": "93d70f74-1659-403f-b4b3-7e7e558d5e85",
+        "name": "get image"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://strapi_cms:1337/api/social-posts",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{\n  {\n    \"data\": {\n      \"platform\": $('split in batches1').item.json.platform.toLowerCase(),\n      \"caption\": $('split in batches1').item.json.caption,\n      \"publishedDate\": $('split in batches1').item.json.strapi_date_final,\n      \"image\": $json.id || null,\n      \"originalPostUrl\": $('split in batches1').item.json.permalink\n    }\n  }\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1776,
+          -256
+        ],
+        "id": "c76407f9-faca-4fad-8aff-9f4918cce113",
+        "name": "create blog1",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "Q0YZrcH36CqB75YB",
+            "name": "Strapi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://strapi_cms:1337/api/upload",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "parameterType": "formBinaryData",
+                "name": "files",
+                "inputDataFieldName": "data"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1552,
+          -256
+        ],
+        "id": "3c17f3d5-990f-40f6-ad0b-dba814e2e94b",
+        "name": "upload image1",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "Q0YZrcH36CqB75YB",
+            "name": "Strapi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.media_url }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1328,
+          -256
+        ],
+        "id": "19fa7a76-5f8f-47e7-89df-07b793d0f9e3",
+        "name": "get image1"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://strapi_cms:1337/api/social-posts",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{\n  {\n    \"data\": {\n      \"platform\": $('split in batches3').item.json.platform.toLowerCase(),\n      \"caption\": $('split in batches3').item.json.caption,\n      \"publishedDate\": $('split in batches3').item.json.strapi_date_final,\n      \"image\": $json.id || null,\n      \"originalPostUrl\": $('split in batches3').item.json.permalink\n    }\n  }\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          2000,
+          -64
+        ],
+        "id": "3823c12d-28aa-4e38-ab1c-84a917a53673",
+        "name": "create blog2",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "Q0YZrcH36CqB75YB",
+            "name": "Strapi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://strapi_cms:1337/api/upload",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "parameterType": "formBinaryData",
+                "name": "files",
+                "inputDataFieldName": "data"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1776,
+          -64
+        ],
+        "id": "9ecf2f8f-c948-43c1-9488-508789f109ce",
+        "name": "upload image2",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "Q0YZrcH36CqB75YB",
+            "name": "Strapi API"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://strapi_cms:1337/api/social-posts",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{\n  {\n    \"data\": {\n      \"platform\": $('split in batches').item.json.platform.toLowerCase(),\n      \"caption\": $('split in batches').item.json.caption,\n      \"publishedDate\": $('split in batches').item.json.strapi_date_final,\n      \"image\": $json.id || null,\n      \"originalPostUrl\": $('split in batches').item.json.permalink\n    }\n  }\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1776,
+          -448
+        ],
+        "id": "4fefcd01-363f-413b-b7e8-201b1904fc5e",
+        "name": "create post",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "Q0YZrcH36CqB75YB",
+            "name": "Strapi API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Loop through all incoming items\nconst results = $input.all().map(item => {\n  // 1. Get the incoming date (from Facebook, Instagram, or LinkedIn)\n  const rawDate = item.json.published_at;\n\n  // 2. Create a Javascript Date Object\n  // This automatically handles the \"+0000\" or ISO formats\n  const dateObj = new Date(rawDate);\n\n  // 3. Format for Strapi \"Date\" field (YYYY-MM-DD)\n  // We split the ISO string at 'T' and take the first part\n  const dateOnly = dateObj.toISOString().split('T')[0]; \n\n  // 4. Format for Strapi \"DateTime\" field (Full ISO)\n  const dateTime = dateObj.toISOString();\n\n  // 5. Return the item with these new specific fields attached\n  return {\n    json: {\n      ...item.json, // Keep all original data\n      strapi_date_final: dateOnly,      // Use this if your field is type \"Date\"\n      strapi_datetime_final: dateTime   // Use this if your field is type \"DateTime\"\n    }\n  };\n});\n\nreturn results;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          656,
+          -448
+        ],
+        "id": "3ea7862b-25a7-4304-91cf-b1b529dcb312",
+        "name": "Code in JavaScript3"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Loop through all incoming items\nconst results = $input.all().map(item => {\n  // 1. Get the incoming date (from Facebook, Instagram, or LinkedIn)\n  const rawDate = item.json.published_at;\n\n  // 2. Create a Javascript Date Object\n  // This automatically handles the \"+0000\" or ISO formats\n  const dateObj = new Date(rawDate);\n\n  // 3. Format for Strapi \"Date\" field (YYYY-MM-DD)\n  // We split the ISO string at 'T' and take the first part\n  const dateOnly = dateObj.toISOString().split('T')[0]; \n\n  // 4. Format for Strapi \"DateTime\" field (Full ISO)\n  const dateTime = dateObj.toISOString();\n\n  // 5. Return the item with these new specific fields attached\n  return {\n    json: {\n      ...item.json, // Keep all original data\n      strapi_date_final: dateOnly,      // Use this if your field is type \"Date\"\n      strapi_datetime_final: dateTime   // Use this if your field is type \"DateTime\"\n    }\n  };\n});\n\nreturn results;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          656,
+          -256
+        ],
+        "id": "af05e95f-d96a-4257-87ac-4dd492501443",
+        "name": "Code in JavaScript4"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Loop through all incoming items\nconst results = $input.all().map(item => {\n  // 1. Get the incoming date (from Facebook, Instagram, or LinkedIn)\n  const rawDate = item.json.published_at;\n\n  // 2. Create a Javascript Date Object\n  // This automatically handles the \"+0000\" or ISO formats\n  const dateObj = new Date(rawDate);\n\n  // 3. Format for Strapi \"Date\" field (YYYY-MM-DD)\n  // We split the ISO string at 'T' and take the first part\n  const dateOnly = dateObj.toISOString().split('T')[0]; \n\n  // 4. Format for Strapi \"DateTime\" field (Full ISO)\n  const dateTime = dateObj.toISOString();\n\n  // 5. Return the item with these new specific fields attached\n  return {\n    json: {\n      ...item.json, // Keep all original data\n      strapi_date_final: dateOnly,      // Use this if your field is type \"Date\"\n      strapi_datetime_final: dateTime   // Use this if your field is type \"DateTime\"\n    }\n  };\n});\n\nreturn results;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          656,
+          -64
+        ],
+        "id": "b8be69c3-d3ae-4ae5-8824-3fb0e452d576",
+        "name": "Code in JavaScript5"
+      },
+      {
+        "parameters": {
+          "batchSize": 3,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          1104,
+          -448
+        ],
+        "id": "c0716bb5-f8e1-4e8b-a78a-c5525b1402ec",
+        "name": "split in batches"
+      },
+      {
+        "parameters": {
+          "batchSize": 3,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          1104,
+          -256
+        ],
+        "id": "98e77aa8-db58-4502-8aa7-767e43d76815",
+        "name": "split in batches1"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.downloadUrl }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1552,
+          -64
+        ],
+        "id": "ef983f93-706c-4ff5-bbc2-e78f733047b3",
+        "name": "get image2",
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.linkedin.com/rest/images/{{ encodeURIComponent($json.media_url) }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "LinkedIn-Version",
+                "value": "202510"
+              },
+              {
+                "name": "X-Restli-Protocol-Version",
+                "value": "2.0.0"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1328,
+          -64
+        ],
+        "id": "5c0734b7-59eb-4811-9f67-639aa74bea03",
+        "name": "Get LinkedIn URL",
+        "alwaysOutputData": false,
+        "credentials": {
+          "oAuth2Api": {
+            "id": "mcQHUJyIiBKeN546",
+            "name": "Unnamed credential 3"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "batchSize": 3,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          1104,
+          -64
+        ],
+        "id": "032ceef1-2804-4812-b1c1-75560b931c16",
+        "name": "split in batches3"
+      },
+      {
+        "parameters": {
+          "maxItems": 3
+        },
+        "type": "n8n-nodes-base.limit",
+        "typeVersion": 1,
+        "position": [
+          880,
+          -448
+        ],
+        "id": "1b1314f0-a255-4171-b93f-c93c5c3e43b3",
+        "name": "Limit"
+      },
+      {
+        "parameters": {
+          "maxItems": 3
+        },
+        "type": "n8n-nodes-base.limit",
+        "typeVersion": 1,
+        "position": [
+          880,
+          -256
+        ],
+        "id": "4ae20c5e-2acf-4bd2-ad3a-f164b914a8ef",
+        "name": "Limit1"
+      },
+      {
+        "parameters": {
+          "maxItems": 3
+        },
+        "type": "n8n-nodes-base.limit",
+        "typeVersion": 1,
+        "position": [
+          880,
+          -64
+        ],
+        "id": "425eed80-c2d7-42e2-849f-2ecf23105852",
+        "name": "Limit2"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 23
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -16,
+          -256
+        ],
+        "id": "521be0e5-4c8d-4607-972d-af4c2c938584",
+        "name": "Schedule Trigger"
+      }
+    ],
+    "connections": {
+      "Facebook Graph API": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Facebook Graph API2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "upload image": {
+        "main": [
+          [
+            {
+              "node": "create post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "get image": {
+        "main": [
+          [
+            {
+              "node": "upload image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "upload image1": {
+        "main": [
+          [
+            {
+              "node": "create blog1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "get image1": {
+        "main": [
+          [
+            {
+              "node": "upload image1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "upload image2": {
+        "main": [
+          [
+            {
+              "node": "create blog2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "Limit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript4": {
+        "main": [
+          [
+            {
+              "node": "Limit1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript5": {
+        "main": [
+          [
+            {
+              "node": "Limit2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "split in batches": {
+        "main": [
+          [],
+          [
+            {
+              "node": "get image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "split in batches1": {
+        "main": [
+          [],
+          [
+            {
+              "node": "get image1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "get image2": {
+        "main": [
+          [
+            {
+              "node": "upload image2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get LinkedIn URL": {
+        "main": [
+          [
+            {
+              "node": "get image2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "split in batches3": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Get LinkedIn URL",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create post": {
+        "main": [
+          []
+        ]
+      },
+      "Limit": {
+        "main": [
+          [
+            {
+              "node": "split in batches",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limit1": {
+        "main": [
+          [
+            {
+              "node": "split in batches1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limit2": {
+        "main": [
+          [
+            {
+              "node": "split in batches3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Facebook Graph API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Facebook Graph API2",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version f28c7a5c",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
