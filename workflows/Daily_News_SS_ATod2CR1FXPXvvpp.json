@@ -96,7 +96,7 @@
     {
       "parameters": {
         "url": "={{ $json.exportUrl }}",
-        "authentication": "[REDACTED_SECRET]",
+        "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "options": {}
       },
