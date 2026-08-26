@@ -1,0 +1,33 @@
+{
+  "updatedAt": "2026-01-28T11:19:01.000Z",
+  "createdAt": "2026-01-24T08:40:46.882Z",
+  "id": "BRt544geDu23zr7DllIwS",
+  "name": "untitled",
+  "active": false,
+  "isArchived": true,
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "2bcbcc09-e0cf-4d84-be0d-13399524f842",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-24T08:40:46.886Z",
+      "createdAt": "2026-01-24T08:40:46.886Z",
+      "role": "workflow:owner",
+      "workflowId": "BRt544geDu23zr7DllIwS",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
