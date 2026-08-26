@@ -1,0 +1,315 @@
+{
+  "updatedAt": "2025-11-21T06:52:48.000Z",
+  "createdAt": "2025-11-18T11:04:05.331Z",
+  "id": "7f8rGc4wZjxRzdRc",
+  "name": "Manual Weekly Newsletter - Text to Telegram",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -32
+      ],
+      "id": "c30d8b1b-cc09-449a-8867-2e2cb5268561",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bbee7f2d-3d63-47a8-a720-0c6d44dbd612",
+              "name": "Week Gone By – 14 November 2025: Markets Rally on Cooling Inflation and Strong Macro Signals",
+              "value": "Domestic equities ended the week on a strong footing as easing inflation, supportive global cues, and rising expectations of a U.S. Federal Reserve rate cut drove sustained investor confidence. Renewed optimism around a potential India–US trade agreement, coupled with political stability signals following the NDA’s firm lead in the Bihar elections, further strengthened sentiment. The ongoing Q2 earnings season also provided incremental support, with select companies reporting resilient performance.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        64,
+        -32
+      ],
+      "id": "f9692969-8660-4308-8d3b-1f1d158cc2ad",
+      "name": "Edit Fields",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "==Here is the raw weekly data I collected from different websites.\nIt is grouped into sections like WeekGoneBy, Gainers, Losers, UnlistedEquity, WeekAhead.\n\nPlease read it and write a well-structured weekly market note as described in the system message:\n\n{{ $json.raw_news }}\n",
+        "text": "",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        304,
+        -16
+      ],
+      "id": "4d31ff5b-624f-48d3-9dfc-9795aa7777b8",
+      "name": "AI Agent",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "raw-news-field",
+              "name": "Week Gone By – 14 November 2025: Markets Rally on Cooling Inflation and Strong Macro Signals",
+              "type": "string",
+              "value": "Domestic equities ended the week on a strong footing as easing inflation, supportive global cues, and rising expectations of a U.S. Federal Reserve rate cut drove sustained investor confidence. Renewed optimism around a potential India–US trade agreement, coupled with political stability signals following the NDA’s firm lead in the Bihar elections, further strengthened sentiment. The ongoing Q2 earnings season also provided incremental support, with select companies reporting resilient performance. For the week ended Friday, 14 November 2025, the S&P BSE Sensex surged 1,346.5 points (1.63%) to close at 84,562.78, while the Nifty 50 gained 417.75 points (1.64%) to settle at 25,910.05. Across broader markets, the BSE MidCap index rose 0.89%, while the BSE SmallCap index edged up 0.14%, indicating a measured yet positive undertone across segments. Markets began the week with a sharp recovery as benchmarks snapped a three-day losing streak, aided by stable global cues and softer inflation readings. Strength extended into Tuesday and Wednesday, with frontline indices gaining momentum amid progress signals on U.S.–India trade negotiations and easing macro pressures. Thursday witnessed muted movement as traders booked partial gains, while Friday saw mild upward closing that completed a five-session winning streak."
+            },
+            {
+              "id": "079fc317-47f6-458f-b580-eb95ded445c2",
+              "name": "#Economy:",
+              "value": "India’s macro indicators stayed supportive despite a dip in reserves. Foreign exchange reserves fell $5.6 billion to $689.7 billion, mainly due to lower foreign currency assets and gold holdings. Inflation cooled further — retail inflation dropped to a record low of 0.25% in October, driven by cheaper food items, while WPI inflation remained in negative territory at -1.21% YoY, indicating broad pricing relief. The government continued policy support with a ₹45,060 crore package to aid export-heavy sectors facing higher global tariffs, including textiles, leather, engineering goods, and gems & jewellery. The measures aim to strengthen competitiveness through export promotion and a larger credit guarantee framework for exporters. Globally, U.S. President Donald Trump signaled progress on a forthcoming bilateral trade agreement with India, suggesting both sides were “close” to finalizing terms. He indicated that Washington may consider lowering tariffs on Indian goods, attributing the development partly to India's declining imports of Russian oil.",
+              "type": "string"
+            },
+            {
+              "id": "8ae3c272-663e-4b77-a1f8-97de590a43dd",
+              "name": "#Gainers4Week – Top 3",
+              "value": "#Tata Motors CV (+21.8%): Jumped after strong buying interest as the stock rebounded from multi-year lows, supported by improving outlook in the commercial vehicle segment. #Data Patterns (+18.6%): Rallied after beating market estimates, with investors responding positively to strong execution and healthy order book visibility. #Vodafone Idea (+18.1%): Extended gains on estimate-beating quarterly performance and improving operational metrics, with the stock also touching a fresh 52-week high. #Losers4Week – Top 3 #Transformers & Rectifiers (−21.3%): Slipped sharply amid profit-booking and cautious sentiment following a strong prior rally in the power equipment space. #Cohance Lifesciences (−14.9%): Declined after margin pressures weighed on investor sentiment, with the stock also hitting a new 52-week low during the week. #Sapphire Foods (−11.9%): Dropped as the stock extended its recent correction, touching a 52-week low amid weaker demand trends and valuation concerns.",
+              "type": "string"
+            },
+            {
+              "id": "8cbe6587-c80b-4b52-801b-d7f924ad6b3d",
+              "name": "#UnlistedEquity",
+              "value": "Unlisted market activity picked up this week, supported by fresh capital flows and early-stage IPO signals. InCred Holdings has filed a confidential DRHP with SEBI, marking another step toward a potential listing in the coming quarters. Meanwhile, edtech startup Codeyoung raised $5 million to accelerate its international expansion and strengthen product capabilities. In another notable development, SoftBank and Blackstone are reportedly in talks to acquire stakes in Neysa, signalling renewed institutional interest in emerging tech platforms. Demand remains steady across names like InCred Holdings, Neysa, Tata Capital, and Oyo, with investors continuing to track upcoming IPO and funding developments.",
+              "type": "string"
+            },
+            {
+              "id": "19b6577b-6752-4f30-ae99-aa1dd4aeb62e",
+              "name": "#WeekAhead",
+              "value": "Indian equities start the week with a positive bias as easing inflation and supportive global cues lift sentiment. India’s CPI cooling to 0.25% in October has strengthened expectations of a rate cut in December, while global risk appetite improved after U.S. inflation slowed to 3.0% and China posted a better-than-expected 5.4% GDP print. Back home, markets will track India’s trade data on 14 November, after the deficit widened to USD 32.15 billion in September. Later in the week, the spotlight shifts to the HSBC Flash PMI on 21 November, which will update activity trends after strong October readings (Manufacturing 59.2 | Services 58.9 | Composite 60.4). Globally, China’s FDI numbers (17 Nov) and Loan Prime Rate decision (20 Nov) will guide sentiment, with the PBoC expected to keep rates unchanged. In the U.S., key releases include the Empire State Manufacturing Index, housing sentiment data, crude inventory numbers, and the important FOMC meeting minutes, which may offer clues on the Fed’s policy path. With key macro data from India, China, and the U.S. lined up, short-term volatility cannot be ruled out. However, cooling inflation, improving earnings momentum, and global soft-landing expectations may help maintain an overall constructive market tone.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f38a57a6-f13c-42b6-9732-9feb67b178f6",
+      "name": "Paste raw news",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -384,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the raw weekly data I collected from different websites.\nIt is grouped into sections like WeekGoneBy, Gainers, Losers, UnlistedEquity, WeekAhead.\n\nUse this to write a well-structured weekly market note as described in the system message:\n\n{{ $json['Week Gone By – 14 November 2025: Markets Rally on Cooling Inflation and Strong Macro Signals'] }}\n\n{{ $json['#Economy:'] }}\n\n{{ $json['#Gainers4Week – Top 3'] }}\n\n{{ $json['#UnlistedEquity'] }}\n\n{{ $json['#WeekAhead'] }}",
+        "options": {
+          "systemMessage": "You are an expert financial content writer for an Indian equity research and wealth advisory firm.\n\nYou will receive raw weekly data for these sections:\n\nWeekGoneBy:\n<text>\n\nEconomy:\n<text>\n\nGainers:\n<text>\n\nLosers:\n<text>\n\nUnlistedEquity:\n<text>\n\nWeekAhead:\n<text>\n\nYour job is to write a clean, professional WEEKLY MARKET NOTE in **HTML**, following THIS FORMAT:\n\n- Use <h1> for the first line: \"Week Gone By – <DATE>: <SHORT HOOK TITLE>\"\n- Use <h2> for section headings:\n  - Economy\n  - Gainers4Week – Top 3\n  - Losers4Week – Top 3\n  - UnlistedEquity\n  - WeekAhead\n- Use <p> for normal paragraphs.\n- Use <ul><li>…</li></ul> lists for the gainers and losers bullet points.\n- You can use <strong> to highlight stock names inside list items.\n\nRULES:\n- Output MUST be valid HTML.\n- Do NOT include <html>, <head> or <body> tags. Just the inner content.\n- Do NOT use Markdown symbols like #, ##, **, etc.\n- Do not invent facts or numbers. Only use what’s in the input.\n- Tone: professional but readable, like a client newsletter.\n- Keep the whole piece within roughly 700–1000 words.\n"
+        }
+      },
+      "id": "56e179e3-eee0-461a-9c7d-cf1815416301",
+      "name": "AI Agent1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        -80,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "id": "963e4071-8f87-475a-b9aa-3c3d24a6a394",
+      "name": "Google Gemini Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        -80,
+        816
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "mPIDXrj8C6kSo8MT",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "html": "<html>\n  <head>\n    <style>\n      body { font-family: Calibri, sans-serif; padding: 40px; line-height: 1.6; font-size: 12pt; }\n      h1 { font-size: 18pt; font-weight: bold; margin-bottom: 10px; }\n      h2 { font-size: 14pt; margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }\n      p { margin: 6px 0; text-align: justify; }\n      li { margin-bottom: 4px; }\n    </style>\n  </head>\n  <body>\n    <div style=\"text-align:center; margin-bottom:30px;\">\n      <img src=\"https://your-logo-link.png\" style=\"height:80px; margin-bottom:10px;\">\n      <h1>Weekly Market Newsletter</h1>\n      <p>Week Ending: 14 November 2025</p>\n    </div>\n\n    {{ $json.output }}\n  </body>\n</html>\n"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        544
+      ],
+      "id": "84bbd6da-8136-4fee-ac7e-60b49526bcdd",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "={{ $json.html }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        544
+      ],
+      "id": "a23df81b-b63b-45d4-83a2-add5847b878b",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "BIOmOY6f2u2k8lgA",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "1334670746",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        544
+      ],
+      "id": "d1c3326c-d58e-42a0-82b3-94fffebed848",
+      "name": "Send a document1",
+      "webhookId": "99cd9234-447b-4132-9be7-07f60de15f57",
+      "credentials": {
+        "telegramApi": {
+          "id": "YWjyhDu5J78b9yKN",
+          "name": "Telegram account 4"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paste raw news": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send a document1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "082a6269-a00f-4560-929b-9ca47a4e9ffa",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-18T11:04:05.338Z",
+      "createdAt": "2025-11-18T11:04:05.338Z",
+      "role": "workflow:owner",
+      "workflowId": "7f8rGc4wZjxRzdRc",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
