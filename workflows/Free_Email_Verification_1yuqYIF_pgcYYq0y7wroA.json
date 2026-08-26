@@ -1,0 +1,430 @@
+{
+  "updatedAt": "2026-07-06T07:04:47.589Z",
+  "createdAt": "2026-07-06T06:50:05.522Z",
+  "id": "1yuqYIF_pgcYYq0y7wroA",
+  "name": "Free Email Verification",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Email Verification Upload",
+        "formDescription": "Upload an Excel (.xlsx) or CSV file that contains an email column anywhere in it. You'll get back a CSV of the emails that pass format + mail-server checks.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Excel File",
+              "fieldType": "file",
+              "acceptFileTypes": ".xlsx,.xls,.csv",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "21a9d012-732a-4d54-869a-64a9aead527b",
+      "name": "Upload Excel File",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        1408
+      ],
+      "webhookId": "e060c2fa-785b-4f4f-a557-0781d33bbb94"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "Excel_File",
+        "options": {}
+      },
+      "id": "6cc952ca-8b79-4144-9214-5d89fa40c8f3",
+      "name": "Read Excel Rows",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        896,
+        1408
+      ],
+      "notes": "IMPORTANT: after importing, open this node and check the 'Input Binary Field' name matches whatever the Upload node actually named the uploaded file (visible in that node's output panel). It is usually the field label with spaces turned into underscores, but n8n can vary this by version."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Finds an email address in ANY column of each row, regardless of the header name.\nconst emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/;\nconst output = [];\n\nfor (const item of $input.all()) {\n  const row = item.json;\n  let found = null;\n\n  for (const key of Object.keys(row)) {\n    const value = String(row[key] ?? '');\n    const match = value.match(emailRegex);\n    if (match) {\n      found = match[0].trim().toLowerCase();\n      break;\n    }\n  }\n\n  if (found) {\n    output.push({ json: { email: found } });\n  }\n}\n\nreturn output;"
+      },
+      "id": "904920be-4768-4cfd-b82a-30252440d31b",
+      "name": "Extract Emails From Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const email = String($json.email || '').trim().toLowerCase();\nconst formatRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/;\nconst isValidFormat = formatRegex.test(email);\nconst domain = isValidFormat ? email.split('@')[1] : null;\n\nconst disposableDomains = [\n  'mailinator.com','tempmail.com','10minutemail.com','guerrillamail.com',\n  'yopmail.com','trashmail.com','throwawaymail.com','getnada.com','fakeinbox.com'\n];\nconst isDisposable = domain ? disposableDomains.includes(domain) : false;\n\nreturn {\n  json: { email, isValidFormat, domain, isDisposable }\n};"
+      },
+      "id": "4ff0743d-474e-42e6-8a3f-96d6aac0c2a1",
+      "name": "Validate Format + Domain",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-format-valid",
+              "leftValue": "={{ $json.isValidFormat }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "446d62a6-bc97-44bd-a504-f89ae9874e72",
+      "name": "Is Format Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1552,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://dns.google/resolve",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.domain }}"
+            },
+            {
+              "name": "type",
+              "value": "MX"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 300
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "id": "66da837f-f436-4d10-ab4e-4d43399f96c7",
+      "name": "Check MX Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1776,
+        1296
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "onError": "continueRegularOutput",
+      "notes": "Free, no API key. Uses Google's public DNS-over-HTTPS resolver to check if the domain has a mail server (MX record). Retries transient timeouts up to 3x, and continues past a domain that keeps failing (marked inactive) instead of crashing the whole run."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const dnsResponse = $json;\nconst original = $('Validate Format + Domain').item.json;\n\n// If the HTTP Request node ultimately failed (after its retries) it was set to\n// 'continue on fail', so this item will carry an .error field instead of real\n// DNS data. Treat that as 'could not confirm' rather than crashing.\nconst requestFailed = Boolean(dnsResponse.error);\n\nconst hasMX = !requestFailed &&\n  Array.isArray(dnsResponse.Answer) &&\n  dnsResponse.Answer.some((record) => record.type === 15);\n\nreturn {\n  json: {\n    email: original.email,\n    domain: original.domain,\n    isValidFormat: true,\n    isDisposable: original.isDisposable,\n    mxFound: hasMX,\n    active: hasMX,\n    checkFailed: requestFailed\n  }\n};"
+      },
+      "id": "aaa443c8-7df3-4669-b6a4-a10c477f81e2",
+      "name": "Parse MX Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1984,
+        1296
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    email: $json.email,\n    domain: $json.domain,\n    isValidFormat: false,\n    isDisposable: $json.isDisposable,\n    mxFound: false,\n    active: false,\n    checkFailed: false\n  }\n};"
+      },
+      "id": "8f56192d-91e4-4cca-bff5-4c6b471862cf",
+      "name": "Mark Invalid Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1776,
+        1520
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "b280bbf8-d7b7-42c1-9477-be977fec33aa",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        2208,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-active",
+              "leftValue": "={{ $json.active }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a3934c74-b2c1-4073-8913-2835be558ccb",
+      "name": "Keep Only Active",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        2432,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Strip every field except the email itself, so the exported CSV\n// is just a plain list of addresses — nothing else.\nreturn {\n  json: {\n    email: $json.email\n  }\n};"
+      },
+      "id": "52a41345-6831-478f-8e7f-97c3769b5593",
+      "name": "Keep Email Only",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2544,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "fileName": "active_emails.csv",
+          "headerRow": true
+        }
+      },
+      "id": "23b712c5-69bc-4f29-b854-cb8283a6e4b7",
+      "name": "Convert To CSV",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2656,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "returnBinaryFile"
+      },
+      "id": "109d954e-4736-419e-b94e-ee5e02136732",
+      "name": "Download Result",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        2864,
+        1408
+      ],
+      "webhookId": "dab79367-dae5-406b-87eb-bd1f89a1f49c",
+      "notes": "If this node shows a warning after import, just re-select 'Return Binary File' as the form ending type and 'data' as the field name from the dropdown — the wiring is already correct."
+    }
+  ],
+  "connections": {
+    "Upload Excel File": {
+      "main": [
+        [
+          {
+            "node": "Read Excel Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Excel Rows": {
+      "main": [
+        [
+          {
+            "node": "Extract Emails From Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Emails From Rows": {
+      "main": [
+        [
+          {
+            "node": "Validate Format + Domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Format + Domain": {
+      "main": [
+        [
+          {
+            "node": "Is Format Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Format Valid?": {
+      "main": [
+        [
+          {
+            "node": "Check MX Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Invalid Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check MX Record": {
+      "main": [
+        [
+          {
+            "node": "Parse MX Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse MX Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Invalid Format": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Keep Only Active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep Only Active": {
+      "main": [
+        [
+          {
+            "node": "Keep Email Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep Email Only": {
+      "main": [
+        [
+          {
+            "node": "Convert To CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert To CSV": {
+      "main": [
+        [
+          {
+            "node": "Download Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "7490024b-ceeb-4dfc-adf3-dcf215903ddf",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-06T06:50:05.612Z",
+      "createdAt": "2026-07-06T06:50:05.612Z",
+      "role": "workflow:owner",
+      "workflowId": "1yuqYIF_pgcYYq0y7wroA",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
