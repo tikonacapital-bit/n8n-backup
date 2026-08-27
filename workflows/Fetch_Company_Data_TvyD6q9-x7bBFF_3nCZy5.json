@@ -1,0 +1,791 @@
+{
+  "updatedAt": "2026-02-09T06:08:43.070Z",
+  "createdAt": "2026-01-22T09:53:49.994Z",
+  "id": "TvyD6q9-x7bBFF_3nCZy5",
+  "name": "Fetch Company Data",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fetch-price",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -272
+      ],
+      "id": "c16dbeca-93c5-4b8e-aa92-1ab652c4b960",
+      "name": "Webhook",
+      "webhookId": "01990088-6b32-402f-9747-7c8df56f2935"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "master_company",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $json.body.type }}",
+              "keyValue": "={{ $json.body.value }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -272
+      ],
+      "id": "5efe4015-f82d-4e0d-b0c3-7cc9463b8789",
+      "name": "Get a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://query1.finance.yahoo.com/v8/finance/chart/{{ $json.nse_symbol }}.NS?range=1y&interval=1d",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        -272
+      ],
+      "id": "4bcdb2f6-ae5d-451e-b3c9-6b340e906bcd",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.screener.in/company/{{ $('Get a row').item.json.nse_symbol }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agen",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        -272
+      ],
+      "id": "cb30735a-99e3-44bb-b001-e9940e565549",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =====================================================\n// 1. SAFE DATA INPUTS (CRASH-PROOF)\n// =====================================================\n// We use Optional Chaining (?.) so if a node fails, the code doesn't break.\nconst screenerData = $node[\"HTTP Request1\"]?.json?.data || \"\";\nconst yahooQuote = $node[\"HTTP Request2\"]?.json?.quoteResponse?.result?.[0] || {};\nconst yahooChart = $node[\"HTTP Request\"]?.json?.chart?.result?.[0] || {};\nconst yahooPrices = yahooChart?.indicators?.quote?.[0]?.close || [];\n\n// =====================================================\n// 2. PARSING FUNCTIONS\n// =====================================================\nfunction extractBetween(start, end) {\n  if (!screenerData) return null;\n  const s = screenerData.indexOf(start);\n  if (s === -1) return null;\n  const sub = screenerData.substring(s + start.length);\n  const e = sub.indexOf(end);\n  return (e === -1) ? null : sub.substring(0, e).trim();\n}\n\nfunction extractTopRatio(label) {\n  if (!screenerData) return null;\n  const regex = new RegExp(`${label}[\\\\s\\\\S]*?<span class=\"number\">([0-9,.]+)`, \"i\");\n  const match = screenerData.match(regex);\n  return match ? parseFloat(match[1].replace(/,/g, \"\")) : null;\n}\n\nfunction getColIndexForYear(tableId, yearStr) {\n  if (!screenerData) return -1;\n  const headerRegex = new RegExp(`section id=\"${tableId}\"[\\\\s\\\\S]*?<thead>[\\\\s\\\\S]*?<tr>([\\\\s\\\\S]*?)<\\\\/tr>`, \"i\");\n  const match = screenerData.match(headerRegex);\n  if (!match) return -1;\n  const headers = [...match[1].matchAll(/<th[^>]*>(.*?)<\\/th>/gi)].map(m => m[1].replace(/<[^>]+>/g, \"\").trim());\n  return headers.findIndex(h => h.includes(yearStr));\n}\n\nfunction extractTableData(tableId, rowNames, colIndex) {\n  if (!screenerData) return 0;\n  if (!Array.isArray(rowNames)) rowNames = [rowNames];\n  \n  const tableRegex = new RegExp(`section id=\"${tableId}\"[\\\\s\\\\S]*?<table[\\\\s\\\\S]*?<\\\\/table>`, \"i\");\n  const tableMatch = screenerData.match(tableRegex);\n  if (!tableMatch) return 0;\n\n  let rowMatch = null;\n  for (const name of rowNames) {\n    const rowRegex = new RegExp(`<tr[^>]*>[\\\\s\\\\S]*?${name}[\\\\s\\\\S]*?<\\\\/tr>`, \"i\");\n    rowMatch = tableMatch[0].match(rowRegex);\n    if (rowMatch) break;\n  }\n  \n  if (!rowMatch) return 0;\n  const cols = [...rowMatch[0].matchAll(/<td[^>]*>(.*?)<\\/td>/gi)].map(m => m[1].replace(/<[^>]+>/g, \"\").trim());\n  const idx = colIndex < 0 ? cols.length + colIndex : colIndex;\n  return parseFloat(cols[idx]?.replace(/,/g, \"\")) || 0;\n}\n\n// Math Helpers\nconst calcCAGR = (s, e, years) => (s > 0 && e > 0) ? (Math.pow(e / s, 1 / years) - 1) * 100 : 0;\nconst calcReturn = (days) => {\n  if (yahooPrices.length < days + 1) return 0;\n  const curr = yahooPrices[yahooPrices.length - 1];\n  const past = yahooPrices[yahooPrices.length - 1 - days];\n  return (past && curr) ? ((curr - past) / past) * 100 : 0;\n};\nconst calcMargin = (num, den) => den ? (num / den) * 100 : 0;\n\n// =====================================================\n// 3. EXTRACTION ENGINE\n// =====================================================\n\n// --- Identity ---\nconst companyName = yahooQuote.longName || extractBetween('<h1 class=\"margin-0 show-from-tablet-landscape\">', '</h1>');\nconst nseCode = yahooQuote.symbol?.replace(\".NS\", \"\") || extractBetween(\"NSE:\", \"</span>\")?.replace(/[^A-Z0-9]/g, \"\");\n\n// --- Live Market Data ---\nconst price = yahooQuote.regularMarketPrice || extractTopRatio(\"Current Price\") || 0;\nconst mCapCr = extractTopRatio(\"Market Cap\"); // Keep in Crores from Screener\nconst vol = yahooQuote.regularMarketVolume || 0;\nconst high52 = yahooQuote.fiftyTwoWeekHigh || parseFloat(extractTopRatio(\"High / Low\")?.toString().split(\"/\")[0]?.replace(/,/g, \"\")) || 0;\nconst low52 = yahooQuote.fiftyTwoWeekLow || parseFloat(extractTopRatio(\"High / Low\")?.toString().split(\"/\")[1]?.replace(/,/g, \"\")) || 0;\n\n// --- Analyst Consensus (From Node 2) ---\nconst targetMean = yahooQuote.targetMeanPrice || 0;\nconst targetHigh = yahooQuote.targetHighPrice || 0;\nconst targetLow = yahooQuote.targetLowPrice || 0;\nconst upsidePct = (targetMean > 0 && price > 0) ? ((targetMean - price) / price) * 100 : 0;\n\n// --- Historical P&L ---\n// Column Indices\nconst idx23 = getColIndexForYear(\"profit-loss\", \"2023\");\nconst idx24 = getColIndexForYear(\"profit-loss\", \"2024\");\nconst idx25 = getColIndexForYear(\"profit-loss\", \"2025\");\n\n// Sales\nconst revTTM = extractTableData(\"profit-loss\", \"Sales\", -1);\nconst rev23 = extractTableData(\"profit-loss\", \"Sales\", idx23);\nconst rev24 = extractTableData(\"profit-loss\", \"Sales\", idx24);\nconst rev25 = extractTableData(\"profit-loss\", \"Sales\", idx25);\n\n// EBITDA\nconst ebitdaTTM = extractTableData(\"profit-loss\", \"Operating Profit\", -1);\nconst ebitda23 = extractTableData(\"profit-loss\", \"Operating Profit\", idx23);\nconst ebitda24 = extractTableData(\"profit-loss\", \"Operating Profit\", idx24);\nconst ebitda25 = extractTableData(\"profit-loss\", \"Operating Profit\", idx25);\n\n// PAT\nconst patTTM = extractTableData(\"profit-loss\", \"Net Profit\", -1);\nconst pat23 = extractTableData(\"profit-loss\", \"Net Profit\", idx23);\nconst pat24 = extractTableData(\"profit-loss\", \"Net Profit\", idx24);\nconst pat25 = extractTableData(\"profit-loss\", \"Net Profit\", idx25);\n\n// EPS\nconst epsTTM = extractTableData(\"profit-loss\", \"EPS\", -1);\nconst eps23 = extractTableData(\"profit-loss\", \"EPS\", idx23);\nconst eps24 = extractTableData(\"profit-loss\", \"EPS\", idx24);\nconst eps25 = extractTableData(\"profit-loss\", \"EPS\", idx25);\n\n// --- Balance Sheet ---\nconst debt = extractTableData(\"balance-sheet\", [\"Borrowings\", \"Debt\"], -1);\nconst cash = extractTableData(\"balance-sheet\", [\"Cash Equivalents\", \"Cash & Bank\", \"Cash &amp; Bank\"], -1);\nconst reserves = extractTableData(\"balance-sheet\", \"Reserves\", -1);\nconst shareCap = extractTableData(\"balance-sheet\", \"Share Capital\", -1);\nconst assets = extractTableData(\"balance-sheet\", \"Fixed Assets\", -1);\nconst cwip = extractTableData(\"balance-sheet\", \"CWIP\", -1);\n\n// --- Quarterly ---\nconst qSalesLat = extractTableData(\"quarters\", \"Sales\", -1);\nconst qSalesPre = extractTableData(\"quarters\", \"Sales\", -2);\nconst qSalesYear = extractTableData(\"quarters\", \"Sales\", -5);\nconst qPatLat = extractTableData(\"quarters\", \"Net Profit\", -1);\nconst qPatPre = extractTableData(\"quarters\", \"Net Profit\", -2);\nconst qPatYear = extractTableData(\"quarters\", \"Net Profit\", -5);\nconst qOpmLat = extractTableData(\"quarters\", [\"OPM %\", \"OPM\"], -1);\nconst qOpLat = extractTableData(\"quarters\", \"Operating Profit\", -1);\nconst qOpPre = extractTableData(\"quarters\", \"Operating Profit\", -2);\n\n\n// =====================================================\n// 4. CALCULATIONS ENGINE\n// =====================================================\n\n// Ratios\nconst netWorth = (shareCap + reserves);\nconst netDebt = debt - cash;\nconst ev = (mCapCr || 0) + netDebt;\nconst deRatio = netWorth ? (debt / netWorth) : 0;\nconst assetTurn = (assets + cwip) ? (revTTM / (assets + cwip)) : 0;\nconst cwipRatio = assets ? (cwip / assets) : 0;\nconst numShares = (mCapCr && price) ? (mCapCr * 10000000) / price : 0;\n\n// Margins\nconst ebitdaMargin25 = calcMargin(ebitda25, rev25);\nconst ebitdaMarginTTM = calcMargin(ebitdaTTM, revTTM);\nconst patMarginTTM = calcMargin(patTTM, revTTM);\nconst patMarginLat = calcMargin(qPatLat, qSalesLat);\n\n// Growth Rates\nconst gQoQ_Rev = qSalesPre ? ((qSalesLat - qSalesPre)/qSalesPre)*100 : 0;\nconst gYoY_Sales = qSalesYear ? ((qSalesLat - qSalesYear)/qSalesYear)*100 : 0;\nconst gYoY_Pat = qPatYear ? ((qPatLat - qPatYear)/qPatYear)*100 : 0;\nconst gQoQ_Ebitda = qOpPre ? ((qOpLat - qOpPre)/qOpPre)*100 : 0;\n\n// CAGR (Historical 2yr)\nconst cagrRev = calcCAGR(rev23, rev25, 2);\nconst cagrEbitda = calcCAGR(ebitda23, ebitda25, 2);\nconst cagrPat = calcCAGR(pat23, pat25, 2);\nconst cagrEps = calcCAGR(eps23, eps25, 2);\n\n// Forward Projections (g = 12%)\nconst g = 1.12;\nconst rev26 = revTTM * g;\nconst rev27 = rev26 * g;\nconst rev28 = rev27 * g;\nconst pat26 = patTTM * g;\nconst pat27 = pat26 * g;\nconst pat28 = pat27 * g;\nconst ebitda26 = ebitdaTTM * g;\nconst ebitda27 = ebitda26 * g;\nconst ebitda28 = ebitda27 * g;\nconst eps26 = epsTTM * g;\nconst eps27 = eps26 * g;\nconst eps28 = eps27 * g;\n\n// PE Forward\nconst pe26 = (eps26 && price) ? price / eps26 : 0;\nconst pe27 = (eps27 && price) ? price / eps27 : 0;\nconst pe28 = (eps28 && price) ? price / eps28 : 0;\n\n// Charts\nconst chartBase = `https://finance.yahoo.com/quote/${nseCode}.NS/chart?p=${nseCode}.NS`;\n\n// =====================================================\n// 5. FINAL OUTPUT (EXACT SCHEMA MATCH)\n// =====================================================\nreturn [{\n  json: {\n    // Identity\n    company_name: companyName,\n    nse_code: nseCode,\n    updated_at: new Date().toISOString(),\n\n    // Market & Technicals\n    market_cap: mCapCr,\n    current_price: price,\n    high_52_week: high52,\n    low_52_week: low52,\n    volume: vol,\n    avg_50_day: yahooQuote.fiftyDayAverage || 0,\n    avg_200_day: yahooQuote.twoHundredDayAverage || 0,\n    \n    // Returns\n    return_1m: calcReturn(21),\n    return_3m: calcReturn(63),\n    return_6m: calcReturn(126),\n    return_12m: calcReturn(252),\n    return_down_from_52w_high: (high52 && price) ? ((price - high52)/high52)*100 : 0,\n    return_up_from_52w_low: (low52 && price) ? ((price - low52)/low52)*100 : 0,\n    \n    // Links\n    chart_url_1m: chartBase + \"&range=1mo\",\n    chart_url_3m: chartBase + \"&range=3mo\",\n    chart_url_6m: chartBase + \"&range=6mo\",\n    chart_url_12m: chartBase + \"&range=1y\",\n\n    // Analyst Targets (Filled)\n    consensus_target_price: targetMean,\n    consensus_upside_pct: upsidePct,\n    target_price_high: targetHigh,\n    target_price_low: targetLow,\n    potential_upside_high: (targetHigh > price) ? ((targetHigh - price)/price)*100 : 0,\n    potential_upside_low: (targetLow > 0) ? ((targetLow - price)/price)*100 : 0,\n\n    // Valuation Ratios\n    pe_ttm: yahooQuote.trailingPE || extractTopRatio(\"Stock P/E\"),\n    pe_fy2026e: pe26,\n    pe_fy2027e: pe27,\n    pe_fy2028e: pe28,\n    ev_ebitda_ttm: ebitdaTTM ? (ev / ebitdaTTM) : 0,\n    ps_ttm: revTTM ? (mCapCr / revTTM) : 0,\n    book_value: extractTopRatio(\"Book Value\"),\n    dividend_yield: yahooQuote.dividendYield || extractTopRatio(\"Dividend Yield\"),\n    roe: extractTopRatio(\"ROE\"),\n    roce: extractTopRatio(\"ROCE\"),\n    face_value: extractTopRatio(\"Face Value\"),\n\n    // Balance Sheet Ratios\n    debt: debt,\n    cash_equivalents: cash,\n    net_debt: netDebt,\n    net_worth: netWorth,\n    enterprise_value: ev,\n    cwip: cwip,\n    net_block: assets,\n    cwip_to_net_block_ratio: cwipRatio,\n    asset_turnover_ratio: assetTurn,\n    debt_to_equity: deRatio,\n    num_equity_shares: numShares,\n\n    // Quarterly\n    sales_latest_qtr: qSalesLat,\n    op_profit_latest_qtr: qOpLat,\n    pat_latest_qtr: qPatLat,\n    ebitda_margin_latest_qtr: qOpmLat,\n    pat_margin_latest_qtr: patMarginLat,\n    sales_preceding_qtr: qSalesPre,\n    op_profit_preceding_qtr: qOpPre,\n    pat_preceding_qtr: qPatPre,\n\n    // Growth\n    revenue_growth_qoq: gQoQ_Rev,\n    ebitda_growth_qoq: gQoQ_Ebitda,\n    sales_growth_yoy_qtr: gYoY_Sales,\n    profit_growth_yoy_qtr: gYoY_Pat,\n\n    // Historicals\n    revenue_fy2023: rev23,\n    revenue_fy2024: rev24,\n    revenue_fy2025: rev25,\n    revenue_ttm: revTTM,\n    sales_ttm_screener: revTTM,\n\n    ebitda_fy2023: ebitda23,\n    ebitda_fy2024: ebitda24,\n    ebitda_fy2025: ebitda25,\n    ebitda_ttm: ebitdaTTM,\n\n    pat_fy2023: pat23,\n    pat_fy2024: pat24,\n    pat_fy2025: pat25,\n    pat_ttm: patTTM,\n    pat_ttm_screener: patTTM,\n\n    eps_fy2023: eps23,\n    eps_fy2024: eps24,\n    eps_fy2025: eps25,\n    eps_ttm: epsTTM,\n    eps_ttm_actual: epsTTM,\n\n    // Margins\n    ebitda_margin_fy2025: ebitdaMargin25,\n    ebitda_margin_ttm: ebitdaMarginTTM,\n    opm_last_year: ebitdaMargin25,\n    pat_margin_ttm: patMarginTTM,\n\n    // Estimates\n    revenue_fy2026e: rev26,\n    revenue_fy2027e: rev27,\n    revenue_fy2028e: rev28,\n    ebitda_fy2026e: ebitda26,\n    ebitda_fy2027e: ebitda27,\n    ebitda_fy2028e: ebitda28,\n    pat_fy2026e: pat26,\n    pat_fy2027e: pat27,\n    pat_fy2028e: pat28,\n    eps_fy2026e: eps26,\n    eps_fy2027e: eps27,\n    eps_fy2028e: eps28,\n\n    // CAGR\n    revenue_cagr_hist_2yr: cagrRev,\n    ebitda_cagr_hist_2yr: cagrEbitda,\n    pat_cagr_hist_2yr: cagrPat,\n    eps_cagr_hist_2yr: cagrEps,\n    \n    // Constant Growth Assumption\n    revenue_cagr_fwd_2yr: 12, \n    ebitda_cagr_fwd_2yr: 12,\n    pat_cagr_fwd_2yr: 12,\n    eps_cagr_fwd_2yr: 12\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -272
+      ],
+      "id": "d7f0fd18-f0c7-43f5-9002-33545270b843",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.google.com/search?q=https://query1.finance.yahoo.com/v7/finance/quote%3Fsymbols%3D{{ $('Get a row').item.json.nse_symbol }}.NS",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "*/*"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        896,
+        -272
+      ],
+      "id": "0088c441-6da0-4cd1-8c0d-f029e3e52c9d",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =====================================================\n// 1. DATA SOURCES FUSION (The Gatekeeper)\n// =====================================================\nconst screenerData = $node[\"HTTP Request1\"]?.json?.data || \"\";\nconst yahooSpark = $node[\"HTTP Request2\"]?.json?.spark?.result?.[0]?.response?.[0]?.meta || {};\nconst yahooChart = $node[\"HTTP Request\"]?.json?.chart?.result?.[0] || {};\nconst yahooPrices = yahooChart?.indicators?.quote?.[0]?.close || [];\n\n// =====================================================\n// 2. HELPER FUNCTIONS\n// =====================================================\nfunction extractTopRatio(label) {\n  if (!screenerData) return null;\n  const regex = new RegExp(`${label}[\\\\s\\\\S]*?<span class=\"number\">([0-9,.]+)`, \"i\");\n  const match = screenerData.match(regex);\n  return match ? parseFloat(match[1].replace(/,/g, \"\")) : null;\n}\n\nconst calcReturn = (days) => {\n  if (yahooPrices.length < days + 1) return 0;\n  const curr = yahooPrices[yahooPrices.length - 1];\n  const past = yahooPrices[yahooPrices.length - 1 - days];\n  return (past && curr) ? ((curr - past) / past) * 100 : 0;\n};\n\n// =====================================================\n// 3. LOGIC & MATH\n// =====================================================\nconst price = yahooSpark.regularMarketPrice || 0;\nconst high52 = yahooSpark.fiftyTwoWeekHigh || 0;\nconst low52 = yahooSpark.fiftyTwoWeekLow || 0;\nconst nseCode = yahooSpark.symbol?.replace(\".NS\", \"\") || \"TCS\";\n\n// Get Revenue TTM for Price-to-Sales calculation\nconst regexSales = /Sales[\\s\\S]*?<td[^>]*>([0-9,.]+)<\\/td>/i;\nconst salesTTM = parseFloat(screenerData.match(regexSales)?.[1]?.replace(/,/g, \"\")) || 0;\nconst mCapCr = extractTopRatio(\"Market Cap\") || 0;\n\n// Projections for 2028\nconst g = 1.12; // 12% growth factor\nconst sales2028e = salesTTM * Math.pow(g, 3);\nconst ps2028e = sales2028e ? mCapCr / sales2028e : 0;\n\n// Charts URL\nconst chartBase = `https://finance.yahoo.com/quote/${nseCode}.NS/chart`;\n\n// =====================================================\n// 4. FINAL OUTPUT (EXACT SUPABASE COLUMN NAMES)\n// =====================================================\nreturn [{\n  json: {\n    // Identity\n    nse_code: nseCode,\n    \n    // Technicals & Returns (FIXING NULLS)\n    return_1m: calcReturn(21),\n    return_3m: calcReturn(63),\n    return_6m: calcReturn(126),\n    return_12m: calcReturn(252),\n    return_down_from_52w_high: (high52 && price) ? ((price - high52) / high52) * 100 : 0,\n    return_up_from_52w_low: (low52 && price) ? ((price - low52) / low52) * 100 : 0,\n    \n    // Valuation\n    ps_fy2028e: ps2028e,\n    \n    // Analyst Targets (Defaults as Yahoo Spark doesn't have these)\n    // We set to 0 instead of null so database is clean\n    target_price_high: 0,\n    target_price_low: 0,\n    consensus_target_price: 0,\n    consensus_upside_pct: 0,\n    potential_upside_high: 0,\n    potential_upside_low: 0,\n\n    // Charts URLs\n    chart_url_1m: chartBase + \"?range=1mo\",\n    chart_url_3m: chartBase + \"?range=3mo\",\n    chart_url_6m: chartBase + \"?range=6mo\",\n    chart_url_12m: chartBase + \"?range=1y\",\n    \n    // Metadata\n    updated_at: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        -272
+      ],
+      "id": "9a2d6b7d-ce96-4b6e-bde4-9ae38e8e5c0e",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "tableId": "equity_universe",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "isin_code",
+              "fieldValue": "={{ $('Get a row').item.json.isin }}"
+            },
+            {
+              "fieldId": "current_price",
+              "fieldValue": "={{ $json.current_price }}"
+            },
+            {
+              "fieldId": "company_name",
+              "fieldValue": "={{ $('Get a row').item.json.company_name }}"
+            },
+            {
+              "fieldId": "nse_code",
+              "fieldValue": "={{ $('Get a row').item.json.nse_symbol }}"
+            },
+            {
+              "fieldId": "bse_code",
+              "fieldValue": "={{ $('Get a row').item.json.bse_code }}"
+            },
+            {
+              "fieldId": "google_code",
+              "fieldValue": "={{ $('Get a row').item.json.google_code }}"
+            },
+            {
+              "fieldId": "high_52_week",
+              "fieldValue": "={{ $('HTTP Request').item.json.chart.result[0].meta.fiftyTwoWeekHigh }}"
+            },
+            {
+              "fieldId": "low_52_week",
+              "fieldValue": "={{ $('HTTP Request').item.json.chart.result[0].meta.regularMarketDayLow }}"
+            },
+            {
+              "fieldId": "market_cap",
+              "fieldValue": "={{ $json.market_cap }}"
+            },
+            {
+              "fieldId": "roe",
+              "fieldValue": "={{ $json.roe }}"
+            },
+            {
+              "fieldId": "roce",
+              "fieldValue": "={{ $json.roce }}"
+            },
+            {
+              "fieldId": "dividend_yield",
+              "fieldValue": "={{ $json.dividend_yield }}"
+            },
+            {
+              "fieldId": "sales_latest_qtr",
+              "fieldValue": "={{ $json.sales_latest_qtr }}"
+            },
+            {
+              "fieldId": "promoter_holding_pct",
+              "fieldValue": "={{ $json.promoter_holding_pct }}"
+            },
+            {
+              "fieldId": "sector",
+              "fieldValue": "={{ $json.sector }}"
+            },
+            {
+              "fieldId": "industry",
+              "fieldValue": "={{ $json.industry }}"
+            },
+            {
+              "fieldId": "face_value",
+              "fieldValue": "={{ $json.face_value }}"
+            },
+            {
+              "fieldId": "sales_preceding_qtr",
+              "fieldValue": "={{ $json.sales_preceding_qtr }}"
+            },
+            {
+              "fieldId": "op_profit_latest_qtr",
+              "fieldValue": "={{ $json.op_profit_latest_qtr }}"
+            },
+            {
+              "fieldId": "op_profit_preceding_qtr",
+              "fieldValue": "={{ $json.op_profit_preceding_qtr }}"
+            },
+            {
+              "fieldId": "pe_ttm",
+              "fieldValue": "={{ $json.pe_fy2026e }}"
+            },
+            {
+              "fieldId": "net_worth",
+              "fieldValue": "={{ $json.net_worth }}"
+            },
+            {
+              "fieldId": "debt",
+              "fieldValue": "={{ $json.debt }}"
+            },
+            {
+              "fieldId": "eps_ttm",
+              "fieldValue": "={{ $json.eps_ttm }}"
+            },
+            {
+              "fieldId": "cwip",
+              "fieldValue": "={{ $json.cwip }}"
+            },
+            {
+              "fieldId": "ebitda_ttm",
+              "fieldValue": "={{ $json.ebitda_margin_ttm }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        -272
+      ],
+      "id": "56d60195-63f0-409a-9dce-7aa685d6c0bd",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "equity_universe",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "isin_code",
+              "condition": "eq",
+              "keyValue": "={{ $json.nse_code }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "return_1m",
+              "fieldValue": "={{ $json.return_1m }}"
+            },
+            {
+              "fieldId": "ps_fy2028e",
+              "fieldValue": "={{ $json.ps_fy2028e }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $json.updated_at }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        -272
+      ],
+      "id": "e048c467-7874-4da1-8356-d06726892dfc",
+      "name": "Update a row",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "import yfinance as yf\nfrom datetime import datetime\n\n# input is the item from the previous node\nticker_symbol = _input.item.json.get(\"nse_code\") \n\n# Handle \".NS\" suffix for NSE if missing\nif not ticker_symbol.endswith(\".NS\") and not ticker_symbol.endswith(\".BO\"):\n    ticker_symbol += \".NS\"\n\nstock = yf.Ticker(ticker_symbol)\ninfo = stock.info\n\n# Helper function to safely get data or return None\ndef get_val(key):\n    return info.get(key, None)\n\n# Calculate Returns\ncurrent = get_val('currentPrice') or 0\nhigh_52 = get_val('fiftyTwoWeekHigh') or 1\nlow_52 = get_val('fiftyTwoWeekLow') or 1\n\n# Logic for \"Down from High\" and \"Up from Low\"\ndown_from_high = ((current - high_52) / high_52) * 100 if high_52 else 0\nup_from_low = ((current - low_52) / low_52) * 100 if low_52 else 0\n\n# Construct Chart URLs dynamically\nbase_chart = f\"https://finance.yahoo.com/quote/{ticker_symbol}/chart\"\n\nreturn {\n    \"json\": {\n        \"nse_code\": _input.item.json.get(\"nse_code\"),\n        \"company_name\": get_val('longName'),\n        \"sector\": get_val('sector'),\n        \"industry\": get_val('industry'),\n        \n        # Prices\n        \"current_price\": current,\n        \"high_52_week high\": high_52,\n        \"low_52_week\": low_52,\n        \"volume\": get_val('volume'),\n        \"return_down_from_52w_high\": round(down_from_high, 2),\n        \"return_up_from_52w_low\": round(up_from_low, 2),\n\n        # Valuation\n        \"market_cap\": get_val('marketCap'),\n        \"pe_ttm\": get_val('trailingPE'),\n        \"eps_ttm\": get_val('trailingEps'),\n        \"book_value\": get_val('bookValue'),\n        \"dividend_yield\": (get_val('dividendYield') or 0) * 100,\n\n        # Financials\n        \"revenue_ttm\": get_val('totalRevenue'),\n        \"ebitda_ttm\": get_val('ebitda'),\n        \"debt\": get_val('totalDebt'),\n        \"cash_equivalents\": get_val('totalCash'),\n        \"roe\": get_val('returnOnEquity'),\n        \n        # Analyst Targets\n        \"consensus_target_price\": get_val('targetMeanPrice'),\n        \"target_price_high\": get_val('targetHighPrice'),\n        \"target_price_low\": get_val('targetLowPrice'),\n\n        # Construct URLs\n        \"chart_url_1m\": f\"{base_chart}?range=1mo\",\n        \"chart_url_3m\": f\"{base_chart}?range=3mo\",\n        \"chart_url_6m\": f\"{base_chart}?range=6mo\",\n        \"chart_url_12m\": f\"{base_chart}?range=1y\",\n        \n        \"updated_at\": datetime.now().isoformat()\n    }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        -272
+      ],
+      "id": "45bcff59-2004-4933-9e82-7a2961f51baa",
+      "name": "Code in Python"
+    },
+    {
+      "parameters": {
+        "operation": "update"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        -272
+      ],
+      "id": "a2ce53b1-d070-4560-911c-39d50be93963",
+      "name": "Update a row1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Code in Python",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python": {
+      "main": [
+        [
+          {
+            "node": "Update a row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "f57ccbba-6371-4478-b9ef-b93517c4eda0",
+  "activeVersionId": "888c3cf6-ed40-4b86-8018-474abd69427d",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-22T09:53:50.001Z",
+      "createdAt": "2026-01-22T09:53:50.001Z",
+      "role": "workflow:owner",
+      "workflowId": "TvyD6q9-x7bBFF_3nCZy5",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-24T09:30:52.000Z",
+    "createdAt": "2026-01-24T09:30:49.818Z",
+    "versionId": "888c3cf6-ed40-4b86-8018-474abd69427d",
+    "workflowId": "TvyD6q9-x7bBFF_3nCZy5",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "fetch-price",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          -272
+        ],
+        "id": "c16dbeca-93c5-4b8e-aa92-1ab652c4b960",
+        "name": "Webhook",
+        "webhookId": "01990088-6b32-402f-9747-7c8df56f2935"
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "tableId": "master_company",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "={{ $json.body.type }}",
+                "keyValue": "={{ $json.body.value }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          224,
+          -272
+        ],
+        "id": "5efe4015-f82d-4e0d-b0c3-7cc9463b8789",
+        "name": "Get a row",
+        "credentials": {
+          "supabaseApi": {
+            "id": "0G7QiEV7evRjasbP",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://query1.finance.yahoo.com/v8/finance/chart/{{ $json.nse_symbol }}.NS",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          448,
+          -272
+        ],
+        "id": "4bcdb2f6-ae5d-451e-b3c9-6b340e906bcd",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "tableId": "equity_universe",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "isin_code",
+                "fieldValue": "={{ $('Get a row').item.json.isin }}"
+              },
+              {
+                "fieldId": "current_price",
+                "fieldValue": "={{ $json.current_price }}"
+              },
+              {
+                "fieldId": "company_name",
+                "fieldValue": "={{ $('Get a row').item.json.company_name }}"
+              },
+              {
+                "fieldId": "nse_code",
+                "fieldValue": "={{ $('Get a row').item.json.nse_symbol }}"
+              },
+              {
+                "fieldId": "bse_code",
+                "fieldValue": "={{ $('Get a row').item.json.bse_code }}"
+              },
+              {
+                "fieldId": "google_code",
+                "fieldValue": "={{ $('Get a row').item.json.google_code }}"
+              },
+              {
+                "fieldId": "high_52_week",
+                "fieldValue": "={{ $('HTTP Request').item.json.chart.result[0].meta.fiftyTwoWeekHigh }}"
+              },
+              {
+                "fieldId": "low_52_week",
+                "fieldValue": "={{ $('HTTP Request').item.json.chart.result[0].meta.regularMarketDayLow }}"
+              },
+              {
+                "fieldId": "market_cap",
+                "fieldValue": "={{ $json.market_cap }}"
+              },
+              {
+                "fieldId": "roe",
+                "fieldValue": "={{ $json.roe }}"
+              },
+              {
+                "fieldId": "roce",
+                "fieldValue": "={{ $json.roce }}"
+              },
+              {
+                "fieldId": "dividend_yield",
+                "fieldValue": "={{ $json.dividend_yield }}"
+              },
+              {
+                "fieldId": "sales_latest_qtr",
+                "fieldValue": "={{ $json.sales_latest_qtr }}"
+              },
+              {
+                "fieldId": "promoter_holding_pct",
+                "fieldValue": "={{ $json.promoter_holding_pct }}"
+              },
+              {
+                "fieldId": "sector",
+                "fieldValue": "={{ $json.sector }}"
+              },
+              {
+                "fieldId": "industry",
+                "fieldValue": "={{ $json.industry }}"
+              },
+              {
+                "fieldId": "face_value",
+                "fieldValue": "={{ $json.face_value }}"
+              },
+              {
+                "fieldId": "sales_preceding_qtr",
+                "fieldValue": "={{ $json.sales_preceding_qtr }}"
+              },
+              {
+                "fieldId": "op_profit_latest_qtr",
+                "fieldValue": "={{ $json.op_profit_latest_qtr }}"
+              },
+              {
+                "fieldId": "op_profit_preceding_qtr",
+                "fieldValue": "={{ $json.op_profit_preceding_qtr }}"
+              },
+              {
+                "fieldId": "pe_ttm",
+                "fieldValue": "={{ $json.pe_fy2026e }}"
+              },
+              {
+                "fieldId": "net_worth",
+                "fieldValue": "={{ $json.net_worth }}"
+              },
+              {
+                "fieldId": "debt",
+                "fieldValue": "={{ $json.debt }}"
+              },
+              {
+                "fieldId": "eps_ttm",
+                "fieldValue": "={{ $json.eps_ttm }}"
+              },
+              {
+                "fieldId": "cwip",
+                "fieldValue": "={{ $json.cwip }}"
+              },
+              {
+                "fieldId": "ebitda_ttm",
+                "fieldValue": "={{ $json.ebitda_margin_ttm }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          -272
+        ],
+        "id": "56d60195-63f0-409a-9dce-7aa685d6c0bd",
+        "name": "Create a row",
+        "credentials": {
+          "supabaseApi": {
+            "id": "0G7QiEV7evRjasbP",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://www.screener.in/company/{{ $('Get a row').item.json.nse_symbol }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "User-Agen",
+                "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "text"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          672,
+          -272
+        ],
+        "id": "cb30735a-99e3-44bb-b001-e9940e565549",
+        "name": "HTTP Request1"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Get the Raw HTML\nconst html = items[0].json.data || \"\";\n\n// --- HELPER FUNCTIONS ---\n\n// Extract text between two markers\nfunction extractBetween(startMarker, endMarker) {\n  const startIndex = html.indexOf(startMarker);\n  if (startIndex === -1) return null;\n  const substring = html.substring(startIndex + startMarker.length);\n  const endIndex = substring.indexOf(endMarker);\n  if (endIndex === -1) return null;\n  return substring.substring(0, endIndex).trim();\n}\n\n// Extract a clean number from a specific HTML label (Top Ratios)\nfunction extractTopRatio(label) {\n  // Regex: Label -> specific class structure -> number\n  const regex = new RegExp(`${label}[\\\\s\\\\S]*?<span class=\"number\">([0-9,.]+)`, \"i\");\n  const match = html.match(regex);\n  return match ? parseFloat(match[1].replace(/,/g, '')) : null;\n}\n\n// Extract Sector/Industry from Breadcrumbs\nfunction extractBreadcrumb(title) {\n  const regex = new RegExp(`href=\"[^\"]+\"[^>]*title=\"${title}\">([^<]+)`, \"i\");\n  const match = html.match(regex);\n  return match ? match[1].trim() : null;\n}\n\n// Parse a Table by ID to get specific Row/Column data\nfunction extractTableData(tableId, rowName, colIndex = -1) {\n  // 1. Find the table\n  const tableRegex = new RegExp(`section id=\"${tableId}\"[\\\\s\\\\S]*?<table[\\\\s\\\\S]*?<\\/table>`, \"i\");\n  const tableMatch = html.match(tableRegex);\n  if (!tableMatch) return null;\n  const tableHtml = tableMatch[0];\n\n  // 2. Find the Row\n  // Matches row start -> rowName -> content up to next row start\n  const rowRegex = new RegExp(`<tr[^>]*>[\\\\s\\\\S]*?${rowName}[\\\\s\\\\S]*?<\\/tr>`, \"i\");\n  const rowMatch = tableHtml.match(rowRegex);\n  if (!rowMatch) return null;\n  \n  // 3. Extract all columns (td)\n  const colRegex = /<td[^>]*>([\\s\\S]*?)<\\/td>/gi;\n  const cols = [...rowMatch[0].matchAll(colRegex)].map(m => m[1].replace(/<[^>]+>/g, '').trim());\n\n  // 4. Return specific column\n  // colIndex -1 = Last Column, -2 = Second to Last\n  if (colIndex < 0) {\n    return parseFloat(cols[cols.length + colIndex].replace(/,/g, '')) || 0;\n  }\n  return parseFloat(cols[colIndex].replace(/,/g, '')) || 0;\n}\n\n// Specific Extractor for Shareholding (often has different structure)\nfunction extractShareholding(category) {\n  const sectionRegex = /section id=\"shareholding\"[\\s\\S]*?<\\/table>/i;\n  const sectionMatch = html.match(sectionRegex);\n  if (!sectionMatch) return null;\n  \n  // Find row based on category (e.g., \"Promoters\")\n  const rowRegex = new RegExp(`onclick=\"Company\\\\.showShareholders\\\\('${category}'[\\\\s\\\\S]*?<\\/tr>`, \"i\");\n  const rowMatch = sectionMatch[0].match(rowRegex);\n  if (!rowMatch) return null;\n\n  // Get last column value\n  const tds = rowMatch[0].match(/<td>([0-9.]+)%<\\/td>/gi);\n  if (tds && tds.length > 0) {\n    const lastVal = tds[tds.length - 1]; // Latest quarter\n    return parseFloat(lastVal.replace(/[^0-9.]/g, ''));\n  }\n  return null;\n}\n\n// --- MAIN EXTRACTION ---\n\n// 1. Identity & Sector\nconst companyName = extractBetween('<h1 class=\"margin-0 show-from-tablet-landscape\">', '</h1>');\nconst sector = extractBreadcrumb(\"Sector\");\nconst industry = extractBreadcrumb(\"Industry\");\nconst bseCode = extractBetween('BSE:', '</span>').replace(/[^0-9]/g, '');\nconst nseCode = extractBetween('NSE:', '</span>').replace(/[^A-Z0-9]/g, ''); // Clean formatting\n\n// 2. Top Ratios\nconst marketCap = extractTopRatio(\"Market Cap\");\nconst currentPrice = extractTopRatio(\"Current Price\");\nconst bookValue = extractTopRatio(\"Book Value\");\nconst dividendYield = extractTopRatio(\"Dividend Yield\");\nconst roe = extractTopRatio(\"ROE\");\nconst roce = extractTopRatio(\"ROCE\");\nconst faceValue = extractTopRatio(\"Face Value\");\n\n// High / Low is tricky, often combined: \"4,161 / 2,867\"\nconst highLowStr = extractBetween('High / Low', '</li>'); // Get the LI content\nlet high52 = null, low52 = null;\nif (highLowStr) {\n  const numbers = highLowStr.match(/[0-9,]+/g);\n  if (numbers && numbers.length >= 2) {\n    high52 = parseFloat(numbers[0].replace(/,/g, ''));\n    low52 = parseFloat(numbers[1].replace(/,/g, ''));\n  }\n}\n\n// 3. Quarterly Results (Latest & Preceding)\n// Note: In your HTML, the table columns end at Dec 2025. \n// We grab the last column (-1) and the one before it (-2).\nconst salesQtrLatest = extractTableData(\"quarters\", \"Sales\", -1);\nconst salesQtrPreceding = extractTableData(\"quarters\", \"Sales\", -2);\nconst salesQtrYearAgo = extractTableData(\"quarters\", \"Sales\", -5); // 4 quarters back for YoY\n\nconst opProfitQtrLatest = extractTableData(\"quarters\", \"Operating Profit\", -1);\nconst opProfitQtrPreceding = extractTableData(\"quarters\", \"Operating Profit\", -2);\n\nconst patQtrLatest = extractTableData(\"quarters\", \"Net Profit\", -1);\nconst patQtrPreceding = extractTableData(\"quarters\", \"Net Profit\", -2);\nconst patQtrYearAgo = extractTableData(\"quarters\", \"Net Profit\", -5);\n\n// 4. Profit & Loss (TTM)\n// TTM is usually the last column in the P&L table\nconst salesTTM = extractTableData(\"profit-loss\", \"Sales\", -1);\nconst opProfitTTM = extractTableData(\"profit-loss\", \"Operating Profit\", -1);\nconst patTTM = extractTableData(\"profit-loss\", \"Net Profit\", -1);\nconst epsTTM = extractTableData(\"profit-loss\", \"EPS\", -1);\n\n// 5. Balance Sheet (Latest Year)\nconst reserves = extractTableData(\"balance-sheet\", \"Reserves\", -1);\nconst equityCapital = extractTableData(\"balance-sheet\", \"Equity Capital\", -1);\nconst debt = extractTableData(\"balance-sheet\", \"Borrowings\", -1);\nconst fixedAssets = extractTableData(\"balance-sheet\", \"Fixed Assets\", -1);\nconst cwip = extractTableData(\"balance-sheet\", \"CWIP\", -1);\n// Investments often labeled \"Investments\"\nconst investments = extractTableData(\"balance-sheet\", \"Investments\", -1);\n// Cash often in \"Other Assets\" or explicit. In this HTML, \"Other Assets\" is huge (85k), likely includes Cash.\n// Screener puts detailed cash in the popup of \"Other Assets\", but raw row is \"Other Assets\".\nconst otherAssets = extractTableData(\"balance-sheet\", \"Other Assets\", -1); \n\n// 6. Shareholding\nconst promoterHolding = extractShareholding(\"promoters\");\n\n// --- CALCULATIONS ---\n\n// Net Worth = Equity + Reserves\nconst netWorth = (equityCapital || 0) + (reserves || 0);\n\n// Net Debt (Approx) = Borrowings - (Investments + Cash). \n// Note: On Screener, \"Investments\" + \"Other Assets\" often covers liquid assets, but \"Other Assets\" includes Receivables. \n// A safer simple Metric is just Debt. For Net Debt, you need \"Cash Equivalents\" which requires parsing the popup (not in this HTML).\n// We will leave Net Debt null or just use Debt.\n\n// Enterprise Value = MarketCap + Debt - Cash (Approx)\n// Without exact Cash, we can't calculate precise EV, but we can store components.\n\n// Growth Calcs\nlet revenueGrowthQoQ = 0;\nif (salesQtrPreceding) {\n  revenueGrowthQoQ = ((salesQtrLatest - salesQtrPreceding) / salesQtrPreceding) * 100;\n}\n\nlet salesGrowthYoY = 0;\nif (salesQtrYearAgo) {\n  salesGrowthYoY = ((salesQtrLatest - salesQtrYearAgo) / salesQtrYearAgo) * 100;\n}\n\nlet profitGrowthYoY = 0;\nif (patQtrYearAgo) {\n  profitGrowthYoY = ((patQtrLatest - patQtrYearAgo) / patQtrYearAgo) * 100;\n}\n\n// Margins\nconst ebitdaMarginTTM = salesTTM ? (opProfitTTM / salesTTM) * 100 : 0;\nconst patMarginTTM = salesTTM ? (patTTM / salesTTM) * 100 : 0;\n\n// Estimates (The \"Magic\" 12% Growth Logic you liked)\nconst growthRate = 0.12; \nconst revenueFY26 = salesTTM * (1 + growthRate);\nconst revenueFY27 = revenueFY26 * (1 + growthRate);\nconst patFY26 = patTTM * (1 + growthRate);\nconst epsFY26 = epsTTM * (1 + growthRate);\nconst peFY26 = (currentPrice && epsFY26) ? (currentPrice / epsFY26) : 0;\n\n// --- FINAL OUTPUT MAPPING ---\nreturn [{\n  json: {\n    // Identity\n    company_name: companyName || \"Unknown\",\n    nse_code: nseCode || $('Get a row').item.json.nse_code, // Fallback to input\n    bse_code: bseCode,\n    sector: sector,\n    industry: industry,\n    \n    // Top Ratios\n    market_cap: marketCap,\n    current_price: currentPrice,\n    high_52_week: high52,\n    low_52_week: low52,\n    book_value: bookValue,\n    dividend_yield: dividendYield,\n    roce: roce,\n    roe: roe,\n    face_value: faceValue,\n    \n    // Quarterly\n    sales_latest_qtr: salesQtrLatest,\n    sales_preceding_qtr: salesQtrPreceding,\n    op_profit_latest_qtr: opProfitQtrLatest,\n    op_profit_preceding_qtr: opProfitQtrPreceding,\n    pat_latest_qtr: patQtrLatest,\n    pat_preceding_qtr: patQtrPreceding,\n    \n    // Growth\n    revenue_growth_qoq: revenueGrowthQoQ,\n    sales_growth_yoy_qtr: salesGrowthYoY,\n    profit_growth_yoy_qtr: profitGrowthYoY,\n    \n    // Annual / TTM\n    sales_ttm: salesTTM, // Maps to sales_ttm_screener\n    op_profit_ttm: opProfitTTM,\n    pat_ttm: patTTM, // Maps to pat_ttm_screener\n    eps_ttm: epsTTM,\n    \n    // Margins\n    ebitda_margin_ttm: ebitdaMarginTTM,\n    pat_margin_ttm: patMarginTTM,\n    \n    // Balance Sheet\n    debt: debt,\n    net_worth: netWorth,\n    net_block: fixedAssets,\n    cwip: cwip,\n    \n    // Shareholding\n    promoter_holding_pct: promoterHolding,\n    \n    // Calculated Estimates (FY26/27)\n    revenue_fy2026e: revenueFY26,\n    revenue_fy2027e: revenueFY27,\n    pat_fy2026e: patFY26,\n    eps_fy2026e: epsFY26,\n    pe_fy2026e: peFY26,\n    \n    // Metadata\n    updated_at: new Date().toISOString()\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          896,
+          -272
+        ],
+        "id": "d7f0fd18-f0c7-43f5-9002-33545270b843",
+        "name": "Code in JavaScript"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get a row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get a row": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create a row": {
+        "main": [
+          []
+        ]
+      },
+      "HTTP Request1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Create a row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version 888c3cf6",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
