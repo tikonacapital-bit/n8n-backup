@@ -1,0 +1,911 @@
+{
+  "updatedAt": "2025-11-12T12:11:37.000Z",
+  "createdAt": "2025-11-12T12:08:48.819Z",
+  "id": "ncflUatUGEt2auuy",
+  "name": "Razorpay Redirect copy",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Z-V_gInrLywfVybpw-V9jM0njwzfPd_CCb6FMGVMZ1w",
+          "mode": "list",
+          "cachedResultName": "Sale -BGV1",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@razorpay.com"
+        },
+        "options": {},
+        "path": "b1480920-ff1b-47f4-a532-db5bbd05443b"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -544,
+        848
+      ],
+      "id": "7f33ffcb-ddf2-49f7-ab2f-8e7fcac6bab0",
+      "name": "Get many messages",
+      "webhookId": "b1480920-ff1b-47f4-a532-db5bbd05443b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mZmjo128EUktXn99",
+          "name": "Gmail account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "Successful payment on Payment Page - The Bhagavad Gita",
+          "sender": "no-reply@razorpay.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -544,
+        528
+      ],
+      "id": "cd52ecfa-656e-4bd3-9bb1-e6a413c23328",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mZmjo128EUktXn99",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "dataPropertyName": "html",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "amount",
+              "cssSelector": ".rupees"
+            },
+            {
+              "key": "payment_id",
+              "cssSelector": ".information-row:nth-of-type(1) .value"
+            },
+            {
+              "key": "method",
+              "cssSelector": ".information-row:has(.label:contains(\"Method\")) .value"
+            },
+            {
+              "key": "mobile_number",
+              "cssSelector": ".information-row:has(.label:contains(\"Mobile Number\")) .value"
+            },
+            {
+              "key": "payer_email",
+              "cssSelector": ".information-row:has(.label:contains(\"Email\")) .value"
+            },
+            {
+              "key": "paid_on",
+              "cssSelector": ".information-row:has(.label:contains(\"Paid On\")) .value"
+            },
+            {
+              "key": "Name",
+              "cssSelector": "div.information-row:has(div.label:contains(\"Name\")) div.value"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        624
+      ],
+      "id": "c3308725-0376-44bf-ab18-836b777fbf4c",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00e5b784-703c-4394-a324-67452f54a690",
+              "name": "messageId",
+              "value": "={{$json[\"id\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "9938bf23-4fa7-4d47-897e-37cd79449a7d",
+              "name": "emailDate",
+              "value": "={{ new Date($json[\"date\"]).toLocaleString(\"en-GB\", { timeZone: \"Asia/Kolkata\", hour12: false }).replace(\",\", \"\").split(\" \")[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "86848ab9-a777-4b4c-9bdf-98651df4cb83",
+              "name": "emailTime",
+              "value": "={{ new Date($json[\"date\"]).toLocaleString(\"en-GB\", { timeZone: \"Asia/Kolkata\", hour12: false }).split(\" \")[1] }}",
+              "type": "string"
+            },
+            {
+              "id": "9c4732d9-6244-478d-a863-27684735936e",
+              "name": "fromEmail",
+              "value": "={{$json[\"from\"][\"value\"][0][\"address\"]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -320,
+        432
+      ],
+      "id": "4f6b827a-0b8a-4a76-a80b-ea15e7626379",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -96,
+        528
+      ],
+      "id": "515594bf-4d58-424c-af25-ead1e926ea84",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://app.wetroo.com/webhook/send-wa-message.php",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "API_KEY",
+              "value": "8s1wsKuNXf96jIOdxOU="
+            },
+            {
+              "name": "EVENT_TYPE",
+              "value": "TIKONA_RAZORPAY_PAYMENT_SUCCESS"
+            },
+            {
+              "name": "TEMPLATE_ID",
+              "value": "819861247460667"
+            },
+            {
+              "name": "TO_NUMBER",
+              "value": "={{ $json['Mobile Number'] }}"
+            },
+            {
+              "name": "CUSTOMER_NAME",
+              "value": "={{ $json.Name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        528
+      ],
+      "id": "87f3ee6b-bdec-4b91-ad07-5ca10fefef80",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Merge').item.json.payer_email }}",
+        "subject": "Enjoy reading The Bhagavad Gita: Saarthi to Your Investing Journey",
+        "message": "=<p>Hello {{ $('Merge').item.json.Name }},</p>\n\n<p><b>TIKONA CAPITAL</b> is delighted to present you with a special gift.</p>\n\n<p>Your digital book <b>“The Bhagavad Gita: Saarthi to Your Investing Journey”</b> is ready.</p>\n\n<p>This book connects ancient wisdom with modern wealth creation to guide you toward clarity and confidence in your financial journey.</p>\n\n<p>May this book illuminate your path to financial wisdom and lasting prosperity.</p>\n\n<p>Warm regards,<br>\nSumit Poddar<br>\nFounder, Tikona Capital</p>",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          },
+          "senderName": "Tikona Capital Finserv P Ltd."
+        },
+        "path": "15813439-646d-469f-9571-cdbabea23581"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1024,
+        528
+      ],
+      "id": "c3cefeb4-4512-48be-a5c0-aa8152f1f2fb",
+      "name": "Send a message",
+      "webhookId": "15813439-646d-469f-9571-cdbabea23581",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mZmjo128EUktXn99",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1Igd0Ux3FePIHnrd55Mo2Y3Xv98EHUPFC",
+          "mode": "list",
+          "cachedResultName": "The Bhagavad Gita of Investing - Online Version 2.0.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/1Igd0Ux3FePIHnrd55Mo2Y3Xv98EHUPFC/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        800,
+        528
+      ],
+      "id": "1e02e511-75d2-496f-aff1-5bbbe5332361",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Z-V_gInrLywfVybpw-V9jM0njwzfPd_CCb6FMGVMZ1w",
+          "mode": "list",
+          "cachedResultName": "Sale -BGV1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z-V_gInrLywfVybpw-V9jM0njwzfPd_CCb6FMGVMZ1w/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z-V_gInrLywfVybpw-V9jM0njwzfPd_CCb6FMGVMZ1w/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Payment Id": "={{ $('Merge').item.json.payment_id }}",
+            "Whatsapp Status": "={{ $json.message_status }}",
+            "Whatsapp message Id": "={{ $json.whatsapp_message_id }}",
+            "Whatsapp Date and Time sent on ": "={{ new Date().toLocaleString(\"en-GB\", { timeZone: \"Asia/Kolkata\", hour12: false }) }}"
+          },
+          "matchingColumns": [
+            "Payment Id"
+          ],
+          "schema": [
+            {
+              "id": "Entry Date",
+              "displayName": "Entry Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Entry Time",
+              "displayName": "Entry Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email Date and Time",
+              "displayName": "Email Date and Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "From ",
+              "displayName": "From ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Payment Id",
+              "displayName": "Payment Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Paid On",
+              "displayName": "Paid On",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Method",
+              "displayName": "Method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Mobile Number",
+              "displayName": "Mobile Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email Id",
+              "displayName": "Email Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Message Link",
+              "displayName": "Message Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Whatsapp Status",
+              "displayName": "Whatsapp Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Whatsapp message Id",
+              "displayName": "Whatsapp message Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Whatsapp Date and Time sent on ",
+              "displayName": "Whatsapp Date and Time sent on ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email sent status",
+              "displayName": "Email sent status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent to ",
+              "displayName": "Email Sent to ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Date and Time sent on ",
+              "displayName": "Email Date and Time sent on ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Link",
+              "displayName": "Email Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        528
+      ],
+      "id": "b97178c8-8129-4f31-84e4-6df8b45acd0c",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TSkkuRLhdX056rOY",
+          "name": "Tikona ops"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Z-V_gInrLywfVybpw-V9jM0njwzfPd_CCb6FMGVMZ1w",
+          "mode": "list",
+          "cachedResultName": "Sale -BGV1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z-V_gInrLywfVybpw-V9jM0njwzfPd_CCb6FMGVMZ1w/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z-V_gInrLywfVybpw-V9jM0njwzfPd_CCb6FMGVMZ1w/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Payment Id": "={{ $('Merge').item.json.payment_id }}",
+            "Email sent status": "={{ $json.labelIds[0] }}",
+            "Email Date and Time sent on ": "={{ new Date().toLocaleString(\"en-GB\", { timeZone: \"Asia/Kolkata\", hour12: false }) }}",
+            "Email Sent to ": "={{ $('Merge').item.json.payer_email }}",
+            "Email Link": "={{ '=HYPERLINK(\"https://mail.google.com/mail/u/' + ($json[\"accountIndex\"] || 0) + '/#inbox/' + $json[\"id\"] + '\", \"View Email\")' }}"
+          },
+          "matchingColumns": [
+            "Payment Id"
+          ],
+          "schema": [
+            {
+              "id": "Entry Date",
+              "displayName": "Entry Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Entry Time",
+              "displayName": "Entry Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email Date and Time",
+              "displayName": "Email Date and Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "From ",
+              "displayName": "From ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Payment Id",
+              "displayName": "Payment Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Paid On",
+              "displayName": "Paid On",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Method",
+              "displayName": "Method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Mobile Number",
+              "displayName": "Mobile Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email Id",
+              "displayName": "Email Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Message Link",
+              "displayName": "Message Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Whatsapp Status",
+              "displayName": "Whatsapp Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Whatsapp message Id",
+              "displayName": "Whatsapp message Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Whatsapp Date and Time sent on ",
+              "displayName": "Whatsapp Date and Time sent on ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email sent status",
+              "displayName": "Email sent status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent to ",
+              "displayName": "Email Sent to ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Date and Time sent on ",
+              "displayName": "Email Date and Time sent on ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Link",
+              "displayName": "Email Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1248,
+        528
+      ],
+      "id": "09a8ba1f-1503-43cc-9b9e-dcd55d8287c5",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TSkkuRLhdX056rOY",
+          "name": "Tikona ops"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Get many messages": {
+      "main": [
+        []
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Gmail Trigger": {
+      "Gmail Trigger": {
+        "lastTimeChecked": 1762941538,
+        "possibleDuplicates": [
+          "19a778520fd1c10a",
+          "19a77707e6af3669"
+        ]
+      }
+    },
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "4ffdfc1b-e857-4338-9d6b-c28015228b85",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-11-12T12:08:48.825Z",
+      "createdAt": "2025-11-12T12:08:48.825Z",
+      "role": "workflow:owner",
+      "workflowId": "ncflUatUGEt2auuy",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
