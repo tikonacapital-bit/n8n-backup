@@ -8,11 +8,7 @@
   "nodes": [
     {
       "parameters": {
-        "urlInput": "https://docs.google.com/spreadsheets/d/1_jeSY_gVGYXZKMjjaGcbXOkGRKZKLrwyvxt6LD3O5Dk/edit?gid=2007698790#gid=2007698790"
-      },
-      "id": "ce2bcfe9-f5a8-4d8e-b216-3117d8dc3262",
-      "name": "Take a screenshot of a website",
-      "type": "@custom-js/n8n-nodes-pdf-toolkit.websiteScreenshot",
+        "urlInput": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@custom-js/n8n-nodes-pdf-toolkit.websiteScreenshot",
       "position": [
         784,
         48
@@ -37,87 +33,7 @@
           "__rl": true,
           "mode": "list",
           "value": "1oFbmzgG2fsRix45r5JtowYjAdwskJ0P6",
-          "cachedResultUrl": "https://drive.google.com/drive/folders/1oFbmzgG2fsRix45r5JtowYjAdwskJ0P6",
-          "cachedResultName": "screenshots"
-        },
-        "options": {}
-      },
-      "id": "fd2cb7cd-becc-46f3-b699-7b3c5d0651ca",
-      "name": "Store Screenshots",
-      "type": "n8n-nodes-base.googleDrive",
-      "position": [
-        304,
-        144
-      ],
-      "typeVersion": 3,
-      "credentials": {
-        "googleDriveOAuth2Api": {
-          "id": "z9BTKWDUKGFkyilR",
-          "name": "Tikona Capital Drive"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "sendPhoto",
-        "chatId": "-1002262360602",
-        "binaryData": true,
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        1120,
-        544
-      ],
-      "id": "7fbbd470-4ea8-46fe-9fd9-487ce6ad9e59",
-      "name": "Send a photo message",
-      "webhookId": "3cf7e932-2ed8-4ef4-984a-0fa78af1268d",
-      "credentials": {
-        "telegramApi": {
-          "id": "I0rf76FsxPDgaIaQ",
-          "name": "Telegram account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// Configuration\nconst spreadsheetId = \"1_jeSY_gVGYXZKMjjaGcbXOkGRKZKLrwyvxt6LD3O5Dk\"; // Your Google Sheets ID\nconst sheetGid = \"1209422735\"; // 0 for first sheet, or specific sheet ID\nconst exportUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&size=7&portrait=false&scale=2&gridlines=false&printtitle=false&sheetnames=false&pagenum=UNDEFINED&gid=${sheetGid}&fzr=false&fzc=false`;\n\nreturn [{\n  json: {\n    exportUrl: exportUrl,\n    timestamp: new Date().toISOString()\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        560,
-        288
-      ],
-      "id": "8761773a-75cf-4287-bcaa-3b1a15d31436",
-      "name": "Code"
-    },
-    {
-      "parameters": {
-        "url": "={{ $json.exportUrl }}",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googleSheetsOAuth2Api",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        768,
-        304
-      ],
-      "id": "359903c9-d60c-4cd4-85e3-3a4796580e5d",
-      "name": "HTTP Request",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "Ls9rJlg0IJOepg23",
-          "name": "Google Sheets"
-        }
-      }
-    },
-    {
-      "parameters": {},
-      "type": "@custom-js/n8n-nodes-pdf-toolkit.PdfToPng",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@custom-js/n8n-nodes-pdf-toolkit.PdfToPng",
       "typeVersion": 1,
       "position": [
         960,
