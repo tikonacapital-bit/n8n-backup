@@ -1,0 +1,508 @@
+{
+  "updatedAt": "2026-01-29T04:56:26.756Z",
+  "createdAt": "2025-12-19T11:49:27.581Z",
+  "id": "qoQZfpi3lhrkmCmZ",
+  "name": "Blog Transfer",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        -128
+      ],
+      "id": "f28e57f4-5dcb-4035-ba27-8dc484edf02c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hZCkRVb5EmFdlyCyGzW1t6KoTIbUvIqYdvwYNxh6ZLc",
+          "mode": "list",
+          "cachedResultName": "all wix blogs - Tikona Capital",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hZCkRVb5EmFdlyCyGzW1t6KoTIbUvIqYdvwYNxh6ZLc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 636195413,
+          "mode": "list",
+          "cachedResultName": "tikonacapital",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hZCkRVb5EmFdlyCyGzW1t6KoTIbUvIqYdvwYNxh6ZLc/edit#gid=636195413"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -400,
+        -128
+      ],
+      "id": "7f595964-3a80-4073-9c39-9f72d1b8e9c6",
+      "name": "read values from a sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -176,
+        -128
+      ],
+      "id": "f7bd38fe-7178-4ed2-b30c-9597f423ad95",
+      "name": "split in batches"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        48,
+        -192
+      ],
+      "id": "00dbf616-5eea-445e-a511-1e464b4d7590",
+      "name": "fetch HTML"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": "h1"
+            },
+            {
+              "key": "content",
+              "cssSelector": "[data-hook=\"post-description\"]",
+              "returnValue": "html"
+            },
+            {
+              "key": "date",
+              "cssSelector": "[data-hook=\"time-ago\"]"
+            },
+            {
+              "key": "category",
+              "cssSelector": "article a[href*=\"/blog/categories/\"]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        272,
+        -192
+      ],
+      "id": "1670628c-c0ae-44b7-8a3e-01eaf7bd3727",
+      "name": "extract HTML"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.image }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        720,
+        -192
+      ],
+      "id": "e88979ff-34dc-487e-aacb-881e5b5f4e86",
+      "name": "get image"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://cms.tikonacapital.com/api/upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        944,
+        -192
+      ],
+      "id": "be5edfb7-69c4-40b9-9ada-fcdd94104f74",
+      "name": "upload image",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "nb9d9ZSvDU8Uhncq",
+          "name": "strapi authorization"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://cms.tikonacapital.com/api/blogs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"data\": {\n    \"internalName\": {{ JSON.stringify($('split in batches').item.json.title) }},\n    \"title\": {{ JSON.stringify($('split in batches').item.json.title) }},\n    \"slug\": {{ JSON.stringify($('split in batches').item.json.url.split('/').filter(Boolean).pop()) }},\n    \"date\": {{ JSON.stringify($('split in batches').item.json.date.split('-').reverse().join('-')) }},\n    \"author\": \"Sumit Poddar\",\n    \"category\": {{ JSON.stringify($('code').item.json.category) }},\n    \"description\": {{ JSON.stringify($('split in batches').item.json.description) }},\n    \"image\": {{ $json.id || null }},\n    \"readTime\": {{ JSON.stringify($('code').item.json.read_time_calculated) }},\n    \"content\": {{ JSON.stringify($('code').item.json.strapi_blocks) }},\n    \"views\": {{ $('split in batches').item.json.views || 0 }},\n    \"likes\": {{ $('split in batches').item.json.likes || 0 }}\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1168,
+        -192
+      ],
+      "id": "0b0e4402-528b-4ed6-ae3c-75e4a644d9f2",
+      "name": "create blog",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "nb9d9ZSvDU8Uhncq",
+          "name": "strapi authorization"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// configuration allowed strapi categories\nconst VALID_CATEGORIES = [\n  \"Market Outlook\", \n  \"Financial Planning\", \n  \"Investing Wisdom\", \n  \"Library Wisdom\", \n  \"Innovation Odyssey\"\n];\n\nconst DEFAULT_CATEGORY = \"Market Outlook\"; \n\n// helper to decode html entities\n// FIXED: Removed .trim() from here to preserve spaces around links\nfunction decodeHtmlEntities(text) {\n  if (!text) return \"\";\n  const entities = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '\"', '&#39;': \"'\", '&nbsp;': ' ' };\n  return text.replace(/&amp;|&lt;|&gt;|&quot;|&#39;|&nbsp;/g, match => entities[match]);\n}\n\n// helper to check if text is a url\nfunction isUrl(text) {\n  return /^(http:\\/\\/|https:\\/\\/|www\\.)/i.test(text.trim());\n}\n\n// helper to calculate read time\nfunction calculateReadTime(text) {\n  const wordsPerMinute = 200;\n  const words = text.split(/\\s+/).length;\n  const minutes = Math.ceil(words / wordsPerMinute);\n  return `${minutes} min read`;\n}\n\n// helper to normalize category\nfunction normalizeCategory(inputCat) {\n  if (!inputCat) return DEFAULT_CATEGORY;\n  \n  let clean = inputCat.trim();\n  \n  // 1. case insensitive check\n  const match = VALID_CATEGORIES.find(\n    cat => cat.toLowerCase() === clean.toLowerCase()\n  );\n\n  if (match) {\n    return match; \n  }\n  \n  // 2. fuzzy match\n  const lower = clean.toLowerCase();\n  if (lower.includes(\"library\")) return \"Library Wisdom\";\n  if (lower.includes(\"investing\")) return \"Investing Wisdom\";\n  if (lower.includes(\"planning\")) return \"Financial Planning\";\n  if (lower.includes(\"innovation\")) return \"Innovation Odyssey\";\n\n  return DEFAULT_CATEGORY;\n}\n\n// helper to parse text and keep <a> links valid\nfunction parseInlineContent(html) {\n  const nodes = [];\n  // regex to find <a ... href=\"...\">...</a>\n  const linkRegex = /<a\\s+(?:[^>]*?\\s+)?href=[\"']([^\"']+)[\"'][^>]*>(.*?)<\\/a>/gi;\n  \n  let lastIndex = 0;\n  let match;\n  \n  while ((match = linkRegex.exec(html)) !== null) {\n    const [fullMatch, url, linkText] = match;\n    const index = match.index;\n    \n    // add text before the link\n    if (index > lastIndex) {\n      const textPart = html.substring(lastIndex, index);\n      // clean tags but KEEP spaces\n      const cleanText = decodeHtmlEntities(textPart.replace(/<[^>]+>/g, '')); \n      if (cleanText) {\n        nodes.push({ type: \"text\", text: cleanText });\n      }\n    }\n    \n    // add the link itself\n    // links usually don't need surrounding spaces inside the anchor tag, so we trim content slightly or keep as is\n    const cleanLinkText = decodeHtmlEntities(linkText.replace(/<[^>]+>/g, ''));\n    if (cleanLinkText) {\n      nodes.push({\n        type: \"link\",\n        url: url,\n        children: [{ type: \"text\", text: cleanLinkText }]\n      });\n    }\n    \n    lastIndex = index + fullMatch.length;\n  }\n  \n  // add text after the last link\n  if (lastIndex < html.length) {\n    const textPart = html.substring(lastIndex);\n    const cleanText = decodeHtmlEntities(textPart.replace(/<[^>]+>/g, ''));\n    if (cleanText) {\n      nodes.push({ type: \"text\", text: cleanText });\n    }\n  }\n  \n  // fallback if no links found return plain text\n  if (nodes.length === 0) {\n      const plain = decodeHtmlEntities(html.replace(/<[^>]+>/g, ''));\n      if (plain) nodes.push({ type: \"text\", text: plain });\n  }\n  \n  return nodes;\n}\n\n// get original data from the split in batches node\nconst sourceItems = $('split in batches').all(); \n\n// main loop\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const sourceItem = sourceItems[i] || {}; \n\n  const rawHtml = item.json.content || \"\"; \n  \n  // sanitize category\n  const rawCategory = item.json.category; \n  item.json.category = normalizeCategory(rawCategory);\n\n  // calculate read time\n  const plainText = rawHtml.replace(/<[^>]+>/g, ' ').trim();\n  const readTime = calculateReadTime(plainText);\n\n  // clean image url\n  let rawImage = sourceItem.json && sourceItem.json.image;\n  if (rawImage && typeof rawImage === 'string') {\n      item.json.image = rawImage.split('/v1/fill/')[0];\n  }\n  \n  // convert html to strapi blocks\n  const blocks = [];\n  \n  const blockRegex = /<(h[1-6]|p|li|blockquote|a)[^>]*>([\\s\\S]*?)<\\/\\1>/gi;\n  let match;\n\n  while ((match = blockRegex.exec(rawHtml)) !== null) {\n    const tag = match[1].toLowerCase();\n    const innerHtml = match[2];\n    const fullMatch = match[0];\n    \n    // For Logic Checks only: create a trimmed text version\n    let cleanTextForCheck = innerHtml.replace(/<[^>]+>/g, '');\n    cleanTextForCheck = decodeHtmlEntities(cleanTextForCheck).trim();\n\n    // skip empty blocks unless it contains a link\n    if (!cleanTextForCheck && !innerHtml.includes('<a')) continue;\n\n    if (tag === 'a') {\n      // HANDLE LOOSE LINKS\n      const linkNodes = parseInlineContent(fullMatch);\n      blocks.push({ type: \"paragraph\", children: linkNodes });\n\n    } else if (tag === 'blockquote') {\n      // HANDLE QUOTES\n      const childrenNodes = parseInlineContent(innerHtml);\n      blocks.push({ type: \"paragraph\", children: childrenNodes });\n\n    } else if (tag.startsWith('h')) {\n      const childrenNodes = parseInlineContent(innerHtml);\n      blocks.push({\n        type: \"heading\",\n        level: parseInt(tag.charAt(1)) || 4,\n        children: childrenNodes\n      });\n\n    } else if (tag === 'li') {\n      const childrenNodes = parseInlineContent(innerHtml);\n      childrenNodes.unshift({ type: \"text\", text: \"• \" });\n      blocks.push({\n        type: \"paragraph\",\n        children: childrenNodes\n      });\n\n    } else {\n      // paragraph logic\n      const childrenNodes = parseInlineContent(innerHtml);\n      \n      // smart heading check (using the trimmed check text)\n      if (cleanTextForCheck.length < 60 && (cleanTextForCheck.endsWith(':') || cleanTextForCheck.endsWith('..') || cleanTextForCheck.includes('?'))) {\n         blocks.push({ type: \"heading\", level: 4, children: childrenNodes });\n      } \n      // smart raw url check\n      else if (isUrl(cleanTextForCheck) && childrenNodes.length === 1 && childrenNodes[0].type === 'text') {\n        let url = cleanTextForCheck;\n        if (!url.startsWith('http')) { url = 'http://' + url; }\n        blocks.push({ type: \"paragraph\", children: [{ type: \"link\", url: url, children: [{ type: \"text\", text: cleanTextForCheck }] }] });\n      } \n      else {\n        blocks.push({ type: \"paragraph\", children: childrenNodes });\n      }\n    }\n  }\n\n  // fallback\n  if (blocks.length === 0 && plainText.length > 0) {\n    blocks.push({ type: \"paragraph\", children: parseInlineContent(rawHtml) });\n  }\n\n  item.json.strapi_blocks = blocks;\n  item.json.read_time_calculated = readTime;\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        -192
+      ],
+      "id": "eab7a66c-e217-4206-b8d9-b63444841229",
+      "name": "code"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1616,
+        -128
+      ],
+      "id": "7ed7736a-a102-4009-99a7-27529605387d",
+      "name": "wait for 2s",
+      "webhookId": "455d1756-4e3d-4724-8429-bb57c26b96d3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hZCkRVb5EmFdlyCyGzW1t6KoTIbUvIqYdvwYNxh6ZLc",
+          "mode": "list",
+          "cachedResultName": "all blogs - Tikona Capital",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hZCkRVb5EmFdlyCyGzW1t6KoTIbUvIqYdvwYNxh6ZLc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 636195413,
+          "mode": "list",
+          "cachedResultName": "tikonacapital",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hZCkRVb5EmFdlyCyGzW1t6KoTIbUvIqYdvwYNxh6ZLc/edit#gid=636195413"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "title": "={{ $json.data.title }}",
+            "strapi_URL": "={{ 'https://cms.tikonacapital.com/admin/content-manager/collection-types/api::blog.blog/' + $json.data.documentId }}"
+          },
+          "matchingColumns": [
+            "title"
+          ],
+          "schema": [
+            {
+              "id": "image",
+              "displayName": "image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "views",
+              "displayName": "views",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "likes",
+              "displayName": "likes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "strapi_URL",
+              "displayName": "strapi_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1392,
+        -192
+      ],
+      "id": "ec3bd681-41d2-45e5-b852-fbfc52d969f1",
+      "name": "add strapi admin URL",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "read values from a sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read values from a sheet": {
+      "main": [
+        [
+          {
+            "node": "split in batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split in batches": {
+      "main": [
+        [],
+        [
+          {
+            "node": "fetch HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch HTML": {
+      "main": [
+        [
+          {
+            "node": "extract HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract HTML": {
+      "main": [
+        [
+          {
+            "node": "code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get image": {
+      "main": [
+        [
+          {
+            "node": "upload image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upload image": {
+      "main": [
+        [
+          {
+            "node": "create blog",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "code": {
+      "main": [
+        [
+          {
+            "node": "get image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create blog": {
+      "main": [
+        [
+          {
+            "node": "add strapi admin URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait for 2s": {
+      "main": [
+        [
+          {
+            "node": "split in batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "add strapi admin URL": {
+      "main": [
+        [
+          {
+            "node": "wait for 2s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "e6e972e1-ab74-4052-8697-48064d997099",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-19T11:49:27.584Z",
+      "createdAt": "2025-12-19T11:49:27.584Z",
+      "role": "workflow:owner",
+      "workflowId": "qoQZfpi3lhrkmCmZ",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
