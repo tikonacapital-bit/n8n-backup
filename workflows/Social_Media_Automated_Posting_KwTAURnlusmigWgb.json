@@ -1,0 +1,3257 @@
+{
+  "updatedAt": "2026-02-07T07:31:40.742Z",
+  "createdAt": "2025-10-25T07:44:22.857Z",
+  "id": "KwTAURnlusmigWgb",
+  "name": "Social Media Automated Posting",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 201592494,
+          "mode": "list",
+          "cachedResultName": "PostBlog",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        160
+      ],
+      "id": "3a95bf4e-9978-4117-9f33-f5529d862356",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "O9TUEIPHEYHKBEVk",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional social media content creator who specializes in creating platform-optimized posts for Facebook, Instagram, LinkedIn and X(formerly Twitter). I will provide you with an idea or topic, and you should create unique, platform-specific content that aligns with each platform's best practices and user expectations.\n\nPlatform-specific requirements:\nFacebook: Conversational and engaging, encouraging discussion and shares. Include 1-2 relevant emojis. Maximum 150 words.\nInstagram: Casual, vibrant, and visually descriptive. Heavy but appropriate emoji usage. Include 3-5 relevant hashtags. Maximum 100 words.\nLinkedIn: Professional tone, business-focused, includes industry insights or professional value. Minimal emoji usage (0-1).\nX (Twitter): Concise, engaging, and attention-grabbing. Focus on strong hooks, trending topics, or bold statements. Keep hashtags or emojis. Use casual and conversational language. Include relevant hashtags for reach. Emoji usage: moderate (1–3 max) to add personality and visual interest. Maximum 200 words.\n\nPlease format your response as a JSON object with the following structure:\n{\n  \"Facebook_Post_Content\": \"\",\n  \"Instagram_Post_Content\": \"\",\n  \"LinkedIn_Post_Content\": \"\",\n  \"X_Post_Content\": \"\"\n}\n\nGuidelines:\n- Each platform's content should be unique, not just reformatted versions of the same text\n- Maintain the brand's voice while adapting to each platform's style\n- Include appropriate call-to-actions for each platform\n- Ensure all content is engaging and shareable\n- Keep text lengths within platform-optimal limits\n- Format the output strictly as valid JSON\n\nMain idea to transform into posts: {{ $json['Idea Content (User Input)'] }}\n",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -384,
+        -64
+      ],
+      "id": "05acae60-848e-432f-ac62-a52ffc6f53ad",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+        "typeVersion": 1,
+        "position": [
+          -320,
+          160
+        ],
+        "id": "3a95bf4e-9978-4117-9f33-f5529d862356",
+        "name": "OpenRouter Chat Model",
+        "credentials": {
+          "openRouterApi": {
+            "id": "O9TUEIPHEYHKBEVk",
+            "name": "OpenRouter account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=You are a professional social media content creator who specializes in creating platform-optimized posts for Facebook, Instagram, LinkedIn and X(formerly Twitter). I will provide you with an idea or topic, and you should create unique, platform-specific content that aligns with each platform's best practices and user expectations.\n\nPlatform-specific requirements:\nFacebook: Conversational and engaging, encouraging discussion and shares. Include 1-2 relevant emojis. Maximum 150 words.\nInstagram: Casual, vibrant, and visually descriptive. Heavy but appropriate emoji usage. Include 3-5 relevant hashtags. Maximum 100 words.\nLinkedIn: Professional tone, business-focused, includes industry insights or professional value. Minimal emoji usage (0-1).\nX (Twitter): Concise, engaging, and attention-grabbing. Focus on strong hooks, trending topics, or bold statements. Keep hashtags or emojis. Use casual and conversational language. Include relevant hashtags for reach. Emoji usage: moderate (1–3 max) to add personality and visual interest. Maximum 200 words.\n\nPlease format your response as a JSON object with the following structure:\n{\n  \"Facebook_Post_Content\": \"\",\n  \"Instagram_Post_Content\": \"\",\n  \"LinkedIn_Post_Content\": \"\",\n  \"X_Post_Content\": \"\"\n}\n\nGuidelines:\n- Each platform's content should be unique, not just reformatted versions of the same text\n- Maintain the brand's voice while adapting to each platform's style\n- Include appropriate call-to-actions for each platform\n- Ensure all content is engaging and shareable\n- Keep text lengths within platform-optimal limits\n- Format the output strictly as valid JSON\n\nMain idea to transform into posts: {{ $json['Idea Content (User Input)'] }}\n",
+          "batching": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.7,
+        "position": [
+          -384,
+          -64
+        ],
+        "id": "05acae60-848e-432f-ac62-a52ffc6f53ad",
+        "name": "Basic LLM Chain"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://openrouter.ai/api/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "openRouterApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n\n    \"model\": \"google/gemini-2.5-flash-image\",\n\n    \"messages\": [\n\n        {\n\n            \"role\": \"user\",\n\n            \"content\": \"Generate a square image (1080x1080 pixels) for social media with the following specifications:Style Requirements:- Create a modern and visually appealing composition- Use colors that complement the message and mood- Ensure all text is clear and readable- Maintain consistent branding elements if specified- Include adequate negative space for visual balanceTechnical Specifications:- Dimension: 1080 x 1080 pixels (perfect square)- Format: High-resolution digital image- Style: {Specify desired style: Minimalist}- Color Scheme: {Specify colors if needed}Additional Elements:- Add subtle visual elements that enhance the message- Include appropriate iconography if relevant- Ensure the composition works well for social media viewingImportant Notes:- Make sure all text is centered unless otherwise specified- Keep the design clean and uncluttered- Ensure high contrast between text and background- Consider social media platform requirements Main idea to generate image:{{ $json.LinkedIn_Post_Content }} \"\n\n        }\n\n    ],\n\n    \"modalities\": [\"image\", \"text\"]\n\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          192,
+          -64
+        ],
+        "id": "a8845ca8-bd10-4d49-b7aa-b1d354257808",
+        "name": "HTTP Request",
+        "credentials": {
+          "openRouterApi": {
+            "id": "O9TUEIPHEYHKBEVk",
+            "name": "OpenRouter account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// In Code node (Set for 'Run Once for All Items')\nconst base64Data = $input.first().json.choices[0].message.images[0].image_url.url\n\n// Remove data URL prefix if present (e.g., \"data:image/png;base64,\")\nconst base64String = base64Data.includes(',') \n  ? base64Data.split(',')[1] \n  : base64Data;\n\n// Convert to binary\nconst binaryData = Buffer.from(base64String, 'base64');\n\nreturn [\n  {\n    json: {},\n    binary: {\n      data: {\n        data: binaryData.toString('base64'),\n        mimeType: 'image/png', // adjust based on your image type\n        fileName: `generated-image-${Date.now()}.png`,\n      }\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          416,
+          -64
+        ],
+        "id": "09b5f3c2-bbc2-4e01-86b9-c2329860eb8b",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "name": "=",
+          "driveId": {
+            "__rl": true,
+            "value": "My Drive",
+            "mode": "list",
+            "cachedResultName": "My Drive",
+            "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1xG34x09_aimU_Sot0gpM5ve5ksnk1p1d",
+            "mode": "list",
+            "cachedResultName": "Social Media Assets",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1xG34x09_aimU_Sot0gpM5ve5ksnk1p1d"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          640,
+          -64
+        ],
+        "id": "59eac699-c924-4014-bb10-2edcded7d5f1",
+        "name": "Upload file",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+            "mode": "list",
+            "cachedResultName": "Master Social Media Automation - Content & Posting -v1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 201592494,
+            "mode": "list",
+            "cachedResultName": "PostBlog",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit#gid=201592494"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Post Status": "Content Generated",
+              "Facebook Content": "={{ $('Basic LLM Chain').item.json.Facebook_Post_Content }}",
+              "LinkedIn Content": "={{ $('Basic LLM Chain').item.json.LinkedIn_Post_Content }}",
+              "Instagram Content": "={{ $('Basic LLM Chain').item.json.Instagram_Post_Content }}",
+              "X(Formerly Twitter) Content": "={{ $('Basic LLM Chain').item.json.X_Post_Content }}",
+              "Content Generation Date & Time": "={{ $now }}",
+              "Instagram link": "https://www.instagram.com/tikonacapital/",
+              "LinkedIn personal link": "https://www.linkedin.com/in/sumitpoddar/",
+              "LinkedIn Company link": "https://www.linkedin.com/company/79035911/admin/page-posts/published/",
+              "row_number": "={{ $('Google Sheets - Filter Rows').item.json.row_number }}"
+            },
+            "matchingColumns": [
+              "row_number"
+            ],
+            "schema": [
+              {
+                "id": "Idea Content (User Input)",
+                "displayName": "Idea Content (User Input)",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Post Status",
+                "displayName": "Post Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Create Image",
+                "displayName": "Create Image",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Additional Prompt Instructions",
+                "displayName": "Additional Prompt Instructions",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Facebook Content",
+                "displayName": "Facebook Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "LinkedIn Content",
+                "displayName": "LinkedIn Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Instagram Content",
+                "displayName": "Instagram Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "X(Formerly Twitter) Content",
+                "displayName": "X(Formerly Twitter) Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Image URL",
+                "displayName": "Image URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Content Generation Date & Time",
+                "displayName": "Content Generation Date & Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Linkedin",
+                "displayName": "Personal Linkedin",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Personal Facebook",
+                "displayName": "Personal Facebook",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Facebook personal link",
+                "displayName": "Facebook personal link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Facebook company link",
+                "displayName": "Facebook company link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Instagram link",
+                "displayName": "Instagram link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "LinkedIn personal link",
+                "displayName": "LinkedIn personal link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "LinkedIn Company link",
+                "displayName": "LinkedIn Company link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Scheduled Date",
+                "displayName": "Scheduled Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "594c0a75-ac7a-45b0-a998-0f534a068181",
+        "name": "Update Google Sheets1",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4,
+        "position": [
+          192,
+          144
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{ $('Google Sheets - Filter Rows').item.json['Post Status'] }}",
+                "value2": "Post Content"
+              }
+            ],
+            "dateTime": [
+              {
+                "value1": "={{ new Date($('Google Sheets - Filter Rows').item.json['Scheduled Date']) }}",
+                "operation": "before",
+                "value2": "={{ $now }}"
+              }
+            ]
+          }
+        },
+        "id": "6c8a45fe-eac0-4f12-9900-75a6528e82c2",
+        "name": "IF Post Content1",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 1,
+        "position": [
+          -1056,
+          608
+        ]
+      },
+      {
+        "parameters": {
+          "httpRequestMethod": "POST",
+          "graphApiVersion": "v23.0",
+          "node": "17841453247289885",
+          "edge": "media",
+          "options": {
+            "queryParameters": {
+              "parameter": [
+                {
+                  "name": "image_url",
+                  "value": "={{ $('Google Sheets - Filter Rows').item.json['Image URL(Valid only for 10 min)'] }}"
+                },
+                {
+                  "name": "caption",
+                  "value": "={{ $('IF Post Content').item.json['Instagram Content'] }}"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.facebookGraphApi",
+        "typeVersion": 1,
+        "position": [
+          -1056,
+          832
+        ],
+        "id": "ab871129-0cdc-4acf-a900-d47f04b313e8",
+        "name": "Instagram Create Container",
+        "credentials": {
+          "facebookGraphApi": {
+            "id": "dMEGTwKgnbmuQHcu",
+            "name": "Facebook Graph account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "httpRequestMethod": "POST",
+          "graphApiVersion": "v23.0",
+          "node": "17841453247289885",
+          "edge": "media",
+          "sendBinaryData": true,
+          "binaryPropertyName": "={{ $('Download file').item.binary.data }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.facebookGraphApi",
+        "typeVersion": 1,
+        "position": [
+          -832,
+          832
+        ],
+        "id": "7fbfd81f-b9d2-46fc-a6d2-5b7401f4bc2f",
+        "name": "Instagram Post",
+        "credentials": {
+          "facebookGraphApi": {
+            "id": "dMEGTwKgnbmuQHcu",
+            "name": "Facebook Graph account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "additionalFields": {
+            "attachments": ""
+          }
+        },
+        "type": "n8n-nodes-base.twitter",
+        "typeVersion": 2,
+        "position": [
+          -1056,
+          1056
+        ],
+        "id": "0289db64-85c8-406d-b1cd-3fa43f957399",
+        "name": "Create Tweet",
+        "credentials": {
+          "twitterOAuth2Api": {
+            "id": "NDWpmNGbtztMmVQf",
+            "name": "X account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "download",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json['Image URL'] }}",
+            "mode": "url"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          -112,
+          400
+        ],
+        "id": "b50ea5af-d048-43ff-92de-024884fb10eb",
+        "name": "Download file",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json['Image URL'].trim() }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "string",
+                        "operation": "notEmpty",
+                        "singleValue": true
+                      },
+                      "id": "73a159b8-49c3-46d8-a864-9990ff0219ea"
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "e05eb602-b6f4-408c-8019-6c005c632a77",
+                      "leftValue": "={{ $json['Image URL'].trim() }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "string",
+                        "operation": "empty",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.3,
+        "position": [
+          -384,
+          384
+        ],
+        "id": "7512c1b6-7de5-473d-b78b-eb1f9bf22c82",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $('Download file').item.json['Personal Linkedin'] }}",
+                      "rightValue": "Yes",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "b06899fd-8486-4ca1-aac2-7ac5bef1bab2"
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "f5736cf5-a1d7-4c8f-9c29-40f7f4a5f941",
+                      "leftValue": "={{ $json['Personal Facebook'] }}",
+                      "rightValue": "Yes",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "options": {
+            "allMatchingOutputs": true
+          }
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.3,
+        "position": [
+          1296,
+          384
+        ],
+        "id": "bbea3de9-8485-4436-9bba-6ae8e8f1918e",
+        "name": "Switch1"
+      },
+      {
+        "parameters": {
+          "httpRequestMethod": "POST",
+          "graphApiVersion": "v23.0",
+          "node": "105205165548711",
+          "edge": "photos",
+          "sendBinaryData": true,
+          "binaryPropertyName": "data",
+          "options": {
+            "queryParameters": {
+              "parameter": [
+                {
+                  "name": "message",
+                  "value": "={{ $json['Facebook Content'] }}"
+                }
+              ]
+            },
+            "queryParametersJson": "{}"
+          }
+        },
+        "type": "n8n-nodes-base.facebookGraphApi",
+        "typeVersion": 1,
+        "position": [
+          208,
+          608
+        ],
+        "id": "1138b8e0-ef34-4c76-be4c-5afbb1594c32",
+        "name": "Facebook TC",
+        "credentials": {
+          "facebookGraphApi": {
+            "id": "dMEGTwKgnbmuQHcu",
+            "name": "Facebook Graph account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "postAs": "organization",
+          "organization": "79035911",
+          "text": "={{ $('Google Sheets - Filter Rows').item.json['LinkedIn Content'] }}",
+          "shareMediaCategory": "IMAGE",
+          "binaryPropertyName": "={{ $('Download file').\nitem.binary.data }}",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.linkedIn",
+        "typeVersion": 1,
+        "position": [
+          816,
+          384
+        ],
+        "id": "79e74851-bbb3-4c44-a908-f0b350a55284",
+        "name": "LinkedIn TC",
+        "credentials": {
+          "linkedInOAuth2Api": {
+            "id": "sKkZblfqoZhLXccm",
+            "name": "LinkedIn account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "person": "kEdJTyJNRV",
+          "text": "={{ $('Google Sheets - Filter Rows').item.json['LinkedIn Content'] }}",
+          "shareMediaCategory": "IMAGE",
+          "binaryPropertyName": "={{ $('Download file'). item.binary.data }}",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.linkedIn",
+        "typeVersion": 1,
+        "position": [
+          1520,
+          384
+        ],
+        "id": "1508d267-ca2a-4437-bbce-28bb2dba2c31",
+        "name": "Linkedin Personal",
+        "credentials": {
+          "linkedInOAuth2Api": {
+            "id": "3ibxAgFPzAjGs6G5",
+            "name": "Linkedin Personal"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.x.com/2/media/upload",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "media_category",
+                "value": "tweet_image"
+              },
+              {
+                "parameterType": "formBinaryData",
+                "name": "media",
+                "inputDataFieldName": "data"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          192,
+          384
+        ],
+        "id": "50747e44-611c-453d-8569-a4667787c7ec",
+        "name": "Upload Image to X",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "UuJZhSbf90Ynd1GB",
+            "name": "X Custom"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.x.com/2/tweets",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendBody": true,
+          "specifyBody": "=json",
+          "bodyParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "jsonBody": "={\n  \"text\": \"{{ $('Google Sheets - Filter Rows').item.json['X(Formerly Twitter) Content'] }}\",\n  \"media\": {\n  \"media_ids\": [\"{{ $json.data.id }}\"]\n  }\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          416,
+          384
+        ],
+        "id": "032a8219-ed22-4323-a2fd-b5b3ca13bf4b",
+        "name": "HTTP Request1",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "UuJZhSbf90Ynd1GB",
+            "name": "X Custom"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+            "mode": "list",
+            "cachedResultName": "Master Social Media Automation - Content & Posting -v1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 201592494,
+            "mode": "list",
+            "cachedResultName": "PostBlog",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit#gid=201592494"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "row_number": "={{ $('Google Sheets - Filter Rows').item.json.row_number }}",
+              "Facebook company Post": "=",
+              "X Post": "=",
+              "LinkedIn Company Post": "=https://linkedin.com/{{ $json.urn }}"
+            },
+            "matchingColumns": [
+              "row_number"
+            ],
+            "schema": [
+              {
+                "id": "Idea Content (User Input)",
+                "displayName": "Idea Content (User Input)",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Post Status",
+                "displayName": "Post Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Create Image",
+                "displayName": "Create Image",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Additional Prompt Instructions",
+                "displayName": "Additional Prompt Instructions",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook Content",
+                "displayName": "Facebook Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "LinkedIn Content",
+                "displayName": "LinkedIn Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Instagram Content",
+                "displayName": "Instagram Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "X(Formerly Twitter) Content",
+                "displayName": "X(Formerly Twitter) Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Image URL",
+                "displayName": "Image URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Content Generation Date & Time",
+                "displayName": "Content Generation Date & Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Linkedin",
+                "displayName": "Personal Linkedin",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Facebook",
+                "displayName": "Personal Facebook",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook personal Post",
+                "displayName": "Facebook personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Facebook company Post",
+                "displayName": "Facebook company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Instagram Post",
+                "displayName": "Instagram Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn personal Post",
+                "displayName": "LinkedIn personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn Company Post",
+                "displayName": "LinkedIn Company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "X Post",
+                "displayName": "X Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Scheduled Date",
+                "displayName": "Scheduled Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1056,
+          384
+        ],
+        "id": "c7484fbe-7440-490a-b3ed-caaffe32bf34",
+        "name": "Update row in sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+            "mode": "list",
+            "cachedResultName": "Master Social Media Automation - Content & Posting -v1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 201592494,
+            "mode": "list",
+            "cachedResultName": "PostBlog",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit#gid=201592494"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "row_number": "={{ $('Google Sheets - Filter Rows').item.json.row_number }}",
+              "Facebook company Post": "=https://facebook.com/{{ $json.post_id }}",
+              "X Post": "=",
+              "LinkedIn Company Post": "="
+            },
+            "matchingColumns": [
+              "row_number"
+            ],
+            "schema": [
+              {
+                "id": "Idea Content (User Input)",
+                "displayName": "Idea Content (User Input)",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Post Status",
+                "displayName": "Post Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Create Image",
+                "displayName": "Create Image",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Additional Prompt Instructions",
+                "displayName": "Additional Prompt Instructions",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook Content",
+                "displayName": "Facebook Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "LinkedIn Content",
+                "displayName": "LinkedIn Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Instagram Content",
+                "displayName": "Instagram Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "X(Formerly Twitter) Content",
+                "displayName": "X(Formerly Twitter) Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Image URL",
+                "displayName": "Image URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Content Generation Date & Time",
+                "displayName": "Content Generation Date & Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Linkedin",
+                "displayName": "Personal Linkedin",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Facebook",
+                "displayName": "Personal Facebook",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook personal Post",
+                "displayName": "Facebook personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Facebook company Post",
+                "displayName": "Facebook company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Instagram Post",
+                "displayName": "Instagram Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn personal Post",
+                "displayName": "LinkedIn personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn Company Post",
+                "displayName": "LinkedIn Company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "X Post",
+                "displayName": "X Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Scheduled Date",
+                "displayName": "Scheduled Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          688,
+          608
+        ],
+        "id": "90641578-74df-4681-86d6-abd4683a6818",
+        "name": "Update row in sheet1",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+            "mode": "list",
+            "cachedResultName": "Master Social Media Automation - Content & Posting -v1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 201592494,
+            "mode": "list",
+            "cachedResultName": "PostBlog",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit#gid=201592494"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "row_number": "={{ $('Google Sheets - Filter Rows').item.json.row_number }}",
+              "Facebook company Post": "=",
+              "X Post": "=https://x.com/tikonacapital/status/{{ $json.data.id }}",
+              "LinkedIn Company Post": "="
+            },
+            "matchingColumns": [
+              "row_number"
+            ],
+            "schema": [
+              {
+                "id": "Idea Content (User Input)",
+                "displayName": "Idea Content (User Input)",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Post Status",
+                "displayName": "Post Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Create Image",
+                "displayName": "Create Image",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Additional Prompt Instructions",
+                "displayName": "Additional Prompt Instructions",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook Content",
+                "displayName": "Facebook Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "LinkedIn Content",
+                "displayName": "LinkedIn Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Instagram Content",
+                "displayName": "Instagram Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "X(Formerly Twitter) Content",
+                "displayName": "X(Formerly Twitter) Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Image URL",
+                "displayName": "Image URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Content Generation Date & Time",
+                "displayName": "Content Generation Date & Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Linkedin",
+                "displayName": "Personal Linkedin",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Facebook",
+                "displayName": "Personal Facebook",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook personal Post",
+                "displayName": "Facebook personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Facebook company Post",
+                "displayName": "Facebook company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Instagram Post",
+                "displayName": "Instagram Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn personal Post",
+                "displayName": "LinkedIn personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn Company Post",
+                "displayName": "LinkedIn Company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "X Post",
+                "displayName": "X Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Scheduled Date",
+                "displayName": "Scheduled Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          624,
+          384
+        ],
+        "id": "2fce26fe-e18d-4821-bdfb-5a8ffb33bdc7",
+        "name": "Update row in sheet2",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+            "mode": "list",
+            "cachedResultName": "Master Social Media Automation - Content & Posting -v1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 201592494,
+            "mode": "list",
+            "cachedResultName": "PostBlog",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit#gid=201592494"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "row_number": "={{ $('Google Sheets - Filter Rows').item.json.row_number }}",
+              "Facebook company Post": "=https://facebook.com/{{ $json.post_id }}",
+              "X Post": "=",
+              "LinkedIn Company Post": "=",
+              "LinkedIn personal Post": "=https://linkedin.com/{{ $json.urn }}"
+            },
+            "matchingColumns": [
+              "row_number"
+            ],
+            "schema": [
+              {
+                "id": "Idea Content (User Input)",
+                "displayName": "Idea Content (User Input)",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Post Status",
+                "displayName": "Post Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Create Image",
+                "displayName": "Create Image",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Additional Prompt Instructions",
+                "displayName": "Additional Prompt Instructions",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook Content",
+                "displayName": "Facebook Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "LinkedIn Content",
+                "displayName": "LinkedIn Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Instagram Content",
+                "displayName": "Instagram Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "X(Formerly Twitter) Content",
+                "displayName": "X(Formerly Twitter) Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Image URL",
+                "displayName": "Image URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Content Generation Date & Time",
+                "displayName": "Content Generation Date & Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Linkedin",
+                "displayName": "Personal Linkedin",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Facebook",
+                "displayName": "Personal Facebook",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook personal Post",
+                "displayName": "Facebook personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Facebook company Post",
+                "displayName": "Facebook company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Instagram Post",
+                "displayName": "Instagram Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn personal Post",
+                "displayName": "LinkedIn personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn Company Post",
+                "displayName": "LinkedIn Company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "X Post",
+                "displayName": "X Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Scheduled Date",
+                "displayName": "Scheduled Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1744,
+          384
+        ],
+        "id": "94c600ff-ffe5-4ace-af33-0060f9aaa18c",
+        "name": "Update row in sheet3",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.x.com/2/tweets",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendBody": true,
+          "specifyBody": "=json",
+          "bodyParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "jsonBody": "={\n  \"text\": \"{{ $('Google Sheets - Filter Rows').item.json['X(Formerly Twitter) Content'] }}\"\n\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -112,
+          816
+        ],
+        "id": "394d47f7-0a84-4d5d-932d-79acb1e13557",
+        "name": "HTTP Request2",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "UuJZhSbf90Ynd1GB",
+            "name": "X Custom"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+            "mode": "list",
+            "cachedResultName": "Master Social Media Automation - Content & Posting -v1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 201592494,
+            "mode": "list",
+            "cachedResultName": "PostBlog",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit#gid=201592494"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "row_number": "={{ $('Google Sheets - Filter Rows').item.json.row_number }}",
+              "Facebook company Post": "=",
+              "X Post": "=https://x.com/tikonacapital/status/{{ $json.data.id }}",
+              "LinkedIn Company Post": "="
+            },
+            "matchingColumns": [
+              "row_number"
+            ],
+            "schema": [
+              {
+                "id": "Idea Content (User Input)",
+                "displayName": "Idea Content (User Input)",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Post Status",
+                "displayName": "Post Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Create Image",
+                "displayName": "Create Image",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Additional Prompt Instructions",
+                "displayName": "Additional Prompt Instructions",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook Content",
+                "displayName": "Facebook Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "LinkedIn Content",
+                "displayName": "LinkedIn Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Instagram Content",
+                "displayName": "Instagram Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "X(Formerly Twitter) Content",
+                "displayName": "X(Formerly Twitter) Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Image URL",
+                "displayName": "Image URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Content Generation Date & Time",
+                "displayName": "Content Generation Date & Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Linkedin",
+                "displayName": "Personal Linkedin",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Facebook",
+                "displayName": "Personal Facebook",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook personal Post",
+                "displayName": "Facebook personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Facebook company Post",
+                "displayName": "Facebook company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Instagram Post",
+                "displayName": "Instagram Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn personal Post",
+                "displayName": "LinkedIn personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn Company Post",
+                "displayName": "LinkedIn Company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "X Post",
+                "displayName": "X Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Scheduled Date",
+                "displayName": "Scheduled Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          144,
+          832
+        ],
+        "id": "0aaba409-6f5e-458b-be71-0592540079aa",
+        "name": "Update row in sheet4",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "postAs": "organization",
+          "organization": "79035911",
+          "text": "={{ $('Google Sheets - Filter Rows').item.json['LinkedIn Content'] }}",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.linkedIn",
+        "typeVersion": 1,
+        "position": [
+          384,
+          832
+        ],
+        "id": "658aab7e-a40e-474a-b9c2-35575f608857",
+        "name": "LinkedIn TC1",
+        "credentials": {
+          "linkedInOAuth2Api": {
+            "id": "sKkZblfqoZhLXccm",
+            "name": "LinkedIn account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+            "mode": "list",
+            "cachedResultName": "Master Social Media Automation - Content & Posting -v1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 201592494,
+            "mode": "list",
+            "cachedResultName": "PostBlog",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit#gid=201592494"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "row_number": "={{ $('Google Sheets - Filter Rows').item.json.row_number }}",
+              "Facebook company Post": "=",
+              "X Post": "=",
+              "LinkedIn Company Post": "=https://linkedin.com/{{ $json.urn }}"
+            },
+            "matchingColumns": [
+              "row_number"
+            ],
+            "schema": [
+              {
+                "id": "Idea Content (User Input)",
+                "displayName": "Idea Content (User Input)",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Post Status",
+                "displayName": "Post Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Create Image",
+                "displayName": "Create Image",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Additional Prompt Instructions",
+                "displayName": "Additional Prompt Instructions",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook Content",
+                "displayName": "Facebook Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "LinkedIn Content",
+                "displayName": "LinkedIn Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Instagram Content",
+                "displayName": "Instagram Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "X(Formerly Twitter) Content",
+                "displayName": "X(Formerly Twitter) Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Image URL",
+                "displayName": "Image URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Content Generation Date & Time",
+                "displayName": "Content Generation Date & Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Linkedin",
+                "displayName": "Personal Linkedin",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Facebook",
+                "displayName": "Personal Facebook",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook personal Post",
+                "displayName": "Facebook personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Facebook company Post",
+                "displayName": "Facebook company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Instagram Post",
+                "displayName": "Instagram Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn personal Post",
+                "displayName": "LinkedIn personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn Company Post",
+                "displayName": "LinkedIn Company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "X Post",
+                "displayName": "X Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Scheduled Date",
+                "displayName": "Scheduled Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          560,
+          832
+        ],
+        "id": "09ac28f1-6b52-41a2-8419-463573d6920c",
+        "name": "Update row in sheet5",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $('Google Sheets - Filter Rows').item.json['Personal Linkedin'] }}",
+                      "rightValue": "Yes",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "b06899fd-8486-4ca1-aac2-7ac5bef1bab2"
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "options": {
+            "allMatchingOutputs": true
+          }
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.3,
+        "position": [
+          1232,
+          816
+        ],
+        "id": "2d55447e-96a9-4182-8606-75a2334eab5f",
+        "name": "Switch2"
+      },
+      {
+        "parameters": {
+          "httpRequestMethod": "POST",
+          "graphApiVersion": "v23.0",
+          "node": "105205165548711",
+          "edge": "feed",
+          "options": {
+            "queryParameters": {
+              "parameter": [
+                {
+                  "name": "message",
+                  "value": "={{ $('Google Sheets - Filter Rows').item.json['Facebook Content'] }}"
+                }
+              ]
+            },
+            "queryParametersJson": "{}"
+          }
+        },
+        "type": "n8n-nodes-base.facebookGraphApi",
+        "typeVersion": 1,
+        "position": [
+          784,
+          832
+        ],
+        "id": "8a2560c3-c6e0-41ee-b10c-eea8c246e68d",
+        "name": "Facebook TC1",
+        "credentials": {
+          "facebookGraphApi": {
+            "id": "dMEGTwKgnbmuQHcu",
+            "name": "Facebook Graph account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+            "mode": "list",
+            "cachedResultName": "Master Social Media Automation - Content & Posting -v1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 201592494,
+            "mode": "list",
+            "cachedResultName": "PostBlog",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit#gid=201592494"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "row_number": "={{ $('Google Sheets - Filter Rows').item.json.row_number }}",
+              "Facebook company Post": "=https://facebook.com/{{ $json.post_id }}",
+              "X Post": "=",
+              "LinkedIn Company Post": "="
+            },
+            "matchingColumns": [
+              "row_number"
+            ],
+            "schema": [
+              {
+                "id": "Idea Content (User Input)",
+                "displayName": "Idea Content (User Input)",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Post Status",
+                "displayName": "Post Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Create Image",
+                "displayName": "Create Image",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Additional Prompt Instructions",
+                "displayName": "Additional Prompt Instructions",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook Content",
+                "displayName": "Facebook Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "LinkedIn Content",
+                "displayName": "LinkedIn Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Instagram Content",
+                "displayName": "Instagram Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "X(Formerly Twitter) Content",
+                "displayName": "X(Formerly Twitter) Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Image URL",
+                "displayName": "Image URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Content Generation Date & Time",
+                "displayName": "Content Generation Date & Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Linkedin",
+                "displayName": "Personal Linkedin",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Facebook",
+                "displayName": "Personal Facebook",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook personal Post",
+                "displayName": "Facebook personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Facebook company Post",
+                "displayName": "Facebook company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Instagram Post",
+                "displayName": "Instagram Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn personal Post",
+                "displayName": "LinkedIn personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn Company Post",
+                "displayName": "LinkedIn Company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "X Post",
+                "displayName": "X Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Scheduled Date",
+                "displayName": "Scheduled Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          992,
+          816
+        ],
+        "id": "eb42ae71-8554-4bec-bfbc-0472fa17ed76",
+        "name": "Update row in sheet6",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "person": "kEdJTyJNRV",
+          "text": "={{ $('Google Sheets - Filter Rows').item.json['LinkedIn Content'] }}",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.linkedIn",
+        "typeVersion": 1,
+        "position": [
+          1536,
+          832
+        ],
+        "id": "6c0dbffe-6908-4b29-bea1-d50f33bf9f07",
+        "name": "Linkedin Personal1",
+        "credentials": {
+          "linkedInOAuth2Api": {
+            "id": "3ibxAgFPzAjGs6G5",
+            "name": "Linkedin Personal"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+            "mode": "list",
+            "cachedResultName": "Master Social Media Automation - Content & Posting -v1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 201592494,
+            "mode": "list",
+            "cachedResultName": "PostBlog",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo/edit#gid=201592494"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "row_number": "={{ $('Google Sheets - Filter Rows').item.json.row_number }}",
+              "Facebook company Post": "=https://facebook.com/{{ $json.post_id }}",
+              "X Post": "=",
+              "LinkedIn Company Post": "=",
+              "LinkedIn personal Post": "=https://linkedin.com/{{ $json.urn }}"
+            },
+            "matchingColumns": [
+              "row_number"
+            ],
+            "schema": [
+              {
+                "id": "Idea Content (User Input)",
+                "displayName": "Idea Content (User Input)",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Post Status",
+                "displayName": "Post Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Create Image",
+                "displayName": "Create Image",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Additional Prompt Instructions",
+                "displayName": "Additional Prompt Instructions",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook Content",
+                "displayName": "Facebook Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "LinkedIn Content",
+                "displayName": "LinkedIn Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Instagram Content",
+                "displayName": "Instagram Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "X(Formerly Twitter) Content",
+                "displayName": "X(Formerly Twitter) Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Image URL",
+                "displayName": "Image URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Content Generation Date & Time",
+                "displayName": "Content Generation Date & Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Linkedin",
+                "displayName": "Personal Linkedin",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Personal Facebook",
+                "displayName": "Personal Facebook",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Facebook personal Post",
+                "displayName": "Facebook personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Facebook company Post",
+                "displayName": "Facebook company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Instagram Post",
+                "displayName": "Instagram Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn personal Post",
+                "displayName": "LinkedIn personal Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "LinkedIn Company Post",
+                "displayName": "LinkedIn Company Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "X Post",
+                "displayName": "X Post",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Scheduled Date",
+                "displayName": "Scheduled Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1808,
+          832
+        ],
+        "id": "577893bc-f580-422b-8b83-b6638e556859",
+        "name": "Update row in sheet7",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "72fecc39-31fd-4853-8383-4970b765094c",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -1040,
+          192
+        ],
+        "id": "bf8d9094-ae26-4f62-a755-714214c5a0cc",
+        "name": "Webhook",
+        "webhookId": "72fecc39-31fd-4853-8383-4970b765094c"
+      }
+    ],
+    "connections": {
+      "Google Sheets - Filter Rows": {
+        "main": [
+          [
+            {
+              "node": "IF Generate Content",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "IF Post Content",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Generate Content": {
+        "main": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Create Image": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Update Google Sheets1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Post Content": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenRouter Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Basic LLM Chain": {
+        "main": [
+          [
+            {
+              "node": "IF Create Image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Upload file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload file": {
+        "main": [
+          [
+            {
+              "node": "Update Google Sheets",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Instagram Create Container": {
+        "main": [
+          [
+            {
+              "node": "Instagram Post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Instagram Post": {
+        "main": [
+          []
+        ]
+      },
+      "Update Google Sheets": {
+        "main": [
+          []
+        ]
+      },
+      "Download file": {
+        "main": [
+          [
+            {
+              "node": "Upload Image to X",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Facebook TC",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Download file",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Request2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch1": {
+        "main": [
+          [
+            {
+              "node": "Linkedin Personal",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Facebook TC": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "LinkedIn TC": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Linkedin Personal": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload Image to X": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request1": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update row in sheet": {
+        "main": [
+          [
+            {
+              "node": "Switch1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update row in sheet2": {
+        "main": [
+          [
+            {
+              "node": "LinkedIn TC",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request2": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update row in sheet4": {
+        "main": [
+          [
+            {
+              "node": "LinkedIn TC1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "LinkedIn TC1": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update row in sheet5": {
+        "main": [
+          [
+            {
+              "node": "Facebook TC1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Facebook TC1": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch2": {
+        "main": [
+          [
+            {
+              "node": "Linkedin Personal1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Linkedin Personal1": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update row in sheet6": {
+        "main": [
+          [
+            {
+              "node": "Switch2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Google Sheets - Filter Rows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version b3724d0c",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": [
+    {
+      "updatedAt": "2025-07-20T07:40:28.334Z",
+      "createdAt": "2025-07-20T07:40:28.334Z",
+      "id": "qPqFNHTQy5850MBa",
+      "name": "🔵 In Progress"
+    }
+  ]
+}
