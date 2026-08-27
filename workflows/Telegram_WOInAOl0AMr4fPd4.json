@@ -1,0 +1,126 @@
+{
+  "updatedAt": "2026-01-02T03:52:19.000Z",
+  "createdAt": "2025-07-03T11:04:49.160Z",
+  "id": "WOInAOl0AMr4fPd4",
+  "name": "Telegram",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "channel_post"
+        ],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4f08c62f-075b-4df4-b28b-d256cea08587",
+      "name": "Telegram Trigger",
+      "webhookId": "7c3b45bf-414b-41d1-a353-18c227c7aea6",
+      "credentials": {
+        "telegramApi": {
+          "id": "I0rf76FsxPDgaIaQ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.channel_post.document.file_name }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2",
+          "mode": "list",
+          "cachedResultName": "n8n Test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "60ec6b30-bb15-4a35-964e-0b330cad5755",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Upload file": [
+      {
+        "json": {
+          "name": "First item",
+          "code": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Second item",
+          "code": 2
+        }
+      }
+    ]
+  },
+  "versionId": "cb38c129-8c3d-409e-8032-416ddba56d56",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-07-03T11:04:49.168Z",
+      "createdAt": "2025-07-03T11:04:49.168Z",
+      "role": "workflow:owner",
+      "workflowId": "WOInAOl0AMr4fPd4",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2025-08-01T21:36:53.955Z",
+      "createdAt": "2025-08-01T21:36:19.973Z",
+      "id": "2PlERqsZFdX75JUS",
+      "name": "🔴 Legacy"
+    }
+  ]
+}
