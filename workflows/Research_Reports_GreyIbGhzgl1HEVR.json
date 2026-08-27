@@ -1,0 +1,2449 @@
+{
+  "updatedAt": "2026-08-14T12:50:14.968Z",
+  "createdAt": "2025-07-27T06:41:23.293Z",
+  "id": "GreyIbGhzgl1HEVR",
+  "name": "Research Reports",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2",
+          "mode": "list",
+          "cachedResultName": "n8n Test",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -208,
+        960
+      ],
+      "id": "8fbe2161-a063-4b61-a24b-0522d960b1ea",
+      "name": "Basic LLM Chain",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        1184
+      ],
+      "id": "b681e0be-756f-457e-b3bc-2cfd1c674b63",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GaCvOMdqQCMm3lhY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "\n{\n  \"oneOf\": [\n    {\n      \"type\": \"object\",\n      \"properties\": {\n        \"company_name\": {\n          \"type\": \"string\",\n          \"const\": \"None\"\n        }\n      },\n      \"required\": [\"company_name\"],\n      \"additionalProperties\": false\n    },\n    {\n      \"type\": \"object\",\n      \"properties\": {\n        \"date\": {\n          \"type\": \"string\"\n        },\n        \"month\": {\n          \"type\": \"string\"\n        },\n        \"year\": {\n          \"type\": \"string\"\n        },\n        \"broker_name\": {\n          \"type\": \"string\"\n        },\n        \"company_name\": {\n          \"type\": \"string\"\n        },\n        \"current_price\": {\n          \"type\": \"number\"\n        },\n        \"target_price\": {\n          \"type\": \"number\"\n        },\n        \"nse_code\": {\n          \"type\": \"string\"\n        },\n        \"upside_percentage\": {\n          \"type\": \"integer\"\n        },\n        \"detailed_argument\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"date\",\n        \"month\",\n        \"year\",\n        \"broker_name\",\n        \"company_name\",\n        \"current_price\",\n        \"target_price\",\n        \"nse_code\",\n        \"upside_percentage\",\n        \"detailed_argument\"\n      ],\n      \"additionalProperties\": false\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        1184
+      ],
+      "id": "7592337c-0204-4114-a880-f6b7b9bebf9e",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c9e1420-4392-4d76-bc66-b0df773b2adc",
+              "leftValue": "={{ $json.output.company_name }}",
+              "rightValue": "None",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -432,
+        1392
+      ],
+      "id": "84da53bf-dd80-4952-b45a-164ffaa0a882",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1cjfbUo_-LOQhARbl80zGN2K9XlWEDYMyazrZXXmJvEE",
+          "mode": "list",
+          "cachedResultName": "EQUITY RESEARCH REPORTS (Responses)",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "c4ef7906-dbd4-4df4-aa0b-a6e143a82f3a",
+      "name": "Analyze document",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nmcibSv4C4So3mQw",
+          "name": "Google Gemini(PaLM) Api account 0"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.economy }}",
+                    "rightValue": "Yes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "bc40a075-fee4-4862-847b-5e19ddf56e75"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "692d9ff6-819a-4d32-b841-6226cedb23bc",
+                    "leftValue": "={{ $json.company}}",
+                    "rightValue": "Yes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4aa484cb-eb1b-4347-9156-4a3ddd1d6fb9",
+                    "leftValue": "={{ $json.sector }}",
+                    "rightValue": "Yes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2b7a2b87-83de-4e89-9bfb-4712a44555ed",
+                    "leftValue": "={{ $json.garbage }}",
+                    "rightValue": "Yes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        688,
+        -32
+      ],
+      "id": "6f812127-c2dc-427f-8cc5-1db15fd5b437",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -432,
+        1616
+      ],
+      "id": "a2dc26a7-9aa0-4213-a426-b23d0eb3a1ae",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d0215d14-c3f0-4ac2-b28f-877ec33d7003",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "132a307c-2b05-47b1-8441-e1c7fd7b8d54",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -432,
+        736
+      ],
+      "id": "eff5ada9-be2f-45cf-9640-0e78884b4381",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f4be68e0-97ab-416a-8538-f94ac8dad931",
+              "name": "file_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f577feb8-075c-4e27-9408-23825041ec74",
+              "name": "file_name",
+              "value": "={{$json.name}}",
+              "type": "string"
+            },
+            {
+              "id": "a3fb0abe-a835-4fac-aad4-48a6a46e1cc2",
+              "name": "status",
+              "value": "Pending",
+              "type": "string"
+            },
+            {
+              "id": "75ca36b8-f68f-47d7-a172-ae5d0f57923b",
+              "name": "retry_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "79321af2-ff78-4416-855f-4b8c86be0c8a",
+              "name": "error",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "48aac99d-30a8-4c66-aad8-48edc9c0c2f3",
+              "name": "created_time",
+              "value": "={{$now}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -624,
+        -16
+      ],
+      "id": "772d8c95-e516-471d-8ed4-ee16f75d1387",
+      "name": "Set"
+    },
+    {
+      "parameters": {
+        "operation": "deleteFile",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.file_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -432,
+        512
+      ],
+      "id": "9c1d1b51-4417-4b73-99af-ec5664defbb0",
+      "name": "Delete a file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.file_id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.7,
+        "position": [
+          -208,
+          960
+        ],
+        "id": "8fbe2161-a063-4b61-a24b-0522d960b1ea",
+        "name": "Basic LLM Chain",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1,
+        "position": [
+          -208,
+          1184
+        ],
+        "id": "b681e0be-756f-457e-b3bc-2cfd1c674b63",
+        "name": "Google Gemini Chat Model",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GaCvOMdqQCMm3lhY",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "schemaType": "manual",
+          "inputSchema": "\n{\n  \"oneOf\": [\n    {\n      \"type\": \"object\",\n      \"properties\": {\n        \"company_name\": {\n          \"type\": \"string\",\n          \"const\": \"None\"\n        }\n      },\n      \"required\": [\"company_name\"],\n      \"additionalProperties\": false\n    },\n    {\n      \"type\": \"object\",\n      \"properties\": {\n        \"date\": {\n          \"type\": \"string\"\n        },\n        \"month\": {\n          \"type\": \"string\"\n        },\n        \"year\": {\n          \"type\": \"string\"\n        },\n        \"broker_name\": {\n          \"type\": \"string\"\n        },\n        \"company_name\": {\n          \"type\": \"string\"\n        },\n        \"current_price\": {\n          \"type\": \"number\"\n        },\n        \"target_price\": {\n          \"type\": \"number\"\n        },\n        \"nse_code\": {\n          \"type\": \"string\"\n        },\n        \"upside_percentage\": {\n          \"type\": \"integer\"\n        },\n        \"detailed_argument\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"date\",\n        \"month\",\n        \"year\",\n        \"broker_name\",\n        \"company_name\",\n        \"current_price\",\n        \"target_price\",\n        \"nse_code\",\n        \"upside_percentage\",\n        \"detailed_argument\"\n      ],\n      \"additionalProperties\": false\n    }\n  ]\n}"
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          -80,
+          1184
+        ],
+        "id": "7592337c-0204-4114-a880-f6b7b9bebf9e",
+        "name": "Structured Output Parser"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "7c9e1420-4392-4d76-bc66-b0df773b2adc",
+                "leftValue": "={{ $json.output.company_name }}",
+                "rightValue": "None",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.2,
+        "position": [
+          -432,
+          1392
+        ],
+        "id": "84da53bf-dd80-4952-b45a-164ffaa0a882",
+        "name": "Filter"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1cjfbUo_-LOQhARbl80zGN2K9XlWEDYMyazrZXXmJvEE",
+            "mode": "list",
+            "cachedResultName": "EQUITY RESEARCH REPORTS (Responses)",
+            "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1,
+        "position": [
+          240,
+          0
+        ],
+        "id": "c4ef7906-dbd4-4df4-aa0b-a6e143a82f3a",
+        "name": "Analyze document",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "credentials": {
+          "googlePalmApi": {
+            "id": "nmcibSv4C4So3mQw",
+            "name": "Google Gemini(PaLM) Api account 0"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.economy }}",
+                      "rightValue": "Yes",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "bc40a075-fee4-4862-847b-5e19ddf56e75"
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "692d9ff6-819a-4d32-b841-6226cedb23bc",
+                      "leftValue": "={{ $json.company}}",
+                      "rightValue": "Yes",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "4aa484cb-eb1b-4347-9156-4a3ddd1d6fb9",
+                      "leftValue": "={{ $json.sector }}",
+                      "rightValue": "Yes",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "2b7a2b87-83de-4e89-9bfb-4712a44555ed",
+                      "leftValue": "={{ $json.garbage }}",
+                      "rightValue": "Yes",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "options": {
+            "allMatchingOutputs": true
+          }
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          688,
+          -32
+        ],
+        "id": "6f812127-c2dc-427f-8cc5-1db15fd5b437",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "batching": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.7,
+        "position": [
+          -432,
+          1616
+        ],
+        "id": "a2dc26a7-9aa0-4213-a426-b23d0eb3a1ae",
+        "name": "Basic LLM Chain1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "d0215d14-c3f0-4ac2-b28f-877ec33d7003",
+                "leftValue": "",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              },
+              {
+                "id": "132a307c-2b05-47b1-8441-e1c7fd7b8d54",
+                "leftValue": "",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.2,
+        "position": [
+          -432,
+          736
+        ],
+        "id": "eff5ada9-be2f-45cf-9640-0e78884b4381",
+        "name": "Filter1"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "f4be68e0-97ab-416a-8538-f94ac8dad931",
+                "name": "file_id",
+                "value": "={{ $json.id }}",
+                "type": "string"
+              },
+              {
+                "id": "f577feb8-075c-4e27-9408-23825041ec74",
+                "name": "file_name",
+                "value": "={{$json.name}}",
+                "type": "string"
+              },
+              {
+                "id": "a3fb0abe-a835-4fac-aad4-48a6a46e1cc2",
+                "name": "status",
+                "value": "Pending",
+                "type": "string"
+              },
+              {
+                "id": "75ca36b8-f68f-47d7-a172-ae5d0f57923b",
+                "name": "retry_count",
+                "value": 0,
+                "type": "number"
+              },
+              {
+                "id": "79321af2-ff78-4416-855f-4b8c86be0c8a",
+                "name": "error",
+                "value": "",
+                "type": "string"
+              },
+              {
+                "id": "48aac99d-30a8-4c66-aad8-48edc9c0c2f3",
+                "name": "created_time",
+                "value": "={{$now}}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -624,
+          -16
+        ],
+        "id": "772d8c95-e516-471d-8ed4-ee16f75d1387",
+        "name": "Set"
+      },
+      {
+        "parameters": {
+          "operation": "deleteFile",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json.file_id }}",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          -432,
+          512
+        ],
+        "id": "9c1d1b51-4417-4b73-99af-ec5664defbb0",
+        "name": "Delete a file",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "move",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json.file_id }}",
+            "mode": "id"
+          },
+          "driveId": {
+            "__rl": true,
+            "value": "My Drive",
+            "mode": "list",
+            "cachedResultName": "My Drive",
+            "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1ty5zqxTFPyWLVvZBicxEWKUZqeAo3g-U",
+            "mode": "list",
+            "cachedResultName": "Macro Reports",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1ty5zqxTFPyWLVvZBicxEWKUZqeAo3g-U"
+          }
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          912,
+          -288
+        ],
+        "id": "256a1e0e-5d84-4a24-8f4d-57accbe43060",
+        "name": "Economy",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "move",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json.file_id }}",
+            "mode": "id"
+          },
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1JGhPWtBgyDXzcRLmkRWrU2W4Sow3If5f",
+            "mode": "list",
+            "cachedResultName": "Company Reports",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1JGhPWtBgyDXzcRLmkRWrU2W4Sow3If5f"
+          }
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1136,
+          -96
+        ],
+        "id": "b2069361-d65b-45a2-bad5-5711e4419f38",
+        "name": "Company",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "move",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json.file_id }}",
+            "mode": "id"
+          },
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1HAps5NgozrgRmy9GU1DFu3kC9r1c6W22",
+            "mode": "list",
+            "cachedResultName": "Sector Reports",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1HAps5NgozrgRmy9GU1DFu3kC9r1c6W22"
+          }
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          912,
+          96
+        ],
+        "id": "9bad3fe2-78ad-4bd4-9957-34f836c4ff01",
+        "name": "Sector",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "62bd2a9f-72cf-4518-ae10-5ce42def528a",
+                "name": "file_url",
+                "value": "=https://drive.google.com/file/d/{{ $('Filter2').item.json.file_id }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1360,
+          -96
+        ],
+        "id": "0332013b-dc04-4d7e-a946-b2d24e1f6c59",
+        "name": "Company URL"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "0ff2b393-6786-4c96-a503-2efa6a06f5c5",
+                "leftValue": "={{ $json.upside_percentage }}",
+                "rightValue": 19,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.2,
+        "position": [
+          912,
+          -96
+        ],
+        "id": "2b4c8032-c9a6-4712-abf8-45d8a8ee9635",
+        "name": "Filter2"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "62bd2a9f-72cf-4518-ae10-5ce42def528a",
+                "name": "file_url",
+                "value": "=https://drive.google.com/file/d/{{ $json.id }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1136,
+          96
+        ],
+        "id": "ba682b61-f555-4955-9a3e-87a2feaf4479",
+        "name": "Sector URL"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1cjfbUo_-LOQhARbl80zGN2K9XlWEDYMyazrZXXmJvEE",
+            "mode": "list",
+            "cachedResultName": "EQUITY RESEARCH REPORTS (Responses)",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cjfbUo_-LOQhARbl80zGN2K9XlWEDYMyazrZXXmJvEE/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1840669480,
+            "mode": "list",
+            "cachedResultName": "Company Reports",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cjfbUo_-LOQhARbl80zGN2K9XlWEDYMyazrZXXmJvEE/edit#gid=1840669480"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Company Name": "={{ $('Filter2').item.json.company_name }}",
+              "CMP": "={{ $('Filter2').item.json.current_price }}",
+              "TP": "={{ $('Filter2').item.json.target_price }}",
+              "BROKER NAME": "={{ $('Filter2').item.json.broker_name }}",
+              "INVESTMENT ARGUMENT": "={{ $('Filter2').item.json.detailed_argument }}",
+              "Upside": "={{ $('Filter2').item.json.upside_percentage }}",
+              "Code": "={{ $('Filter2').item.json.nse_code }}",
+              "Entry Date": "={{ $today.format('dd/LL/yyyy') }}",
+              "Link": "={{ $json.file_url }}",
+              "GROWTH GUIDANCE": "={{ $('Filter2').item.json.growth_guidance }}",
+              "REPORT DATE": "={{ \n  (() => {\n    try {\n      return $('Filter2').item.json.date || $today.format('dd/LL/yyyy');\n    } catch (error) {\n      return $today.format('dd/LL/yyyy');\n    }\n  })()\n}}\n"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "REPORT DATE",
+                "displayName": "REPORT DATE",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "NSE Code",
+                "displayName": "NSE Code",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Company Name",
+                "displayName": "Company Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "CMP",
+                "displayName": "CMP",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "TP",
+                "displayName": "TP",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Upside",
+                "displayName": "Upside",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Price",
+                "displayName": "Price",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Upside Now",
+                "displayName": "Upside Now",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Code",
+                "displayName": "Code",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "BROKER NAME",
+                "displayName": "BROKER NAME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "INVESTMENT ARGUMENT",
+                "displayName": "INVESTMENT ARGUMENT",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "GROWTH GUIDANCE",
+                "displayName": "GROWTH GUIDANCE",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Link",
+                "displayName": "Link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Entry Date",
+                "displayName": "Entry Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {
+            "cellFormat": "USER_ENTERED"
+          }
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.6,
+        "position": [
+          1584,
+          -96
+        ],
+        "id": "237d80c6-730f-4762-a067-bc37961ac784",
+        "name": "Company Reports",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1cjfbUo_-LOQhARbl80zGN2K9XlWEDYMyazrZXXmJvEE",
+            "mode": "list",
+            "cachedResultName": "EQUITY RESEARCH REPORTS (Responses)",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cjfbUo_-LOQhARbl80zGN2K9XlWEDYMyazrZXXmJvEE/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 289123771,
+            "mode": "list",
+            "cachedResultName": "Sector Reports",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cjfbUo_-LOQhARbl80zGN2K9XlWEDYMyazrZXXmJvEE/edit#gid=289123771"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "REPORT DT": "={{ $('Code').item.json.date }}",
+              "Description": "={{ $('Code').item.json.description }}",
+              "Link": "={{ $json.file_url }}",
+              "Entry Date": "={{ $today.format('dd/LL/yyyy') }}",
+              "Sector/Macro Name": "={{ $('Code').item.json.sector_name }}",
+              "Broker Name": "={{ $('Code').item.json.broker_name }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "REPORT DT",
+                "displayName": "REPORT DT",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Sector/Macro Name",
+                "displayName": "Sector/Macro Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Description",
+                "displayName": "Description",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Link",
+                "displayName": "Link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Entry Date",
+                "displayName": "Entry Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Broker Name",
+                "displayName": "Broker Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.6,
+        "position": [
+          1360,
+          96
+        ],
+        "id": "39b600a7-cf03-4a4d-bbb6-17a6d3c63704",
+        "name": "Sector Reports",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "move",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json.file_id }}",
+            "mode": "id"
+          },
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1QUTM04B2xuumhtll82lD4aqDFamUJUPh",
+            "mode": "list",
+            "cachedResultName": "Garbage",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1QUTM04B2xuumhtll82lD4aqDFamUJUPh"
+          }
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          912,
+          288
+        ],
+        "id": "dd2cf390-d989-4b35-824d-dc3a90f60cf2",
+        "name": "Move file",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "62bd2a9f-72cf-4518-ae10-5ce42def528a",
+                "name": "file_url",
+                "value": "=https://drive.google.com/file/d/{{ $json.id }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1136,
+          -288
+        ],
+        "id": "5acca187-7a20-4843-b0ce-1f7d1746ea15",
+        "name": "Economy URL"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1cjfbUo_-LOQhARbl80zGN2K9XlWEDYMyazrZXXmJvEE",
+            "mode": "list",
+            "cachedResultName": "EQUITY RESEARCH REPORTS (Responses)",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cjfbUo_-LOQhARbl80zGN2K9XlWEDYMyazrZXXmJvEE/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 289123771,
+            "mode": "list",
+            "cachedResultName": "Sector Reports",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cjfbUo_-LOQhARbl80zGN2K9XlWEDYMyazrZXXmJvEE/edit#gid=289123771"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "REPORT DT": "={{ $('Code').item.json.date }}",
+              "Description": "={{ $('Code').item.json.description }}",
+              "Link": "={{ $json.file_url }}",
+              "Entry Date": "={{ $today.format('dd/LL/yyyy') }}",
+              "Sector/Macro Name": "={{ $('Code').item.json.economy_name }}",
+              "Broker Name": "={{ $('Code').item.json.broker_name }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "REPORT DT",
+                "displayName": "REPORT DT",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Sector/Macro Name",
+                "displayName": "Sector/Macro Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Description",
+                "displayName": "Description",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Link",
+                "displayName": "Link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Entry Date",
+                "displayName": "Entry Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Broker Name",
+                "displayName": "Broker Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.6,
+        "position": [
+          1360,
+          -288
+        ],
+        "id": "48e5c944-e4da-4928-b345-53587fa50354",
+        "name": "Sector Reports1",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "model": "sonar-pro",
+          "messages": {
+            "message": [
+              {
+                "content": "=You are an expert financial analyst and stock market strategist with over 15 years of experience in the Indian equity markets. You specialize in generating investment ideas for the Indian stock market (NSE and BSE), drawing from real-time data sources like Yahoo Finance, Screener.in, Moneycontrol, BSE/NSE filings, analyst reports from firms like Motilal Oswal or ICICI Securities, and recent research from Economic Times or Business Standard. Your analysis is always accurate, unbiased, data-driven, and compliant with SEBI regulations—avoid hype, speculation, or unverified claims. Focus on factual insights, quantitative metrics, and balanced views.\n\nYou are building an automated idea generator dashboard for Indian stocks. For each company, you receive:\n- Company Name: {{ $json[\"Company Name\"] }} (e.g., Reliance Industries)\n- Research Report Description: {{ $json[\"INVESTMENT ARGUMENT\"] }} (a brief summary of key insights from a research report related to the company, e.g., \"Analyst report from Motilal Oswal highlights Reliance Industries' Q2 FY24 revenue growth of 10% YoY, driven by Jio's subscriber additions and retail expansion, with a BUY rating and target price of 3000 INR, citing strong free cash flow generation despite refining margin pressures.\")\n\nYour task is to analyze this input and generate a comprehensive stock idea report. Ensure all sections are tailored to the Indian market context, incorporating factors like rupee-denominated metrics, GST impacts, RBI policies, and sector-specific drivers (e.g., for IT: global outsourcing; for banking: NPAs and RBI rates).\n\nGenerate the following 10 sections exactly as specified, using the provided company name and research report description as the foundation. Make each section concise (100-200 words max per section, except quantitative data which should be in bullet-point format), factual, and insightful. If data is estimated or based on historical trends, note it clearly. Base quantitative data on the latest available figures (up to your knowledge cutoff), and simulate realistic projections where needed.\n\n1. Company Description: A brief overview of the company's business model, history, key products/services, market position in India, and global presence (if any). Tie in the research report description.\n\n2. Quantitative Data: Key financial metrics formatted as bullet points. Include: Market Cap (INR Cr), Current Stock Price (INR), P/E Ratio, EPS (TTM), Revenue (last FY, INR Cr), Net Profit (last FY, INR Cr), Debt/Equity Ratio, ROE (%), Dividend Yield (%), and 52-week High/Low (INR). Use realistic, up-to-date estimates. Format as a string with each metric on a new line starting with '- ' (e.g., - Market Cap (INR Cr): 10000).\n\n3. Industry Drivers: 4-6 key factors driving the company's industry in India (e.g., regulatory changes, economic trends, competition, supply chain issues). Link to how the research report description affects these. Format as bullet points or paragraphs.\n\n4. Recent Update: Summary of the most recent developments (last 1-3 months), including earnings results, mergers, product launches, or regulatory news. Incorporate and expand on the provided research report description with additional context.\n\n5. Last 5-Year Performance Summary: A balanced summary of stock price performance, revenue growth, profit trends, and key milestones/events over the past 5 years (e.g., CAGR for revenue/stock price). Highlight positives and risks, referencing Indian market events like COVID-19 or demonetization.\n\n6. Peer Group List: List 4-6 comparable Indian peers (e.g., for Tata Motors: Maruti Suzuki, Mahindra & Mahindra). For each, include a brief reason for comparison and their current P/E ratio.\n\n7. Management Concall Summary: A synthesized summary of insights from the latest earnings concall (or recent ones if not available), covering management's views on outlook, challenges, growth strategies, and Q&A highlights. Base on real filings or reports; if none recent, estimate based on the research report.\n\n8. Technical View: Technical analysis based on the latest TradingView charts and indicators (e.g., for the NSE symbol). Include current trend (bullish/bearish/neutral), key support/resistance levels (INR), moving averages (50-day/200-day SMA), RSI, short-term outlook (1 week), medium-term outlook (up to 3 months), and long-term outlook (up to 12 months). Use standard TA tools like trendlines, Fibonacci levels, or volume analysis for longer-term insights.\n\n9. Investment Rationale: A balanced case for investing (or not), covering strengths (e.g., market leadership), weaknesses (e.g., high valuations), opportunities (e.g., expansion), threats (e.g., competition), and how the research report fits in. Rate overall sentiment: Positive, Neutral, or Negative.\n\n10. Target Price: A 12-month target price (INR) based on DCF/PE multiples/comps, with upside/downside % from current price. Explain methodology briefly and provide a risk-adjusted range (e.g., 1500-1800 INR).\n\nOutput ONLY in raw JSON format. Do not include any additional text, explanations, or markdown. Use this exact structure:\n{\n  \"company_name\": \"[COMPANY_NAME]\",\n  \"company_description\": \"String content\",\n  \"quantitative_data\": \"String content with bullet points, e.g., - Market Cap (INR Cr): value\\n- Current Stock Price (INR): value\\n- etc. (ensure one bullet per metric)\",\n  \"industry_drivers\": \"String content (bullet points or paragraphs)\",\n  \"recent_update\": \"String content\",\n  \"last_5_year_performance_summary\": \"String content\",\n  \"peer_group_list\": [\n    {\"peer_name\": \"String\", \"comparison_reason\": \"String\", \"pe_ratio\": number},\n    ... (4-6 items)\n  ],\n  \"management_concall_summary\": \"String content\",\n  \"technical_view\": \"String content\",\n  \"investment_rationale\": \"String content\",\n  \"target_price\": {\n    \"target_inr\": number,\n    \"upside_downside_percent\": number,\n    \"range_low_inr\": number,\n    \"range_high_inr\": number,\n    \"methodology\": \"String explanation\"\n  }\n}\nEnsure all numbers are floats or integers as appropriate, and strings are well-formatted for readability. For quantitative_data, use \\n for line breaks in the string to separate bullets."
+              }
+            ]
+          },
+          "options": {},
+          "requestOptions": {}
+        },
+        "type": "n8n-nodes-base.perplexity",
+        "typeVersion": 1,
+        "position": [
+          2032,
+          -96
+        ],
+        "id": "ceb59612-2a01-4900-9d1e-255395d1f09f",
+        "name": "Message a model",
+        "credentials": {
+          "perplexityApi": {
+            "id": "9o8x6wOWmnlG4lRA",
+            "name": "Perplexity account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Helper function to clean and parse a single content string\nfunction cleanAndParseContent(content) {\n  // Step 1: Fix common invalid JSON issues BEFORE parsing (non-string related)\n  // Remove commas from numbers (e.g., 53,100 -> 53100)\n  content = content.replace(/(\\d+),(\\d+)/g, '$1$2');\n\n  // Fix invalid pe_ratio like \"- (loss-making)\" or \"-\" -> null\n  content = content.replace(/\"pe_ratio\":\\s*-\\s*\\(loss-making\\)/g, '\"pe_ratio\": null');\n  content = content.replace(/\"pe_ratio\":\\s*-\\s*/g, '\"pe_ratio\": null');\n\n  // Remove trailing commas in objects/arrays (common AI output error)\n  content = content.replace(/,\\s*(?=}|[}\\]])/g, '');\n\n  // Fix underscores in numbers (e.g., 1_230 -> 1230)\n  content = content.replace(/(\\d+)_(\\d+)/g, '$1$2');\n\n  // Debug log: Show pre-parse cleaned content\n  console.log('Pre-parse cleaned content (first 200 chars):', content.substring(0, 200));\n\n  // Step 2: Parse the cleaned string as JSON (\\\\n is still escaped here)\n  try {\n    const parsed = JSON.parse(content);\n    \n    // Step 3: Post-parse: Replace escaped \\\\n with actual \\n in specific string fields for readability\n    if (typeof parsed.quantitative_data === 'string') {\n      parsed.quantitative_data = parsed.quantitative_data.replace(/\\\\n/g, '\\n');\n      // Optionally flatten to single-line (uncomment if preferred):\n      // parsed.quantitative_data = parsed.quantitative_data.replace(/\\\\n/g, '; ');\n    }\n    if (typeof parsed.industry_drivers === 'string') {\n      parsed.industry_drivers = parsed.industry_drivers.replace(/\\\\n/g, '\\n');\n      // Optionally flatten:\n      // parsed.industry_drivers = parsed.industry_drivers.replace(/\\\\n/g, '; ');\n    }\n\n    // Step 4: Other post-parse cleaning\n    // Stringify peer_group_list for Sheets\n    if (parsed.peer_group_list && Array.isArray(parsed.peer_group_list)) {\n      parsed.peer_group_list = parsed.peer_group_list.map(peer => \n        `${peer.peer_name}: ${peer.comparison_reason} (P/E: ${peer.pe_ratio ?? 'N/A'})`\n      ).join('; ');\n    }\n    // Convert target_price to a single bullet-point string\n    if (parsed.target_price) {\n      parsed.target_price = \n        `- Target INR: ${parsed.target_price.target_inr}\\n` +\n        `- Upside/Downside %: ${parsed.target_price.upside_downside_percent}\\n` +\n        `- Range Low INR: ${parsed.target_price.range_low_inr}\\n` +\n        `- Range High INR: ${parsed.target_price.range_high_inr}\\n` +\n        `- Methodology: ${parsed.target_price.methodology}`;\n      // No delete needed since we're overwriting the key with a string\n    }\n\n    // Debug log: Successful parse\n    console.log('Successfully parsed content.');\n\n    return parsed;\n  } catch (error) {\n    console.error('Error parsing content:', error.message);\n    console.error('Error position in content:', content.substring(error.columnNumber - 50, error.columnNumber + 50)); // Approximate error spot\n    console.error('Problematic content snippet:', content.substring(0, 200) + '...'); // Log start for debugging\n    return null; // Skip invalid\n  }\n}\n\n// Main logic: Extract the raw array from input (flexible handling)\nlet rawArray = [];\nif (items.length === 1 && Array.isArray(items[0].json)) {\n  // Case: Single item with the array inside json (common for API responses)\n  rawArray = items[0].json;\n  console.log('Detected single item with array inside json. Length:', rawArray.length);\n} else if (items.length > 0) {\n  // Case: Multiple items, each with json being one object\n  rawArray = items.map(item => item.json).filter(Boolean);\n  console.log('Detected multiple items. Length:', rawArray.length);\n} else {\n  console.log('No input items found.');\n  return []; // Empty output if no data\n}\n\n// Process each object in the rawArray\nconst cleanedItems = [];\nfor (const rawItem of rawArray) {\n  const content = rawItem?.choices?.[0]?.message?.content;\n  if (content) {\n    console.log('Processing content for item ID:', rawItem.id); // Debug log\n    const cleaned = cleanAndParseContent(content);\n    if (cleaned) {\n      cleanedItems.push({ json: cleaned });\n    } else {\n      console.log('Skipping invalid content for item ID:', rawItem.id);\n    }\n  } else {\n    console.log('No content found in item:', rawItem?.id || 'unknown');\n  }\n}\n\n// Output the cleaned array of items\nconsole.log('Total cleaned items:', cleanedItems.length);\nreturn cleanedItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2256,
+          0
+        ],
+        "id": "6083e48a-3570-4fd8-94d5-435b02efcfb8",
+        "name": "Code1"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY",
+            "mode": "list",
+            "cachedResultName": "Portfolio tracker ",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1571267585,
+            "mode": "list",
+            "cachedResultName": "Copy of IDEA GENERATOR DASHBOARD",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY/edit#gid=1571267585"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Shor term / Medium Trem / Long term ": "Long",
+              "Company Name": "={{ $json.company_name }}",
+              "Code": "={{ \n  (() => {\n    try {\n      return $('Filter2').item.json.nse_code || $json.nse_code;\n    } catch (error) {\n      return $json.nse_code;\n    }\n  })()\n}}\n",
+              "Company Description": "={{ $json.company_description }}",
+              "Quantitative data": "={{ $json.quantitative_data }}",
+              "Industry drivers ": "={{ $json.industry_drivers }}",
+              "Recent update ": "={{ $json.recent_update }}",
+              "Last 5-year performance summary": "={{ $json.last_5_year_performance_summary }}",
+              "Peer group list": "={{ $json.peer_group_list }}",
+              "Management Concall summary ": "={{ $json.management_concall_summary  }}",
+              "Techincal View ": "={{ $json.technical_view }}",
+              "Investment Rationale ": "={{ $json.investment_rationale }}",
+              "Target price ": "={{ $json.target_price }}",
+              "Date": "={{ $today.format('dd/LL/yyyy') }}",
+              "Source": "={{\n  (() => {\n    try {\n      if ($('Filter2').item.json.nse_code) {\n        return \"Research Reports\";\n      } else if ($json.nse_code) {\n        return \"Trendlyne Screener\";\n      } else {\n        return \"\";\n      }\n    } catch (error) {\n      if ($json.nse_code) {\n        return \"Trendlyne Screener\";\n      }\n      return \"\";\n    }\n  })()\n}}\n"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Date",
+                "displayName": "Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Source",
+                "displayName": "Source",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Company Name",
+                "displayName": "Company Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Shor term / Medium Trem / Long term ",
+                "displayName": "Shor term / Medium Trem / Long term ",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Code",
+                "displayName": "Code",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Screener Link",
+                "displayName": "Screener Link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "CMP",
+                "displayName": "CMP",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Market Cap",
+                "displayName": "Market Cap",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Company Description",
+                "displayName": "Company Description",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Quantitative data",
+                "displayName": "Quantitative data",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Industry drivers ",
+                "displayName": "Industry drivers ",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Recent update ",
+                "displayName": "Recent update ",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Last 5-year performance summary",
+                "displayName": "Last 5-year performance summary",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Peer group list",
+                "displayName": "Peer group list",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Management Concall summary ",
+                "displayName": "Management Concall summary ",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Techincal View ",
+                "displayName": "Techincal View ",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Investment Rationale ",
+                "displayName": "Investment Rationale ",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Target price ",
+                "displayName": "Target price ",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.6,
+        "position": [
+          2480,
+          0
+        ],
+        "id": "4b35cc1c-0679-4ecf-b06c-955c93c9abfd",
+        "name": "Append row in sheet1",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "b30173c3-cb2b-4854-9ef4-ee95c3577528",
+                "leftValue": "={{ $('Switch').item.json.pat_growth_percentage }}",
+                "rightValue": 19,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.2,
+        "position": [
+          2352,
+          -416
+        ],
+        "id": "5600a2b8-9ad4-4ac3-8a66-4652193d1ee9",
+        "name": "Filter3"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          1584,
+          96
+        ],
+        "id": "8568e2f1-7739-43de-9bdd-080877a5e13c",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY",
+            "mode": "list",
+            "cachedResultName": "Portfolio tracker ",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 1335957943,
+            "mode": "list",
+            "cachedResultName": "Idea Generator Screener",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY/edit#gid=1335957943"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1808,
+          96
+        ],
+        "id": "ce7905f3-025a-436e-8205-2d559b9a3e34",
+        "name": "Get row(s) in sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "model": "sonar-pro",
+          "messages": {
+            "message": [
+              {
+                "content": "=You are an expert financial analyst and stock market strategist with over 15 years of experience in the Indian equity markets. You specialize in generating investment ideas for the Indian stock market (NSE and BSE), drawing from real-time data sources like Yahoo Finance, Screener.in, Moneycontrol, BSE/NSE filings, analyst reports from firms like Motilal Oswal or ICICI Securities, and recent research from Economic Times or Business Standard. Your analysis is always accurate, unbiased, data-driven, and compliant with SEBI regulations—avoid hype, speculation, or unverified claims. Focus on factual insights, quantitative metrics, and balanced views.\n\nYou are building an automated idea generator dashboard for Indian stocks. For each company, you receive:\n- Company Name: {{ $json[\"Company Name\"] }} (e.g., Reliance Industries)\n\n\nYour task is to analyze this given company and generate a comprehensive stock idea report. Ensure all sections are tailored to the Indian market context, incorporating factors like rupee-denominated metrics, GST impacts, RBI policies, and sector-specific drivers (e.g., for IT: global outsourcing; for banking: NPAs and RBI rates).\n\nGenerate the following 10 sections exactly as specified, using the provided company name and research report description as the foundation. Make each section concise (100-200 words max per section, except quantitative data which should be in bullet-point format), factual, and insightful. If data is estimated or based on historical trends, note it clearly. Base quantitative data on the latest available figures (up to your knowledge cutoff), and simulate realistic projections where needed.\n\n1. Company Description: A brief overview of the company's business model, history, key products/services, market position in India, and global presence (if any). Tie in the research report description.\n\n2. Quantitative Data: Key financial metrics formatted as bullet points. Include: Market Cap (INR Cr), Current Stock Price (INR), P/E Ratio, EPS (TTM), Revenue (last FY, INR Cr), Net Profit (last FY, INR Cr), Debt/Equity Ratio, ROE (%), Dividend Yield (%), and 52-week High/Low (INR). Use realistic, up-to-date estimates. Format as a string with each metric on a new line starting with '- ' (e.g., - Market Cap (INR Cr): 10000).\n\n3. Industry Drivers: 4-6 key factors driving the company's industry in India (e.g., regulatory changes, economic trends, competition, supply chain issues). Link to how the research report description affects these. Format as bullet points or paragraphs.\n\n4. Recent Update: Summary of the most recent developments (last 1-3 months), including earnings results, mergers, product launches, or regulatory news. Incorporate and expand on the provided research report description with additional context.\n\n5. Last 5-Year Performance Summary: A balanced summary of stock price performance, revenue growth, profit trends, and key milestones/events over the past 5 years (e.g., CAGR for revenue/stock price). Highlight positives and risks, referencing Indian market events like COVID-19 or demonetization.\n\n6. Peer Group List: List 4-6 comparable Indian peers (e.g., for Tata Motors: Maruti Suzuki, Mahindra & Mahindra). For each, include a brief reason for comparison and their current P/E ratio.\n\n7. Management Concall Summary: A synthesized summary of insights from the latest earnings concall (or recent ones if not available), covering management's views on outlook, challenges, growth strategies, and Q&A highlights. Base on real filings or reports; if none recent, estimate based on the research report.\n\n8. Technical View: Technical analysis based on the latest TradingView charts and indicators (e.g., for the NSE symbol). Include current trend (bullish/bearish/neutral), key support/resistance levels (INR), moving averages (50-day/200-day SMA), RSI, short-term outlook (1 week), medium-term outlook (up to 3 months), and long-term outlook (up to 12 months). Use standard TA tools like trendlines, Fibonacci levels, or volume analysis for longer-term insights.\n\n9. Investment Rationale: A balanced case for investing (or not), covering strengths (e.g., market leadership), weaknesses (e.g., high valuations), opportunities (e.g., expansion), threats (e.g., competition), and how the research report fits in. Rate overall sentiment: Positive, Neutral, or Negative.\n\n10. Target Price: A 12-month target price (INR) based on DCF/PE multiples/comps, with upside/downside % from current price. Explain methodology briefly and provide a risk-adjusted range (e.g., 1500-1800 INR).\n\n11. Search the web to get the updated NSE code for the given company\n\nOutput ONLY in raw JSON format. Do not include any additional text, explanations, or markdown. Use this exact structure:\n{\n  \"company_name\": \"[COMPANY_NAME]\",\n  \"company_description\": \"String content\",\n  \"quantitative_data\": \"String content with bullet points, e.g., - Market Cap (INR Cr): value\\n- Current Stock Price (INR): value\\n- etc. (ensure one bullet per metric)\",\n  \"industry_drivers\": \"String content (bullet points or paragraphs)\",\n  \"recent_update\": \"String content\",\n  \"last_5_year_performance_summary\": \"String content\",\n  \"peer_group_list\": [\n    {\"peer_name\": \"String\", \"comparison_reason\": \"String\", \"pe_ratio\": number},\n    ... (4-6 items)\n  ],\n  \"management_concall_summary\": \"String content\",\n  \"technical_view\": \"String content\",\n  \"investment_rationale\": \"String content\",\n  \"target_price\": {\n    \"target_inr\": number,\n    \"upside_downside_percent\": number,\n    \"range_low_inr\": number,\n    \"range_high_inr\": number,\n    \"methodology\": \"String explanation\"\n  }\n\"nse_code\": \"[NSE CODE FROM WEB]\"\n}\nEnsure all numbers are floats or integers as appropriate, and strings are well-formatted for readability. For quantitative_data, use \\n for line breaks in the string to separate bullets."
+              }
+            ]
+          },
+          "options": {},
+          "requestOptions": {}
+        },
+        "type": "n8n-nodes-base.perplexity",
+        "typeVersion": 1,
+        "position": [
+          2032,
+          96
+        ],
+        "id": "93cd2992-4429-4b81-b4a5-9702faac49b2",
+        "name": "Message a model1",
+        "credentials": {
+          "perplexityApi": {
+            "id": "9o8x6wOWmnlG4lRA",
+            "name": "Perplexity account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1tTM01j1ymncJY2HcdxduBsalAriuxk32gBzfkKJsZpc",
+            "mode": "list",
+            "cachedResultName": "Research Report Queue",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tTM01j1ymncJY2HcdxduBsalAriuxk32gBzfkKJsZpc/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sequence",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tTM01j1ymncJY2HcdxduBsalAriuxk32gBzfkKJsZpc/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "File ID": "={{ $json.file_id }}",
+              "File Name": "={{ $json.file_name }}",
+              "Error": "={{ $json.error }}",
+              "Status": "={{ $json.status }}",
+              "Retry Count": "={{ $json.retry_count }}",
+              "Created Time": "={{ $json.created_time }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "File ID",
+                "displayName": "File ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "File Name",
+                "displayName": "File Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Retry Count",
+                "displayName": "Retry Count",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Error",
+                "displayName": "Error",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Created Time",
+                "displayName": "Created Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Completed Time",
+                "displayName": "Completed Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -400,
+          -16
+        ],
+        "id": "f7a6a28e-45d3-46df-a703-d2549ddc43a9",
+        "name": "Append row in sheet2",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 1
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -464,
+          -256
+        ],
+        "id": "86c54a8e-9f32-4764-8b9e-b178fae59a84",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1tTM01j1ymncJY2HcdxduBsalAriuxk32gBzfkKJsZpc",
+            "mode": "list",
+            "cachedResultName": "Research Report Queue",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tTM01j1ymncJY2HcdxduBsalAriuxk32gBzfkKJsZpc/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sequence",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tTM01j1ymncJY2HcdxduBsalAriuxk32gBzfkKJsZpc/edit#gid=0"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "Status",
+                "lookupValue": "=Pending"
+              }
+            ]
+          },
+          "options": {
+            "returnFirstMatch": true
+          }
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -256,
+          -256
+        ],
+        "id": "1ae27005-d2d3-420b-a5db-7bf043c94960",
+        "name": "Get row(s) in sheet1",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.row_number }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "string",
+                        "operation": "notEmpty",
+                        "singleValue": true
+                      },
+                      "id": "9af2f16d-06d9-4cfe-898b-0fd65461f0b1"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "0"
+              }
+            ]
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          -48,
+          -256
+        ],
+        "id": "d98e0f88-faa8-4f53-8e0a-c0ef467b5497",
+        "name": "Switch1"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1tTM01j1ymncJY2HcdxduBsalAriuxk32gBzfkKJsZpc",
+            "mode": "list",
+            "cachedResultName": "Research Report Queue",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tTM01j1ymncJY2HcdxduBsalAriuxk32gBzfkKJsZpc/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sequence",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tTM01j1ymncJY2HcdxduBsalAriuxk32gBzfkKJsZpc/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Status": "=Processed",
+              "File ID": "={{ $json['File ID'] }}",
+              "File Name": "={{ $json['File Name'] }}",
+              "Retry Count": "={{ $json['Retry Count'] }}",
+              "Error": "={{ $json.Error }}",
+              "Created Time": "={{ $json['Created Time'] }}",
+              "Completed Time": "={{ $json['Completed Time'] }}",
+              "row_number": "={{ $json.row_number }}"
+            },
+            "matchingColumns": [
+              "row_number"
+            ],
+            "schema": [
+              {
+                "id": "File ID",
+                "displayName": "File ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "File Name",
+                "displayName": "File Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Retry Count",
+                "displayName": "Retry Count",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Error",
+                "displayName": "Error",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Created Time",
+                "displayName": "Created Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Completed Time",
+                "displayName": "Completed Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          160,
+          -256
+        ],
+        "id": "fdd4cafa-ca9b-4783-9ffd-02ef087a3579",
+        "name": "Update row in sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Google Drive Trigger": {
+        "main": [
+          [
+            {
+              "node": "Set",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Download file": {
+        "main": [
+          [
+            {
+              "node": "Analyze document",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract from File": {
+        "main": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Structured Output Parser": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Basic LLM Chain": {
+        "main": [
+          [],
+          []
+        ]
+      },
+      "Filter": {
+        "main": [
+          [
+            {
+              "node": "Append row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet": {
+        "main": [
+          []
+        ]
+      },
+      "Code": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Analyze document": {
+        "main": [
+          [
+            {
+              "node": "Code",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Economy",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Filter2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Sector",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Move file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set": {
+        "main": [
+          [
+            {
+              "node": "Append row in sheet2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Company": {
+        "main": [
+          [
+            {
+              "node": "Company URL",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Company URL": {
+        "main": [
+          [
+            {
+              "node": "Company Reports",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter2": {
+        "main": [
+          [
+            {
+              "node": "Company",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sector": {
+        "main": [
+          [
+            {
+              "node": "Sector URL",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sector URL": {
+        "main": [
+          [
+            {
+              "node": "Sector Reports",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Economy": {
+        "main": [
+          [
+            {
+              "node": "Economy URL",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Economy URL": {
+        "main": [
+          [
+            {
+              "node": "Sector Reports1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Company Reports": {
+        "main": [
+          []
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Code1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code1": {
+        "main": [
+          [
+            {
+              "node": "Append row in sheet1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter3": {
+        "main": [
+          []
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet": {
+        "main": [
+          [
+            {
+              "node": "Message a model1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model1": {
+        "main": [
+          [
+            {
+              "node": "Code1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet1": {
+        "main": [
+          [
+            {
+              "node": "Switch1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch1": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update row in sheet": {
+        "main": [
+          [
+            {
+              "node": "Download file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version 884ba0b3",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": [
+    {
+      "updatedAt": "2025-07-07T02:47:29.277Z",
+      "createdAt": "2025-07-07T02:47:29.277Z",
+      "id": "usBpWvKJ18XVI8DB",
+      "name": "🟢 Done"
+    }
+  ]
+}
