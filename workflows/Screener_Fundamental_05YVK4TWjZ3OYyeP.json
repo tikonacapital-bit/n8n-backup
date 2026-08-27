@@ -199,7 +199,7 @@
       "parameters": {
         "method": "PUT",
         "url": "=https://sheets.googleapis.com/v4/spreadsheets/1CENxKQlPdPJiIpwmuA0D02PG2vSFdwXH0ckoggKZZb8/values/'Screener%20Data'!A4:C?valueInputOption=USER_ENTERED",
-        "authentication": "[REDACTED_SECRET]",
+        "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
@@ -225,7 +225,7 @@
       "parameters": {
         "method": "PUT",
         "url": "=https://sheets.googleapis.com/v4/spreadsheets/1CENxKQlPdPJiIpwmuA0D02PG2vSFdwXH0ckoggKZZb8/values/'Screener%20Data'!E4:BI?valueInputOption=USER_ENTERED",
-        "authentication": "[REDACTED_SECRET]",
+        "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
@@ -250,7 +250,7 @@
     {
       "parameters": {
         "url": "https://sheets.googleapis.com/v4/spreadsheets/1CENxKQlPdPJiIpwmuA0D02PG2vSFdwXH0ckoggKZZb8/values/Screener%20Data!A4",
-        "authentication": "[REDACTED_SECRET]",
+        "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "options": {}
       },
