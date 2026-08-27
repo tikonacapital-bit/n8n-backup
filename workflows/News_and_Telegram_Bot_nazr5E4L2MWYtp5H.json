@@ -1,0 +1,833 @@
+{
+  "updatedAt": "2026-07-24T13:13:50.499Z",
+  "createdAt": "2025-07-20T08:01:59.347Z",
+  "id": "nazr5E4L2MWYtp5H",
+  "name": "News and Telegram Bot",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "channel_post"
+        ],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        336
+      ],
+      "id": "bdd7912a-d9c9-4061-a738-50e10b575057",
+      "name": "Telegram Trigger",
+      "webhookId": "e56af656-7dc9-42ba-a619-fe3b7d580497",
+      "credentials": {
+        "telegramApi": {
+          "id": "I0rf76FsxPDgaIaQ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1184,
+        -656
+      ],
+      "id": "34d0c365-ef42-4346-9ea1-2fea9aef1cce",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n\n// // 1. Grab the output of your HTTP Request node by name:\n// let resp = $node[\"HTTP Request\"].json;\n\n// // 2. If it’s an array (i.e. you did NOT split into items), take the first element:\n// if (Array.isArray(resp)) {\n//   resp = resp[0];\n// }\n\n// // 3. Now resp should be the object that has 'choices'\n// if (!resp.choices) {\n//   throw new Error(\"Could not find resp.choices – check the structure with console.log(resp)\");\n// }\n\n// // 4. Extract the LLM content\n// const content = resp.choices[0]?.message?.content;\n// if (!content) {\n//   throw new Error(\"Could not find message.content\");\n// }\n\n// // 5. Strip any ``` fences\n// let jsonText = content\n//   .replace(/^```.*\\n/, \"\")\n//   .replace(/```$/, \"\")\n//   .trim();\n\n// // 6. Extract only the JSON part between [ ... ]\n// const match = jsonText.match(/\\[.*\\]/s);\n// if (!match) {\n//   throw new Error(\"Could not find JSON array in the response\");\n// }\n// jsonText = match[0]; // the actual JSON array\n\n// // 7. Parse the JSON array\n// let stocks;\n// try {\n//   stocks = JSON.parse(jsonText);\n// } catch (err) {\n//   throw new Error(\"Invalid JSON: \" + err.message + \"\\nRaw text:\\n\" + jsonText);\n// }\n\n// // 8. Output one item per stock for Google Sheets\n// return stocks.map(stock => ({\n//   json: {\n//     stockName:           stock[\"Stock Name\"],\n//     nseCode:             stock[\"NSE Code\"],\n//     sentiment:           stock[\"Positive/Negative\"],\n//     description:         stock[\"Description\"],\n//     analysisOfImpact:    stock[\"Analysis of Likely Impact\"],\n//     confidence:          stock[\"Confidence Level\"],\n//     likelyImpactPercent: stock[\"Likely Impact on Stock Today\"],\n//     date:                stock[\"Date\"]\n//   }\n// }));\n\nlet resp = $node[\"HTTP Request\"].json;\n\nif (Array.isArray(resp)) {\n  resp = resp[0];\n}\n\nif (!resp.choices) {\n  throw new Error(\"Could not find resp.choices – check the structure with console.log(resp)\");\n}\n\nconst content = resp.choices[0]?.message?.content;\nif (!content) {\n  throw new Error(\"Could not find message.content\");\n}\n\n// Remove ``` fences\nlet jsonText = content\n  .replace(/^```.*\\n/, \"\")\n  .replace(/```$/, \"\")\n  .trim();\n\n// Try parsing directly first\nlet parsed;\ntry {\n  parsed = JSON.parse(jsonText);\n} catch (_) {\n  // Try extracting array OR object\n  const match = jsonText.match(/(\\[.*\\]|\\{.*\\})/s);\n  if (!match) {\n    throw new Error(\"Could not find JSON object or array\");\n  }\n  parsed = JSON.parse(match[0]);\n}\n\n// Ensure output is always an array\nlet stocks = Array.isArray(parsed) ? parsed : [parsed];\n\n// Map to n8n items\nreturn stocks.map(stock => ({\n  json: {\n    stockName:           stock[\"Stock Name\"],\n    nseCode:             stock[\"NSE Code\"],\n    sentiment:           stock[\"Positive/Negative\"],\n    description:         stock[\"Description\"],\n    analysisOfImpact:    stock[\"Analysis of Likely Impact\"],\n    confidence:          stock[\"Confidence Level\"],\n    likelyImpactPercent: stock[\"Likely Impact on Stock Today\"],\n    date:                stock[\"Date\"]\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        -496
+      ],
+      "id": "f5ce73b5-d678-49e3-b31e-6eafd04a89a3",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1_jeSY_gVGYXZKMjjaGcbXOkGRKZKLrwyvxt6LD3O5Dk",
+          "mode": "list",
+          "cachedResultName": "News tracker",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        624,
+        -544
+      ],
+      "id": "4de01032-4cb5-4fde-a2b9-6583f57be542",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-3-flash-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        608,
+        -304
+      ],
+      "id": "aff86618-c018-4d72-a75b-12f9ab936d70",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "O9TUEIPHEYHKBEVk",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Grab the output of your HTTP Request node by name:\nlet resp = $node[\"Basic LLM Chain\"].json;\n\n// 2. If it's an array (i.e. you did NOT split into items), take the first element:\nif (Array.isArray(resp)) {\n  resp = resp[0];\n}\n\n// 3. Check if response has the expected structure\nif (!resp || typeof resp !== 'object') {\n  throw new Error(\"Response is not a valid object – check the structure\");\n}\n\n// 4. Extract the text content from the first element\nlet content;\nif (resp.text) {\n  content = resp.text;\n} else if (resp.choices) {\n  // Fallback to old format if needed\n  content = resp.choices[0]?.message?.content;\n}\n\nif (!content) {\n  throw new Error(\"Could not find text content in response\");\n}\n\n// 5. Strip any ``` fences\nlet jsonText = content\n  .replace(/^```json\\n/, \"\")\n  .replace(/^```.*\\n/, \"\")\n  .replace(/\\n```[\\s\\S]*$/, \"\")  // Remove closing ``` and everything after it\n  .trim();\n\n// 6. Extract JSON array between [ ... ]\nconst match = jsonText.match(/\\[[\\s\\S]*\\]/);\nif (!match) {\n  throw new Error(\"Could not find JSON array in the response\");\n}\njsonText = match[0]; // the actual JSON array\n\n// 7. Parse the JSON array\nlet stocks;\ntry {\n  stocks = JSON.parse(jsonText);\n} catch (err) {\n  throw new Error(\"Invalid JSON: \" + err.message + \"\\nRaw text:\\n\" + jsonText);\n}\n\n// 8. Output one item per stock for Google Sheets\nreturn stocks.map(stock => ({\n  json: {\n    stockName:           stock[\"Stock Name\"],\n    nseCode:             stock[\"NSE Code\"],\n    sentiment:           stock[\"Positive/Negative\"],\n    description:         stock[\"Description\"],\n    analysisOfImpact:    stock[\"Analysis of Likely Impact\"],\n    confidence:          stock[\"Confidence Level\"],\n    likelyImpactPercent: stock[\"Likely Impact on Stock Today\"],\n    date:                stock[\"Date\"]\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        -352
+      ],
+      "id": "47a30714-04df-43cf-924d-1ec4daf6093b",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a highly experienced equity market analyst with over 20 years of expertise in stock analysis. Your task is to extract structured data from the given image containing financial or stock market information. Objective: Read the image content and extract details in Raw JSON format only (do not include explanations or commentary). Extract everything in text only. Required JSON:1. Stock Name 2. NSE Code (Please search for the correct NSE code on web - this is very important) 3. Positive/Negative (based on the sentiment of the content) 4. Description (brief summary of what the image says about the stock,if the news is regarding some order received for a company then also mention the order value as a % of current order book - please search the web extensively for this) 5. Analysis of Likely Impact (based on your expert judgment as a 20-year equity analyst) 6. Likely Impact on Stock Today (numerical integer value only, in percentage points compared to yesterday's closing price; do NOT include the '%' symbol).7. Date (Today's date in DD/MM/YYYY) 8. Based on the likely impact on Stock today and the kind of news we have , give the confidence level of the Impact - the confidence level should be one of the following: High, Medium or Low ((based on your expert judgment as a 20-year equity analyst)Instructions: 1. Output strictly in Raw JSON format. 2. Do NOT include percentage symbols or extra commentary in the output. 3. Ensure the sentiment (Positive/Negative) is clear and based on the image content. 4. if the news is about a new order received to a company, then make sure you add the latest order book available of that particular company in the description section, along with the news item 5. Assume all necessary context if any part of the image is unclear, and use your expertise to complete missing inferences.\n\nImage URL - data:image/png;base64,{{ $json.data }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -256,
+        -704
+      ],
+      "id": "45958da7-90c7-4b46-b57f-efb980503929",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "operation": "runCustomScript",
+        "scriptCode": "// URL\nconst url = \"https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        -880
+      ],
+      "id": "3eb46909-2748-4c7a-946f-17e14297be5a",
+      "name": "Analyze an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "xLY310Jwu3F1Ouym",
+          "name": "Google Gemini(PaLM) Api account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "8RkbE2HPG3lpqOXP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/8RkbE2HPG3lpqOXP",
+          "cachedResultName": "Weekly Newsletter Automation"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        560
+      ],
+      "id": "73d7013b-6ea5-4291-966f-ab626853a77d",
+      "name": "Call 'Weekly Newsletter Automation'"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        []
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "Call 'Idea Screener'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Weekly Newsletter Automation'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Daily News Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        []
+      ]
+    },
+    "Daily News Photo": {
+      "main": [
+        []
+      ]
+    },
+    "Upload file": {
+      "main": [
+        []
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Puppeteer": {
+      "main": [
+        [
+          {
+            "node": "Macro News Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Call 'Weekly Newsletter Automation'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    },
+    "node:Schedule Trigger1": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-12-22T08:55:00.012+05:30",
+          "Readable date": "December 22nd 2025, 8:55:00 am",
+          "Readable time": "8:55:00 am",
+          "Day of week": "Monday",
+          "Year": "2025",
+          "Month": "December",
+          "Day of month": "22",
+          "Hour": "08",
+          "Minute": "55",
+          "Second": "00",
+          "Timezone": "Asia/Kolkata (UTC+05:30)"
+        }
+      }
+    ]
+  },
+  "versionId": "8a9f1539-4151-4385-9307-7dcabb41ff56",
+  "activeVersionId": "8a9f1539-4151-4385-9307-7dcabb41ff56",
+  "triggerCount": 3,
+  "shared": [
+    {
+      "updatedAt": "2025-07-20T08:01:59.352Z",
+      "createdAt": "2025-07-20T08:01:59.352Z",
+      "role": "workflow:owner",
+      "workflowId": "nazr5E4L2MWYtp5H",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-24T13:13:54.000Z",
+    "createdAt": "2026-07-24T13:13:50.501Z",
+    "versionId": "8a9f1539-4151-4385-9307-7dcabb41ff56",
+    "workflowId": "nazr5E4L2MWYtp5H",
+    "nodes": [
+      {
+        "parameters": {
+          "updates": [
+            "channel_post"
+          ],
+          "additionalFields": {
+            "download": true
+          }
+        },
+        "type": "n8n-nodes-base.telegramTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -400,
+          336
+        ],
+        "id": "bdd7912a-d9c9-4061-a738-50e10b575057",
+        "name": "Telegram Trigger",
+        "webhookId": "e56af656-7dc9-42ba-a619-fe3b7d580497",
+        "credentials": {
+          "telegramApi": {
+            "id": "I0rf76FsxPDgaIaQ",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "binaryToPropery",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1,
+        "position": [
+          1184,
+          -656
+        ],
+        "id": "34d0c365-ef42-4346-9ea1-2fea9aef1cce",
+        "name": "Extract from File"
+      },
+      {
+        "parameters": {
+          "jsCode": "\n\n// // 1. Grab the output of your HTTP Request node by name:\n// let resp = $node[\"HTTP Request\"].json;\n\n// // 2. If it’s an array (i.e. you did NOT split into items), take the first element:\n// if (Array.isArray(resp)) {\n//   resp = resp[0];\n// }\n\n// // 3. Now resp should be the object that has 'choices'\n// if (!resp.choices) {\n//   throw new Error(\"Could not find resp.choices – check the structure with console.log(resp)\");\n// }\n\n// // 4. Extract the LLM content\n// const content = resp.choices[0]?.message?.content;\n// if (!content) {\n//   throw new Error(\"Could not find message.content\");\n// }\n\n// // 5. Strip any ``` fences\n// let jsonText = content\n//   .replace(/^```.*\\n/, \"\")\n//   .replace(/```$/, \"\")\n//   .trim();\n\n// // 6. Extract only the JSON part between [ ... ]\n// const match = jsonText.match(/\\[.*\\]/s);\n// if (!match) {\n//   throw new Error(\"Could not find JSON array in the response\");\n// }\n// jsonText = match[0]; // the actual JSON array\n\n// // 7. Parse the JSON array\n// let stocks;\n// try {\n//   stocks = JSON.parse(jsonText);\n// } catch (err) {\n//   throw new Error(\"Invalid JSON: \" + err.message + \"\\nRaw text:\\n\" + jsonText);\n// }\n\n// // 8. Output one item per stock for Google Sheets\n// return stocks.map(stock => ({\n//   json: {\n//     stockName:           stock[\"Stock Name\"],\n//     nseCode:             stock[\"NSE Code\"],\n//     sentiment:           stock[\"Positive/Negative\"],\n//     description:         stock[\"Description\"],\n//     analysisOfImpact:    stock[\"Analysis of Likely Impact\"],\n//     confidence:          stock[\"Confidence Level\"],\n//     likelyImpactPercent: stock[\"Likely Impact on Stock Today\"],\n//     date:                stock[\"Date\"]\n//   }\n// }));\n\nlet resp = $node[\"HTTP Request\"].json;\n\nif (Array.isArray(resp)) {\n  resp = resp[0];\n}\n\nif (!resp.choices) {\n  throw new Error(\"Could not find resp.choices – check the structure with console.log(resp)\");\n}\n\nconst content = resp.choices[0]?.message?.content;\nif (!content) {\n  throw new Error(\"Could not find message.content\");\n}\n\n// Remove ``` fences\nlet jsonText = content\n  .replace(/^```.*\\n/, \"\")\n  .replace(/```$/, \"\")\n  .trim();\n\n// Try parsing directly first\nlet parsed;\ntry {\n  parsed = JSON.parse(jsonText);\n} catch (_) {\n  // Try extracting array OR object\n  const match = jsonText.match(/(\\[.*\\]|\\{.*\\})/s);\n  if (!match) {\n    throw new Error(\"Could not find JSON object or array\");\n  }\n  parsed = JSON.parse(match[0]);\n}\n\n// Ensure output is always an array\nlet stocks = Array.isArray(parsed) ? parsed : [parsed];\n\n// Map to n8n items\nreturn stocks.map(stock => ({\n  json: {\n    stockName:           stock[\"Stock Name\"],\n    nseCode:             stock[\"NSE Code\"],\n    sentiment:           stock[\"Positive/Negative\"],\n    description:         stock[\"Description\"],\n    analysisOfImpact:    stock[\"Analysis of Likely Impact\"],\n    confidence:          stock[\"Confidence Level\"],\n    likelyImpactPercent: stock[\"Likely Impact on Stock Today\"],\n    date:                stock[\"Date\"]\n  }\n}));\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1696,
+          -496
+        ],
+        "id": "f5ce73b5-d678-49e3-b31e-6eafd04a89a3",
+        "name": "Code"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1_jeSY_gVGYXZKMjjaGcbXOkGRKZKLrwyvxt6LD3O5Dk",
+            "mode": "list",
+            "cachedResultName": "News tracker",
+            "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.7,
+        "position": [
+          624,
+          -544
+        ],
+        "id": "4de01032-4cb5-4fde-a2b9-6583f57be542",
+        "name": "Basic LLM Chain"
+      },
+      {
+        "parameters": {
+          "model": "google/gemini-3-flash-preview",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+        "typeVersion": 1,
+        "position": [
+          608,
+          -304
+        ],
+        "id": "aff86618-c018-4d72-a75b-12f9ab936d70",
+        "name": "OpenRouter Chat Model",
+        "credentials": {
+          "openRouterApi": {
+            "id": "O9TUEIPHEYHKBEVk",
+            "name": "OpenRouter account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1. Grab the output of your HTTP Request node by name:\nlet resp = $node[\"Basic LLM Chain\"].json;\n\n// 2. If it's an array (i.e. you did NOT split into items), take the first element:\nif (Array.isArray(resp)) {\n  resp = resp[0];\n}\n\n// 3. Check if response has the expected structure\nif (!resp || typeof resp !== 'object') {\n  throw new Error(\"Response is not a valid object – check the structure\");\n}\n\n// 4. Extract the text content from the first element\nlet content;\nif (resp.text) {\n  content = resp.text;\n} else if (resp.choices) {\n  // Fallback to old format if needed\n  content = resp.choices[0]?.message?.content;\n}\n\nif (!content) {\n  throw new Error(\"Could not find text content in response\");\n}\n\n// 5. Strip any ``` fences\nlet jsonText = content\n  .replace(/^```json\\n/, \"\")\n  .replace(/^```.*\\n/, \"\")\n  .replace(/\\n```[\\s\\S]*$/, \"\")  // Remove closing ``` and everything after it\n  .trim();\n\n// 6. Extract JSON array between [ ... ]\nconst match = jsonText.match(/\\[[\\s\\S]*\\]/);\nif (!match) {\n  throw new Error(\"Could not find JSON array in the response\");\n}\njsonText = match[0]; // the actual JSON array\n\n// 7. Parse the JSON array\nlet stocks;\ntry {\n  stocks = JSON.parse(jsonText);\n} catch (err) {\n  throw new Error(\"Invalid JSON: \" + err.message + \"\\nRaw text:\\n\" + jsonText);\n}\n\n// 8. Output one item per stock for Google Sheets\nreturn stocks.map(stock => ({\n  json: {\n    stockName:           stock[\"Stock Name\"],\n    nseCode:             stock[\"NSE Code\"],\n    sentiment:           stock[\"Positive/Negative\"],\n    description:         stock[\"Description\"],\n    analysisOfImpact:    stock[\"Analysis of Likely Impact\"],\n    confidence:          stock[\"Confidence Level\"],\n    likelyImpactPercent: stock[\"Likely Impact on Stock Today\"],\n    date:                stock[\"Date\"]\n  }\n}));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          928,
+          -352
+        ],
+        "id": "47a30714-04df-43cf-924d-1ec4daf6093b",
+        "name": "Code2"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=You are a highly experienced equity market analyst with over 20 years of expertise in stock analysis. Your task is to extract structured data from the given image containing financial or stock market information. Objective: Read the image content and extract details in Raw JSON format only (do not include explanations or commentary). Extract everything in text only. Required JSON:1. Stock Name 2. NSE Code (Please search for the correct NSE code on web - this is very important) 3. Positive/Negative (based on the sentiment of the content) 4. Description (brief summary of what the image says about the stock,if the news is regarding some order received for a company then also mention the order value as a % of current order book - please search the web extensively for this) 5. Analysis of Likely Impact (based on your expert judgment as a 20-year equity analyst) 6. Likely Impact on Stock Today (numerical integer value only, in percentage points compared to yesterday's closing price; do NOT include the '%' symbol).7. Date (Today's date in DD/MM/YYYY) 8. Based on the likely impact on Stock today and the kind of news we have , give the confidence level of the Impact - the confidence level should be one of the following: High, Medium or Low ((based on your expert judgment as a 20-year equity analyst)Instructions: 1. Output strictly in Raw JSON format. 2. Do NOT include percentage symbols or extra commentary in the output. 3. Ensure the sentiment (Positive/Negative) is clear and based on the image content. 4. if the news is about a new order received to a company, then make sure you add the latest order book available of that particular company in the description section, along with the news item 5. Assume all necessary context if any part of the image is unclear, and use your expertise to complete missing inferences.\n\nImage URL - data:image/png;base64,{{ $json.data }}",
+          "batching": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.7,
+        "position": [
+          -256,
+          -704
+        ],
+        "id": "45958da7-90c7-4b46-b57f-efb980503929",
+        "name": "Basic LLM Chain1"
+      },
+      {
+        "parameters": {
+          "operation": "runCustomScript",
+          "scriptCode": "// URL\nconst url = \"https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1,
+        "position": [
+          1216,
+          -880
+        ],
+        "id": "3eb46909-2748-4c7a-946f-17e14297be5a",
+        "name": "Analyze an image",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "xLY310Jwu3F1Ouym",
+            "name": "Google Gemini(PaLM) Api account 6"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "8RkbE2HPG3lpqOXP",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/8RkbE2HPG3lpqOXP",
+            "cachedResultName": "Weekly Newsletter Automation"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          176,
+          560
+        ],
+        "id": "73d7013b-6ea5-4291-966f-ab626853a77d",
+        "name": "Call 'Weekly Newsletter Automation'"
+      }
+    ],
+    "connections": {
+      "Telegram Trigger": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract from File": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code": {
+        "main": [
+          []
+        ]
+      },
+      "Append row in sheet": {
+        "main": [
+          []
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Code1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code1": {
+        "main": [
+          [
+            {
+              "node": "Append row in sheet1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Upload file",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [],
+          [
+            {
+              "node": "Call 'Idea Screener'",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Call 'Weekly Newsletter Automation'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request1": {
+        "main": [
+          [
+            {
+              "node": "Daily News Photo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request2": {
+        "main": [
+          []
+        ]
+      },
+      "Daily News Photo": {
+        "main": [
+          []
+        ]
+      },
+      "Upload file": {
+        "main": [
+          []
+        ]
+      },
+      "OpenRouter Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code2": {
+        "main": [
+          [
+            {
+              "node": "Append row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Basic LLM Chain": {
+        "main": [
+          [
+            {
+              "node": "Code2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Puppeteer": {
+        "main": [
+          [
+            {
+              "node": "Macro News Photo",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          []
+        ]
+      },
+      "Schedule Trigger1": {
+        "main": [
+          [
+            {
+              "node": "Call 'Weekly Newsletter Automation'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Code",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version 8a9f1539",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": [
+    {
+      "updatedAt": "2025-07-07T02:47:29.277Z",
+      "createdAt": "2025-07-07T02:47:29.277Z",
+      "id": "usBpWvKJ18XVI8DB",
+      "name": "🟢 Done"
+    }
+  ]
+}
