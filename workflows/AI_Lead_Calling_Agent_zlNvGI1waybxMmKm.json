@@ -1,0 +1,3186 @@
+{
+  "updatedAt": "2025-11-21T06:52:31.000Z",
+  "createdAt": "2025-11-19T10:14:07.247Z",
+  "id": "zlNvGI1waybxMmKm",
+  "name": "AI Lead Calling Agent",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1952,
+        40
+      ],
+      "id": "b1deaabd-cdd9-42f1-ac57-aaebe0511e9b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/convai/batch-calling/submit",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "<insert key here>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"call_name\": \"Lead Call - {{ $json.fields['Full Name'] }}\",\n  \"agent_id\": \"<insert agent id>\",\n  \"agent_phone_number_id\": \"<insert agent phone number here>\",\n  \"scheduled_time_unix\": {{ Math.floor(Date.now() / 1000) }},\n  \"recipients\": [\n    {\n      \"phone_number\": \"{{ String($json.fields['Phone Number']).split('').filter(c => c >= '0' && c <= '9').join('') }}\",\n      \"id\": \"{{ String($json.fields.ID).split('').filter(c => c >= '0' && c <= '9').join('') }}\",\n      \"conversation_initiation_client_data\":\n      {\n          \"dynamic_variables\": \n               {\n                  \"first_name\": \"{{ $json.fields[\"Full Name\"].split(\" \")[0] }}\",\n                  \"full_name\": \"{{ $json.fields['Full Name'] }}\",\n                  \"email\": \"{{ $json.fields.Email }}\"\n               }\n      }\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1728,
+        -32
+      ],
+      "id": "33c03480-b930-4ded-9ec2-67d1cca0d30b",
+      "name": "Make Elevenlabs Agent Call the Lead"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ea0bddc6-ad76-458b-bee6-c8f4bfd7ccef",
+              "leftValue": "={{ $json.fields['Batch Call ID'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2176,
+        40
+      ],
+      "id": "fc7df6c6-aa26-469d-9781-bbee6548c0df",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "authentication": "airtableTokenApi",
+        "baseId": {
+          "__rl": true,
+          "value": "appxoyYtA8W4vTtl1",
+          "mode": "id"
+        },
+        "tableId": {
+          "__rl": true,
+          "value": "tblJPHyyC1kWkCCID",
+          "mode": "id"
+        },
+        "triggerField": "Created Time",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.airtableTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2400,
+        40
+      ],
+      "id": "544105f2-e2cf-4aa2-b120-1ed55f6ce58d",
+      "name": "Airtable Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appxoyYtA8W4vTtl1",
+          "mode": "list",
+          "cachedResultName": "Facebook Leads via Ads",
+          "cachedResultUrl": "https://airtable.com/appxoyYtA8W4vTtl1"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJPHyyC1kWkCCID",
+          "mode": "list",
+          "cachedResultName": "Voice AI Agent",
+          "cachedResultUrl": "https://airtable.com/appxoyYtA8W4vTtl1/tblJPHyyC1kWkCCID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $('If4').item.json.fields.ID }}",
+            "Batch Call ID": "={{ $json.id }}",
+            "Batch Call Status": "pending"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Time of Submission",
+              "displayName": "Time of Submission",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 2",
+              "displayName": "Field 2",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "ag:120230070449890500",
+                  "value": "ag:120230070449890500"
+                },
+                {
+                  "name": "ag:120230070450140500",
+                  "value": "ag:120230070450140500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Ad Name",
+              "displayName": "Ad Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Leads16_IB01_Ad06_30-07-2025",
+                  "value": "Leads16_IB01_Ad06_30-07-2025"
+                },
+                {
+                  "name": "Leads16_IB03_Ad02_30-07-2025",
+                  "value": "Leads16_IB03_Ad02_30-07-2025"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 4",
+              "displayName": "Field 4",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "as:120230070450160500",
+                  "value": "as:120230070450160500"
+                },
+                {
+                  "name": "as:120230070450150500",
+                  "value": "as:120230070450150500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Adset Name",
+              "displayName": "Adset Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Tier 1 Cities",
+                  "value": "Tier 1 Cities"
+                },
+                {
+                  "name": "IB - Business",
+                  "value": "IB - Business"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 6",
+              "displayName": "Field 6",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "c:120230070449860500",
+                  "value": "c:120230070449860500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Campaign Name",
+              "displayName": "Campaign Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Leads 17 AI Voice Agent 30-07-2025",
+                  "value": "Leads 17 AI Voice Agent 30-07-2025"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 8",
+              "displayName": "Field 8",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "f:24189928717367770",
+                  "value": "f:24189928717367770"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Form Name",
+              "displayName": "Form Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 10",
+              "displayName": "Field 10",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Platform",
+              "displayName": "Platform",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "ig",
+                  "value": "ig"
+                },
+                {
+                  "name": "fb",
+                  "value": "fb"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Selected Budget",
+              "displayName": "Selected Budget",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "25k_-_50k_",
+                  "value": "25k_-_50k_"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "AI Agent Call",
+              "displayName": "AI Agent Call",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "sure!!_please_feel_free_to_call_via_a_california,_usa_(+1)_number!",
+                  "value": "sure!!_please_feel_free_to_call_via_a_california,_usa_(+1)_number!"
+                },
+                {
+                  "name": "i_understand._i_will_not_submit_the_form.",
+                  "value": "i_understand._i_will_not_submit_the_form."
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 17",
+              "displayName": "Field 17",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "lead_status",
+              "displayName": "lead_status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "CREATED",
+                  "value": "CREATED"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Batch Call ID",
+              "displayName": "Batch Call ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Batch Call Status",
+              "displayName": "Batch Call Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "completed",
+                  "value": "completed"
+                },
+                {
+                  "name": "pending",
+                  "value": "pending"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Conversation ID",
+              "displayName": "Conversation ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Budget ",
+              "displayName": "Budget ",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Final Requirement",
+              "displayName": "Final Requirement",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Transcript Summary",
+              "displayName": "Transcript Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Successful",
+              "displayName": "Call Successful",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "success",
+                  "value": "success"
+                },
+                {
+                  "name": "Call Didn't Pick Up",
+                  "value": "Call Didn't Pick Up"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Duration",
+              "displayName": "Call Duration",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Cost",
+              "displayName": "Call Cost",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Recording URL",
+              "displayName": "Call Recording URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Created Time",
+              "displayName": "Created Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Last Modified Time",
+              "displayName": "Last Modified Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -1504,
+        40
+      ],
+      "id": "2b282645-3698-4bf8-a285-d8af78068dd5",
+      "name": "Update record"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.elevenlabs.io/v1/convai/batch-calling/{{ $json['Batch Call ID'] }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "<insert key here>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1728,
+        912
+      ],
+      "id": "140bbcd6-6817-4ad0-afd1-9f5e5086e78f",
+      "name": "Fetch Conversation ID"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1952,
+        864
+      ],
+      "id": "377cc2f4-842f-438b-a944-336abdf4b289",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "10cf5685-8ac7-4b6d-a307-9ddebbbf4380",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1504,
+        912
+      ],
+      "id": "e37a4b07-ce51-4cb7-9446-1368248fa72e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appxoyYtA8W4vTtl1",
+          "mode": "list",
+          "cachedResultName": "Facebook Leads via Ads",
+          "cachedResultUrl": "https://airtable.com/appxoyYtA8W4vTtl1"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJPHyyC1kWkCCID",
+          "mode": "list",
+          "cachedResultName": "Voice AI Agent",
+          "cachedResultUrl": "https://airtable.com/appxoyYtA8W4vTtl1/tblJPHyyC1kWkCCID"
+        },
+        "filterByFormula": "=({Batch Call Status} = 'pending')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -2176,
+        864
+      ],
+      "id": "7ec82acb-14cc-4b58-8d1b-560cf9b20212",
+      "name": "Search records"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appxoyYtA8W4vTtl1",
+          "mode": "list",
+          "cachedResultName": "Facebook Leads via Ads",
+          "cachedResultUrl": "https://airtable.com/appxoyYtA8W4vTtl1"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJPHyyC1kWkCCID",
+          "mode": "list",
+          "cachedResultName": "Voice AI Agent",
+          "cachedResultUrl": "https://airtable.com/appxoyYtA8W4vTtl1/tblJPHyyC1kWkCCID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Batch Call ID": "={{ $json.id }}",
+            "Conversation ID": "={{ $json.recipients[0].conversation_id }}",
+            "Batch Call Status": "completed"
+          },
+          "matchingColumns": [
+            "Batch Call ID"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Time of Submission",
+              "displayName": "Time of Submission",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 2",
+              "displayName": "Field 2",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "ag:120230070449890500",
+                  "value": "ag:120230070449890500"
+                },
+                {
+                  "name": "ag:120230070450140500",
+                  "value": "ag:120230070450140500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Ad Name",
+              "displayName": "Ad Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Leads16_IB01_Ad06_30-07-2025",
+                  "value": "Leads16_IB01_Ad06_30-07-2025"
+                },
+                {
+                  "name": "Leads16_IB03_Ad02_30-07-2025",
+                  "value": "Leads16_IB03_Ad02_30-07-2025"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 4",
+              "displayName": "Field 4",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "as:120230070450160500",
+                  "value": "as:120230070450160500"
+                },
+                {
+                  "name": "as:120230070450150500",
+                  "value": "as:120230070450150500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Adset Name",
+              "displayName": "Adset Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Tier 1 Cities",
+                  "value": "Tier 1 Cities"
+                },
+                {
+                  "name": "IB - Business",
+                  "value": "IB - Business"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 6",
+              "displayName": "Field 6",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "c:120230070449860500",
+                  "value": "c:120230070449860500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Campaign Name",
+              "displayName": "Campaign Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Leads 17 AI Voice Agent 30-07-2025",
+                  "value": "Leads 17 AI Voice Agent 30-07-2025"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 8",
+              "displayName": "Field 8",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "f:24189928717367770",
+                  "value": "f:24189928717367770"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Form Name",
+              "displayName": "Form Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 10",
+              "displayName": "Field 10",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Platform",
+              "displayName": "Platform",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "ig",
+                  "value": "ig"
+                },
+                {
+                  "name": "fb",
+                  "value": "fb"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Selected Budget",
+              "displayName": "Selected Budget",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "25k_-_50k_",
+                  "value": "25k_-_50k_"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "AI Agent Call",
+              "displayName": "AI Agent Call",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "sure!!_please_feel_free_to_call_via_a_california,_usa_(+1)_number!",
+                  "value": "sure!!_please_feel_free_to_call_via_a_california,_usa_(+1)_number!"
+                },
+                {
+                  "name": "i_understand._i_will_not_submit_the_form.",
+                  "value": "i_understand._i_will_not_submit_the_form."
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 17",
+              "displayName": "Field 17",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "lead_status",
+              "displayName": "lead_status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "CREATED",
+                  "value": "CREATED"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Batch Call ID",
+              "displayName": "Batch Call ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Batch Call Status",
+              "displayName": "Batch Call Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "completed",
+                  "value": "completed"
+                },
+                {
+                  "name": "pending",
+                  "value": "pending"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Conversation ID",
+              "displayName": "Conversation ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Budget ",
+              "displayName": "Budget ",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Final Requirement",
+              "displayName": "Final Requirement",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Transcript Summary",
+              "displayName": "Transcript Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Successful",
+              "displayName": "Call Successful",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "success",
+                  "value": "success"
+                },
+                {
+                  "name": "Call Didn't Pick Up",
+                  "value": "Call Didn't Pick Up"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Duration",
+              "displayName": "Call Duration",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Cost",
+              "displayName": "Call Cost",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Recording URL",
+              "displayName": "Call Recording URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Created Time",
+              "displayName": "Created Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Last Modified Time",
+              "displayName": "Last Modified Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -1280,
+        984
+      ],
+      "id": "ab9a96e6-2a79-415e-b68c-824c4dd9e480",
+      "name": "Update record1"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.elevenlabs.io/v1/convai/conversations/{{ $json.fields['Conversation ID'] }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "<insert key here>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1280,
+        456
+      ],
+      "id": "bdb7d0e3-2f47-4a26-aafc-287077c62d0c",
+      "name": "Fetch Conversation Details"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "94377d6b-8bf8-4dde-95ce-58025e0a444a",
+              "leftValue": "={{ $json.fields['Batch Call Status'] }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1728,
+        528
+      ],
+      "id": "70168eaf-6df9-4b7c-b54a-adc2141ccf2c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.elevenlabs.io/v1/convai/conversations/{{ $json.fields['Conversation ID'] }}/audio",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "<insert key here>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -832,
+        456
+      ],
+      "id": "c3df1051-f262-4f6b-abf8-67b3e5b70920",
+      "name": "Get Audio",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "=data",
+        "name": "=Lead Call - {{ $('Fetch Conversation Details').item.json.conversation_initiation_client_data.dynamic_variables.first_name }}.mp3\n",
+        "driveId": {
+          "__rl": true,
+          "value": "0AMQ_1CeCxUyoUk9PVA",
+          "mode": "list",
+          "cachedResultName": "All Creatives - Bizwit Marketing",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/0AMQ_1CeCxUyoUk9PVA"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "17pVr4_Vp-PDRbpn7ErtVrd_9gb59Eyq1",
+          "mode": "list",
+          "cachedResultName": "AI Leads recording",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/17pVr4_Vp-PDRbpn7ErtVrd_9gb59Eyq1"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -608,
+        360
+      ],
+      "id": "d2769547-7a7a-4e5a-a426-18296534858b",
+      "name": "Upload file"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1504,
+        528
+      ],
+      "id": "abacdca9-0272-44c2-a368-8a7b6fdb0840",
+      "name": "Loop Over Items4"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appxoyYtA8W4vTtl1",
+          "mode": "list",
+          "cachedResultName": "Facebook Leads via Ads",
+          "cachedResultUrl": "https://airtable.com/appxoyYtA8W4vTtl1"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJPHyyC1kWkCCID",
+          "mode": "list",
+          "cachedResultName": "Voice AI Agent",
+          "cachedResultUrl": "https://airtable.com/appxoyYtA8W4vTtl1/tblJPHyyC1kWkCCID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Call Duration": "={{ $json.metadata.call_duration_secs }}",
+            "Call Cost": "={{ $json.metadata.cost }}",
+            "Conversation ID": "={{ $json.conversation_id }}",
+            "Budget ": "={{ $json.analysis.data_collection_results.Budget.value }}",
+            "Budget Rationale": "={{ $json.analysis.data_collection_results.Budget.rationale }}",
+            "Final Requirement": "={{ $json.analysis.data_collection_results['Final Requirement '].value }}  \n\nRationale: {{ $json.analysis.data_collection_results['Final Requirement '].rationale }}",
+            "Transcript Summary": "={{ $json.analysis.transcript_summary }}",
+            "Call Successful": "success"
+          },
+          "matchingColumns": [
+            "Conversation ID"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Time of Submission",
+              "displayName": "Time of Submission",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 2",
+              "displayName": "Field 2",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "ag:120230070449890500",
+                  "value": "ag:120230070449890500"
+                },
+                {
+                  "name": "ag:120230070450140500",
+                  "value": "ag:120230070450140500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Ad Name",
+              "displayName": "Ad Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Leads16_IB01_Ad06_30-07-2025",
+                  "value": "Leads16_IB01_Ad06_30-07-2025"
+                },
+                {
+                  "name": "Leads16_IB03_Ad02_30-07-2025",
+                  "value": "Leads16_IB03_Ad02_30-07-2025"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 4",
+              "displayName": "Field 4",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "as:120230070450160500",
+                  "value": "as:120230070450160500"
+                },
+                {
+                  "name": "as:120230070450150500",
+                  "value": "as:120230070450150500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Adset Name",
+              "displayName": "Adset Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Tier 1 Cities",
+                  "value": "Tier 1 Cities"
+                },
+                {
+                  "name": "IB - Business",
+                  "value": "IB - Business"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 6",
+              "displayName": "Field 6",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "c:120230070449860500",
+                  "value": "c:120230070449860500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Campaign Name",
+              "displayName": "Campaign Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Leads 17 AI Voice Agent 30-07-2025",
+                  "value": "Leads 17 AI Voice Agent 30-07-2025"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 8",
+              "displayName": "Field 8",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "f:24189928717367770",
+                  "value": "f:24189928717367770"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Form Name",
+              "displayName": "Form Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 10",
+              "displayName": "Field 10",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Platform",
+              "displayName": "Platform",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "ig",
+                  "value": "ig"
+                },
+                {
+                  "name": "fb",
+                  "value": "fb"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Selected Budget",
+              "displayName": "Selected Budget",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "25k_-_50k_",
+                  "value": "25k_-_50k_"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "AI Agent Call",
+              "displayName": "AI Agent Call",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "sure!!_please_feel_free_to_call_via_a_california,_usa_(+1)_number!",
+                  "value": "sure!!_please_feel_free_to_call_via_a_california,_usa_(+1)_number!"
+                },
+                {
+                  "name": "i_understand._i_will_not_submit_the_form.",
+                  "value": "i_understand._i_will_not_submit_the_form."
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 17",
+              "displayName": "Field 17",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "lead_status",
+              "displayName": "lead_status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "CREATED",
+                  "value": "CREATED"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Batch Call ID",
+              "displayName": "Batch Call ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Batch Call Status",
+              "displayName": "Batch Call Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "completed",
+                  "value": "completed"
+                },
+                {
+                  "name": "pending",
+                  "value": "pending"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Conversation ID",
+              "displayName": "Conversation ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Budget ",
+              "displayName": "Budget ",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Budget Rationale",
+              "displayName": "Budget Rationale",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Final Requirement",
+              "displayName": "Final Requirement",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Transcript Summary",
+              "displayName": "Transcript Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Call Successful",
+              "displayName": "Call Successful",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "success",
+                  "value": "success"
+                },
+                {
+                  "name": "Call Didn't Pick Up",
+                  "value": "Call Didn't Pick Up"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Call Duration",
+              "displayName": "Call Duration",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Call Cost",
+              "displayName": "Call Cost",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Call Recording URL",
+              "displayName": "Call Recording URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Created Time",
+              "displayName": "Created Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Last Modified Time",
+              "displayName": "Last Modified Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -1056,
+        456
+      ],
+      "id": "cb54f662-2f24-42c8-a0a3-0f3a3e9bb6f5",
+      "name": "Update record2"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appxoyYtA8W4vTtl1",
+          "mode": "list",
+          "cachedResultName": "Facebook Leads via Ads",
+          "cachedResultUrl": "https://airtable.com/appxoyYtA8W4vTtl1"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJPHyyC1kWkCCID",
+          "mode": "list",
+          "cachedResultName": "Voice AI Agent",
+          "cachedResultUrl": "https://airtable.com/appxoyYtA8W4vTtl1/tblJPHyyC1kWkCCID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Call Duration": 0,
+            "Call Cost": 0,
+            "Call Successful": "Call Didn't Pick Up",
+            "Conversation ID": "={{ $json.fields['Conversation ID'] }}"
+          },
+          "matchingColumns": [
+            "Conversation ID"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Time of Submission",
+              "displayName": "Time of Submission",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 2",
+              "displayName": "Field 2",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "ag:120230070449890500",
+                  "value": "ag:120230070449890500"
+                },
+                {
+                  "name": "ag:120230070450140500",
+                  "value": "ag:120230070450140500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Ad Name",
+              "displayName": "Ad Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Leads16_IB01_Ad06_30-07-2025",
+                  "value": "Leads16_IB01_Ad06_30-07-2025"
+                },
+                {
+                  "name": "Leads16_IB03_Ad02_30-07-2025",
+                  "value": "Leads16_IB03_Ad02_30-07-2025"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 4",
+              "displayName": "Field 4",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "as:120230070450160500",
+                  "value": "as:120230070450160500"
+                },
+                {
+                  "name": "as:120230070450150500",
+                  "value": "as:120230070450150500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Adset Name",
+              "displayName": "Adset Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Tier 1 Cities",
+                  "value": "Tier 1 Cities"
+                },
+                {
+                  "name": "IB - Business",
+                  "value": "IB - Business"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 6",
+              "displayName": "Field 6",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "c:120230070449860500",
+                  "value": "c:120230070449860500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Campaign Name",
+              "displayName": "Campaign Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Leads 17 AI Voice Agent 30-07-2025",
+                  "value": "Leads 17 AI Voice Agent 30-07-2025"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 8",
+              "displayName": "Field 8",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "f:24189928717367770",
+                  "value": "f:24189928717367770"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Form Name",
+              "displayName": "Form Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 10",
+              "displayName": "Field 10",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Platform",
+              "displayName": "Platform",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "ig",
+                  "value": "ig"
+                },
+                {
+                  "name": "fb",
+                  "value": "fb"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Selected Budget",
+              "displayName": "Selected Budget",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "25k_-_50k_",
+                  "value": "25k_-_50k_"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "AI Agent Call",
+              "displayName": "AI Agent Call",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "sure!!_please_feel_free_to_call_via_a_california,_usa_(+1)_number!",
+                  "value": "sure!!_please_feel_free_to_call_via_a_california,_usa_(+1)_number!"
+                },
+                {
+                  "name": "i_understand._i_will_not_submit_the_form.",
+                  "value": "i_understand._i_will_not_submit_the_form."
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 17",
+              "displayName": "Field 17",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "lead_status",
+              "displayName": "lead_status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "CREATED",
+                  "value": "CREATED"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Batch Call ID",
+              "displayName": "Batch Call ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Batch Call Status",
+              "displayName": "Batch Call Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "completed",
+                  "value": "completed"
+                },
+                {
+                  "name": "pending",
+                  "value": "pending"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Conversation ID",
+              "displayName": "Conversation ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Budget ",
+              "displayName": "Budget ",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Budget Rationale",
+              "displayName": "Budget Rationale",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Final Requirement",
+              "displayName": "Final Requirement",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Transcript Summary",
+              "displayName": "Transcript Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Successful",
+              "displayName": "Call Successful",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "success",
+                  "value": "success"
+                },
+                {
+                  "name": "Call Didn't Pick Up",
+                  "value": "Call Didn't Pick Up"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Call Duration",
+              "displayName": "Call Duration",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Call Cost",
+              "displayName": "Call Cost",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Call Recording URL",
+              "displayName": "Call Recording URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Created Time",
+              "displayName": "Created Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Last Modified Time",
+              "displayName": "Last Modified Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -608,
+        552
+      ],
+      "id": "9e811493-f8d3-49bb-9eef-9b4acf2923d7",
+      "name": "Update record3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appxoyYtA8W4vTtl1",
+          "mode": "list",
+          "cachedResultName": "Facebook Leads via Ads",
+          "cachedResultUrl": "https://airtable.com/appxoyYtA8W4vTtl1"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJPHyyC1kWkCCID",
+          "mode": "list",
+          "cachedResultName": "Voice AI Agent",
+          "cachedResultUrl": "https://airtable.com/appxoyYtA8W4vTtl1/tblJPHyyC1kWkCCID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Call Recording URL": "={{ $json.webViewLink }}",
+            "Conversation ID": "={{ $('Get Audio').item.json.fields['Conversation ID'] }}"
+          },
+          "matchingColumns": [
+            "Conversation ID"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Time of Submission",
+              "displayName": "Time of Submission",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 2",
+              "displayName": "Field 2",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "ag:120230070449890500",
+                  "value": "ag:120230070449890500"
+                },
+                {
+                  "name": "ag:120230070450140500",
+                  "value": "ag:120230070450140500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Ad Name",
+              "displayName": "Ad Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Leads16_IB01_Ad06_30-07-2025",
+                  "value": "Leads16_IB01_Ad06_30-07-2025"
+                },
+                {
+                  "name": "Leads16_IB03_Ad02_30-07-2025",
+                  "value": "Leads16_IB03_Ad02_30-07-2025"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 4",
+              "displayName": "Field 4",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "as:120230070450160500",
+                  "value": "as:120230070450160500"
+                },
+                {
+                  "name": "as:120230070450150500",
+                  "value": "as:120230070450150500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Adset Name",
+              "displayName": "Adset Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Tier 1 Cities",
+                  "value": "Tier 1 Cities"
+                },
+                {
+                  "name": "IB - Business",
+                  "value": "IB - Business"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 6",
+              "displayName": "Field 6",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "c:120230070449860500",
+                  "value": "c:120230070449860500"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Campaign Name",
+              "displayName": "Campaign Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Leads 17 AI Voice Agent 30-07-2025",
+                  "value": "Leads 17 AI Voice Agent 30-07-2025"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 8",
+              "displayName": "Field 8",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "f:24189928717367770",
+                  "value": "f:24189928717367770"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Form Name",
+              "displayName": "Form Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 10",
+              "displayName": "Field 10",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Platform",
+              "displayName": "Platform",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "ig",
+                  "value": "ig"
+                },
+                {
+                  "name": "fb",
+                  "value": "fb"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Selected Budget",
+              "displayName": "Selected Budget",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "25k_-_50k_",
+                  "value": "25k_-_50k_"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "AI Agent Call",
+              "displayName": "AI Agent Call",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "sure!!_please_feel_free_to_call_via_a_california,_usa_(+1)_number!",
+                  "value": "sure!!_please_feel_free_to_call_via_a_california,_usa_(+1)_number!"
+                },
+                {
+                  "name": "i_understand._i_will_not_submit_the_form.",
+                  "value": "i_understand._i_will_not_submit_the_form."
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Field 17",
+              "displayName": "Field 17",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "lead_status",
+              "displayName": "lead_status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "CREATED",
+                  "value": "CREATED"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Batch Call ID",
+              "displayName": "Batch Call ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Batch Call Status",
+              "displayName": "Batch Call Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "completed",
+                  "value": "completed"
+                },
+                {
+                  "name": "pending",
+                  "value": "pending"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Conversation ID",
+              "displayName": "Conversation ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Budget ",
+              "displayName": "Budget ",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Budget Rationale",
+              "displayName": "Budget Rationale",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Final Requirement",
+              "displayName": "Final Requirement",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Transcript Summary",
+              "displayName": "Transcript Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Successful",
+              "displayName": "Call Successful",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "success",
+                  "value": "success"
+                },
+                {
+                  "name": "Call Didn't Pick Up",
+                  "value": "Call Didn't Pick Up"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Duration",
+              "displayName": "Call Duration",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Cost",
+              "displayName": "Call Cost",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Call Recording URL",
+              "displayName": "Call Recording URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Created Time",
+              "displayName": "Created Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Last Modified Time",
+              "displayName": "Last Modified Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -384,
+        480
+      ],
+      "id": "fa489f4a-e76b-4371-850d-eba4829b64de",
+      "name": "Update record4"
+    },
+    {
+      "parameters": {
+        "text": "New Voice AI Leads Updated",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1280,
+        264
+      ],
+      "id": "979f01cc-ac6e-4c83-9b42-1abe25490cd4",
+      "name": "Send a text message1",
+      "webhookId": "09a8f3a0-eddd-471f-8fb7-eb9c1b39d583"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2400,
+        864
+      ],
+      "id": "15f876d1-2756-4b92-99ff-54d3c923e46c",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Make Elevenlabs Agent Call the Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make Elevenlabs Agent Call the Lead": {
+      "main": [
+        [
+          {
+            "node": "Update record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable Trigger": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Conversation ID": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Conversation ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Update record1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Conversation Details": {
+      "main": [
+        [
+          {
+            "node": "Update record2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Audio": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update record3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Update record4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items4": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Conversation Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record2": {
+      "main": [
+        [
+          {
+            "node": "Get Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Search records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "b79957b5-98c5-421e-bea8-431b286c9d3f",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-19T10:14:07.255Z",
+      "createdAt": "2025-11-19T10:14:07.255Z",
+      "role": "workflow:owner",
+      "workflowId": "zlNvGI1waybxMmKm",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
