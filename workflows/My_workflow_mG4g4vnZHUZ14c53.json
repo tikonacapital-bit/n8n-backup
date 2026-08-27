@@ -1,0 +1,1238 @@
+{
+  "updatedAt": "2025-12-24T13:48:16.000Z",
+  "createdAt": "2025-12-19T06:49:40.275Z",
+  "id": "mG4g4vnZHUZ14c53",
+  "name": "My workflow",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1584,
+        208
+      ],
+      "id": "c1a5be72-f6a8-4cfa-9469-23f3083d97c2",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ae3c4fa7-55f7-4d53-b6db-e5204061e699",
+              "name": "Image 1",
+              "value": "={{ $json.image_1.images[0].url }}",
+              "type": "string"
+            },
+            {
+              "id": "5849fa56-59e4-46f1-8d0d-7a72ab118c37",
+              "name": "Audio 1",
+              "value": "={{ $json.audio_1.audio.url }}",
+              "type": "string"
+            },
+            {
+              "id": "7629501a-6b17-4842-8c0e-1cb8a867648a",
+              "name": "Image 2",
+              "value": "={{ $json.image_2.images[0].url }}",
+              "type": "string"
+            },
+            {
+              "id": "a250e441-e78d-468e-bc9a-3ad4e705f13e",
+              "name": "Audio 2",
+              "value": "={{ $json.audio_2.audio.url }}",
+              "type": "string"
+            },
+            {
+              "id": "75b8133e-96a8-47ab-94db-b20b87ed66c9",
+              "name": "Image 3",
+              "value": "={{ $json.image_3.images[0].url }}",
+              "type": "string"
+            },
+            {
+              "id": "2f03412a-4a01-475c-aed3-980cf30524bb",
+              "name": "Audio 3",
+              "value": "={{ $json.audio_3.audio.url }}",
+              "type": "string"
+            },
+            {
+              "id": "f6118d24-c4f7-4b63-843c-113f4caacc53",
+              "name": "base_url",
+              "value": "http://ncat:8080",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -880,
+        848
+      ],
+      "id": "e31e7cb3-3f9d-4d63-8f8d-4e7e318d67e9",
+      "name": "Set Variables"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "scenes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        1168
+      ],
+      "id": "bb11c7ff-150f-44b6-a255-1fdf5abc5c70",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "jsCode": "const buildArrayScenes = $('Build Faceless Array').first().json.scenes;\nconst doneBranchItems = $input.all();\n\nconst updatedScenes = buildArrayScenes.map(scene => {\n\n  const matchingVideoItem = doneBranchItems.find(item =>\n    item.json?.id === scene.sceneId &&\n    typeof item.json.response === 'string' && \n    item.json.response.startsWith('http')\n  );\n\n  if (matchingVideoItem) {\n    return {\n      ...scene,\n      video: matchingVideoItem.json.response,\n    };\n  }\n\n  return scene;\n});\n\nreturn [\n  {\n    json: {\n      scenes: updatedScenes,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        1168
+      ],
+      "id": "61ab3f12-3060-48a6-8e60-3e81e3e975e7",
+      "name": "Create Array with Videos"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "scenes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        848
+      ],
+      "id": "234fe2a4-6232-484d-849f-1670240c9c3e",
+      "name": "Split Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst videoUrls = items.map((item) => ({\n  video_url: item.json.response[0].file_url\n}));\n\nconst output = {\n  video_urls: videoUrls,\n  id: \"2323\"\n};\n\nreturn [\n  {\n    json: {\n      output: JSON.stringify(output)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        848
+      ],
+      "id": "41276021-644b-481c-bc4e-7a5fe9871fa6",
+      "name": "Build Video Array"
+    },
+    {
+      "parameters": {
+        "content": "## Prepare Automation",
+        "height": 300,
+        "width": 580,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1024,
+        752
+      ],
+      "typeVersion": 1,
+      "id": "7ee11949-5ca2-4810-8b0a-0ab8b9bb2322",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Set Variables').first().json.base_url }}/v1/image/convert/video",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "local-dev-key-123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"image_url\":\"{{ $json.image }}\",\n    \"length\": 20,\n    \"frame_rate\": 25,\n    \"zoom_speed\": 6,\n    \"id\": \"{{ $('Split Out').item.json.sceneId }}\"\n} ",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -768,
+        1168
+      ],
+      "id": "fda7ef0b-4f51-4851-85b6-fd31b6197f6c",
+      "name": "Generate Video"
+    },
+    {
+      "parameters": {
+        "content": "## Generate Videos",
+        "height": 300,
+        "width": 580,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1024,
+        1072
+      ],
+      "typeVersion": 1,
+      "id": "d329ed47-72df-44ad-a047-f0434c09c35d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nconst scenes = [];\n\nconst keys = Object.keys(item);\nconst sceneNumbers = new Set();\n\nkeys.forEach(key => {\n  const match = key.match(/(Audio|Image) (\\d+)/);\n  if (match) {\n    sceneNumbers.add(match[2]);\n  }\n});\n\nArray.from(sceneNumbers)\n  .sort((a, b) => Number(a) - Number(b))\n  .forEach(num => {\n    scenes.push({\n      audio: item[`Audio ${num}`] || null,\n      image: item[`Image ${num}`] || null,\n      video: null,\n      sceneId: `Scene ${num}`,\n    });\n  });\n\nreturn [\n  {\n    json: {\n      scenes,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        848
+      ],
+      "id": "50159839-414d-473d-96b4-1f85016ab021",
+      "name": "Build Faceless Array"
+    },
+    {
+      "parameters": {
+        "content": "## Get Video Metadata",
+        "height": 300,
+        "width": 580,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -416,
+        752
+      ],
+      "typeVersion": 1,
+      "id": "6ae3025f-580e-4ebd-861e-c31993961c85",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Trim Audio + Video",
+        "height": 300,
+        "width": 580,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -416,
+        1072
+      ],
+      "typeVersion": 1,
+      "id": "be8170b3-8adf-428d-970c-71d556743972",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Final Merged Video",
+        "height": 300,
+        "width": 540,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        192,
+        752
+      ],
+      "typeVersion": 1,
+      "id": "5f24d75e-1391-4c5c-b491-fe37e6f84e9a",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Set Variables').first().json.base_url }}/v1/video/concatenate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "local-dev-key-123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.output }}",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        848
+      ],
+      "id": "ac56ecb1-c77a-47d2-b8a9-eb5d1706d8d4",
+      "name": "Concatenate Video"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Set Variables').first().json.base_url }}/v1/video/trim",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "local-dev-key-123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"video_url\": \"{{ $('Split Items').item.json.video }}\",\n    \"start\": \"00:00:00\",\n    \"end\": \"{{ $json.response.duration_formatted }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -288,
+        1168
+      ],
+      "id": "d71d8431-dc00-4a29-8763-b82f50fceb9e",
+      "name": "Trim Video"
+    },
+    {
+      "parameters": {
+        "content": "## Caption Video",
+        "height": 300,
+        "width": 540,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        192,
+        1072
+      ],
+      "typeVersion": 1,
+      "id": "1bb13ec7-9b5a-4e89-afa4-37297b05c7e6",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Set Variables').first().json.base_url }}/v1/media/metadata ",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "local-dev-key-123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"media_url\":\"{{ $json.audio }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -64,
+        848
+      ],
+      "id": "66c2d535-1ae2-45c7-8afa-b833fd8ec8f4",
+      "name": "Get Audio Metadata"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Set Variables').first().json.base_url }}/v1/video/caption",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "local-dev-key-123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"video_url\": \"{{ $json.response }}\",\n  \"settings\": {\n    \"line_color\": \"#FFFFFF\",\n    \"word_color\": \"#66ff74\",\n    \"all_caps\": false,\n    \"max_words_per_line\": 3,\n    \"font_size\": 60,\n    \"bold\": false,\n    \"italic\": false,\n    \"underline\": false,\n    \"strikeout\": false,\n    \"outline_width\": 3,\n    \"shadow_offset\": 4,\n    \"style\": \"highlight\",\n    \"font_family\": \"The Bold Font\",\n    \"position\": \"bottom_center\"\n  },\n  \"id\": \"gdrive-five\"\n}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        1168
+      ],
+      "id": "30865f12-2ee6-4d38-953e-5bdd053f239a",
+      "name": "Caption Video"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Set Variables').first().json.base_url }}/v1/ffmpeg/compose",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "local-dev-key-123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"inputs\": [\n    {\n      \"file_url\": \"{{ $json.response }}\"\n    },\n    {\n      \"file_url\": \"{{ $('Split Items').item.json.audio }}\"\n    }\n  ],\n  \"outputs\": [\n    {\n      \"options\": [\n        {\n          \"option\": \"-map\",\n          \"argument\": \"0:v:0\"\n        },\n        {\n          \"option\": \"-map\",\n          \"argument\": \"1:a:0\"\n        },\n        {\n          \"option\": \"-c:v\",\n          \"argument\": \"copy\"\n        },\n        {\n          \"option\": \"-c:a\",\n          \"argument\": \"aac\"\n        },\n        {\n          \"option\": \"-shortest\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -64,
+        1168
+      ],
+      "id": "a4d236ca-35eb-48de-9d72-c8a09a533134",
+      "name": "Combine Audio + Video"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.idea }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a professional financial content creator for **Tikona Capital**, a SEBI-registered Investment Advisory and Wealth Management firm based in Mumbai, India. Your task is to generate an educational, professional, and visually compelling script designed for a **4-5 minute video**.\n\nThe final output should be split into **10 parts**, each tied to a specific image and audio segment. Each segment should be approximately 25-30 seconds.\n\n### BRAND IDENTITY:\n- Company: Tikona Capital Finserv Pvt Ltd\n- Tone: Educational, trustworthy, professional yet approachable\n- Visual Style: Premium, modern corporate aesthetic with Indian context\n\n### IMAGE PROMPT REQUIREMENTS:\n1. Style: Modern, professional, cinematic quality with premium corporate aesthetics\n2. Color Scheme: Rich blues, warm golds, clean whites\n3. Subjects: Professional Indian business people, modern office settings, financial symbols, wealth representations\n4. Composition: Wide or mid-shots, clean backgrounds, professional lighting\n5. Format: 9:16 vertical format\n6. End each image prompt with: \"Professional corporate photography, premium quality, 9:16 vertical format\"\n\n### AUDIO SCRIPT REQUIREMENTS:\n1. Duration: Each segment should be 60-80 words (25-30 seconds when spoken)\n2. Language: Clear English with Indian context (use terms like lakhs, crores, SIP where relevant)\n3. Tone: Authoritative but warm, educational, confidence-inspiring\n4. Structure:\n   - Segment 1: Hook + Problem statement\n   - Segments 2-3: Core concept explanation\n   - Segments 4-6: Deep dive with examples/data\n   - Segments 7-8: Practical tips\n   - Segment 9: Common mistakes to avoid\n   - Segment 10: Call-to-action mentioning Tikona Capital\n\n5. FORBIDDEN: \"Guaranteed returns\", \"Risk-free\", \"Double your money\", \"Get rich quick\"\n6. Do NOT include hashtags, bullet points, or emojis\n\n### TOPIC:\n{{ $json.idea }}\n\n### OUTPUT FORMAT (JSON):\n{\n  \"image_1\": \"....\",\n  \"image_2\": \"....\",\n  \"image_3\": \"....\",\n  \"image_4\": \"....\",\n  \"image_5\": \"....\",\n  \"image_6\": \"....\",\n  \"image_7\": \"....\",\n  \"image_8\": \"....\",\n  \"image_9\": \"....\",\n  \"image_10\": \"....\",\n  \"audio_1\": \"....\",\n  \"audio_2\": \"....\",\n  \"audio_3\": \"....\",\n  \"audio_4\": \"....\",\n  \"audio_5\": \"....\",\n  \"audio_6\": \"....\",\n  \"audio_7\": \"....\",\n  \"audio_8\": \"....\",\n  \"audio_9\": \"....\",\n  \"audio_10\": \"....\"\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -1088,
+        144
+      ],
+      "id": "222448c1-4a43-40cf-ba86-c588fbf46b19",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n    \"image_1\": \"......\",\n    \"image_2\": \"......\",\n    \"image_3\": \"......\",\n    \"audio_1\": \"......\",\n    \"audio_2\": \"......\",\n    \"audio_3\": \"......\"\n    }"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -816,
+        320
+      ],
+      "id": "66663876-6c84-44cc-bdf7-ce4e1938de91",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1072,
+        352
+      ],
+      "id": "d394521c-6eb1-4050-8e67-ee2134def1ac",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "mjq78WKVUEoUwbFH",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ee9d9198-73be-4b18-8178-43bd88dc7411",
+              "name": "image_1",
+              "value": "={{ $json.output.image_1 }}",
+              "type": "string"
+            },
+            {
+              "id": "865fe843-de47-45f4-b983-151249e86612",
+              "name": "image_2",
+              "value": "={{ $json.output.image_2 }}",
+              "type": "string"
+            },
+            {
+              "id": "aeb27b33-e301-43f6-9815-b4211f327892",
+              "name": "image_3",
+              "value": "={{ $json.output.image_3 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        96
+      ],
+      "id": "abc739d3-b1da-4654-9292-1b096fcb8d82",
+      "name": "Image Scripts"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ee9d9198-73be-4b18-8178-43bd88dc7411",
+              "name": "audio_1",
+              "value": "={{ $json.output.audio_1 }}",
+              "type": "string"
+            },
+            {
+              "id": "aeb27b33-e301-43f6-9815-b4211f327892",
+              "name": "audio_2",
+              "value": "={{ $json.output.audio_2 }}",
+              "type": "string"
+            },
+            {
+              "id": "2b411a02-bcef-4b5b-bbac-ddb277c93ab4",
+              "name": "audio_3",
+              "value": "={{ $json.output.audio_3 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -480,
+        304
+      ],
+      "id": "e2f62775-8429-4573-8726-a8441616597d",
+      "name": "Audio Scripts"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\n\n// Assuming your input has audio_1, audio_2, audio_3 fields\nconst inputItem = $input.first();\n\n// Extract each audio script as a separate item\nif (inputItem.json.audio_1) {\n  items.push({\n    json: {\n      audio_script: inputItem.json.audio_1,\n\n    }\n  });\n}\n\nif (inputItem.json.audio_2) {\n  items.push({\n    json: {\n      audio_script: inputItem.json.audio_2,\n\n    }\n  });\n}\n\nif (inputItem.json.audio_3) {\n  items.push({\n    json: {\n      audio_script: inputItem.json.audio_3,\n\n    }\n  });\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        304
+      ],
+      "id": "0bb7caac-514e-4813-be02-dd31a6f533bf",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\n\n// Assuming your input has image_1, image_2, image_3 fields\nconst inputItem = $input.first();\n\n// Extract each image script as a separate item\nif (inputItem.json.image_1) {\n  items.push({\n    json: {\n     image_script: inputItem.json.image_1,\n      \n    }\n  });\n}\n\nif (inputItem.json.image_2) {\n  items.push({\n    json: {\n      image_script: inputItem.json.image_2,\n    \n    }\n  });\n}\n\nif (inputItem.json.image_3) {\n  items.push({\n    json: {\n      image_script: inputItem.json.image_3,\n      \n    }\n  });\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        96
+      ],
+      "id": "415bdd07-b2dd-4a9b-8c3c-c9c74244a452",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "url": "=https://queue.fal.run/fal-ai/flux-pro/requests/{{ $json.request_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        64
+      ],
+      "id": "b3a29d55-41cd-4308-ab93-91cea516228b",
+      "name": "Image Get"
+    },
+    {
+      "parameters": {
+        "jsCode": "const combinedItem = {\n  json: {}\n};\n\n// Combine all items into a single item\n$input.all().forEach((item, index) => {\n  const imageNumber = index + 1;\n  combinedItem.json[`image_${imageNumber}`] = item.json.image_script || item.json;\n});\n\nreturn [combinedItem];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        64
+      ],
+      "id": "c384eb53-d4d9-4508-8d64-9e15dd16159b",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "const combinedItem = {\n  json: {}\n};\n\n// Combine all items into a single item\n$input.all().forEach((item, index) => {\n  const audioNumber = index + 1;\n  combinedItem.json[`audio_${audioNumber}`] = item.json.audio_script || item.json;\n});\n\nreturn [combinedItem];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        368
+      ],
+      "id": "b16df6e0-bbf0-4f53-9f3a-f077fdb7bdf7",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        960,
+        384
+      ],
+      "id": "8e2d64af-f4eb-4f75-8d55-d7951b115bc0",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "content": "# Self-Hosted API for Video Creation, Merging, and Auto-Captions",
+        "height": 780,
+        "width": 1840
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1088,
+        624
+      ],
+      "id": "061c0343-1b3f-4e6b-a094-3772cbeeae3f",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## Generate Images",
+        "height": 220,
+        "width": 780,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "57f05dac-6913-4732-a60a-a5373170b825",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Generate Audio ",
+        "height": 220,
+        "width": 780,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        304
+      ],
+      "typeVersion": 1,
+      "id": "76c38c32-4f18-4e30-9c64-bb134d27cfb8",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Unbundle Images & Audio",
+        "height": 480,
+        "width": 500,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -560,
+        32
+      ],
+      "typeVersion": 1,
+      "id": "b969f241-ae1d-4697-a8be-9a00a2462662",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "## Generate Script",
+        "height": 400,
+        "width": 500,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1136,
+        64
+      ],
+      "typeVersion": 1,
+      "id": "366f8394-8c5c-48a7-8c4c-c9827411b163",
+      "name": "Sticky Note10"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Variables": {
+      "main": [
+        [
+          {
+            "node": "Build Faceless Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Generate Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Array with Videos": {
+      "main": [
+        [
+          {
+            "node": "Split Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Items": {
+      "main": [
+        [
+          {
+            "node": "Get Audio Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Video Array": {
+      "main": [
+        [
+          {
+            "node": "Concatenate Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Video": {
+      "main": [
+        [
+          {
+            "node": "Create Array with Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Faceless Array": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Concatenate Video": {
+      "main": [
+        [
+          {
+            "node": "Caption Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trim Video": {
+      "main": [
+        [
+          {
+            "node": "Combine Audio + Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Audio Metadata": {
+      "main": [
+        [
+          {
+            "node": "Trim Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Audio + Video": {
+      "main": [
+        [
+          {
+            "node": "Build Video Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Image Scripts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Audio Scripts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voice Gen1": {
+      "main": [
+        [
+          {
+            "node": "Get Voice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Scripts": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio Scripts": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Image Gen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Gen": {
+      "main": [
+        [
+          {
+            "node": "Image Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Voice Gen1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Get": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Voice": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Image Gen": [
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "4964321b-5f6b-4aa2-93a8-5a3efaa191d7",
+          "response_url": "https://queue.fal.run/fal-ai/flux-pro/requests/4964321b-5f6b-4aa2-93a8-5a3efaa191d7",
+          "status_url": "https://queue.fal.run/fal-ai/flux-pro/requests/4964321b-5f6b-4aa2-93a8-5a3efaa191d7/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-pro/requests/4964321b-5f6b-4aa2-93a8-5a3efaa191d7/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 1
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "c9a3f657-929e-4e89-b3ae-4f0bb8224333",
+          "response_url": "https://queue.fal.run/fal-ai/flux-pro/requests/c9a3f657-929e-4e89-b3ae-4f0bb8224333",
+          "status_url": "https://queue.fal.run/fal-ai/flux-pro/requests/c9a3f657-929e-4e89-b3ae-4f0bb8224333/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-pro/requests/c9a3f657-929e-4e89-b3ae-4f0bb8224333/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 0
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "7a89a901-feef-474d-b6a0-2d495d22443b",
+          "response_url": "https://queue.fal.run/fal-ai/flux-pro/requests/7a89a901-feef-474d-b6a0-2d495d22443b",
+          "status_url": "https://queue.fal.run/fal-ai/flux-pro/requests/7a89a901-feef-474d-b6a0-2d495d22443b/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-pro/requests/7a89a901-feef-474d-b6a0-2d495d22443b/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 1
+        }
+      }
+    ],
+    "Image Scripts": [
+      {
+        "json": {
+          "image_1": "A solitary figure stands at the edge of a deserted track, the horizon stretching out before them. The person, dressed in workout gear, gazes resolutely into the distance, their breath visible in the cool air. The stark contrast between the shadows and light highlights their determination, the path ahead symbolizing the journey of discipline. Black & White",
+          "image_2": "An individual lifts a heavy weight in a dimly lit gym, sweat glistening on their brow as they focus intensely on the task at hand. Their strong silhouette against the shadows captures the essence of hard work and the commitment to show up day after day. Black & White",
+          "image_3": "In an empty park at dawn, a figure runs on a secluded path, the trees looming large around them. Their expression is one of sheer grit and focus, encapsulating the idea that transformation is born from the dedication to keep moving forward, regardless of motivation. Black & White"
+        }
+      }
+    ],
+    "Code3": [
+      {
+        "json": {
+          "image_script": "A solitary figure stands at the edge of a deserted track, the horizon stretching out before them. The person, dressed in workout gear, gazes resolutely into the distance, their breath visible in the cool air. The stark contrast between the shadows and light highlights their determination, the path ahead symbolizing the journey of discipline. Black & White"
+        }
+      },
+      {
+        "json": {
+          "image_script": "An individual lifts a heavy weight in a dimly lit gym, sweat glistening on their brow as they focus intensely on the task at hand. Their strong silhouette against the shadows captures the essence of hard work and the commitment to show up day after day. Black & White"
+        }
+      },
+      {
+        "json": {
+          "image_script": "In an empty park at dawn, a figure runs on a secluded path, the trees looming large around them. Their expression is one of sheer grit and focus, encapsulating the idea that transformation is born from the dedication to keep moving forward, regardless of motivation. Black & White"
+        }
+      }
+    ],
+    "Image Get": [
+      {
+        "json": {
+          "images": [
+            {
+              "url": "https://fal.media/files/monkey/f4HYjAwBPRTjqPaONzQPZ_11bb7b0b974a46dfbbba5d6912ec1d9e.jpg",
+              "width": 1536,
+              "height": 2752,
+              "content_type": "image/jpeg"
+            }
+          ],
+          "timings": {},
+          "seed": 2056047210,
+          "has_nsfw_concepts": [
+            false
+          ],
+          "prompt": "A solitary figure stands at the edge of a deserted track, the horizon stretching out before them. The person, dressed in workout gear, gazes resolutely into the distance, their breath visible in the cool air. The stark contrast between the shadows and light highlights their determination, the path ahead symbolizing the journey of discipline. Black & White"
+        }
+      },
+      {
+        "json": {
+          "images": [
+            {
+              "url": "https://fal.media/files/tiger/J9wTzwty7fVFlw6tKLCWG_527bf803632e4e3d9fc5415bf080b327.jpg",
+              "width": 1536,
+              "height": 2752,
+              "content_type": "image/jpeg"
+            }
+          ],
+          "timings": {},
+          "seed": 643515940,
+          "has_nsfw_concepts": [
+            false
+          ],
+          "prompt": "An individual lifts a heavy weight in a dimly lit gym, sweat glistening on their brow as they focus intensely on the task at hand. Their strong silhouette against the shadows captures the essence of hard work and the commitment to show up day after day. Black & White"
+        }
+      },
+      {
+        "json": {
+          "images": [
+            {
+              "url": "https://fal.media/files/zebra/jl_MpbD2FYgn-dhcqH-jb_d0fd03f7a20c4448b5d85e4b934a3993.jpg",
+              "width": 1536,
+              "height": 2752,
+              "content_type": "image/jpeg"
+            }
+          ],
+          "timings": {},
+          "seed": 2660932060,
+          "has_nsfw_concepts": [
+            false
+          ],
+          "prompt": "In an empty park at dawn, a figure runs on a secluded path, the trees looming large around them. Their expression is one of sheer grit and focus, encapsulating the idea that transformation is born from the dedication to keep moving forward, regardless of motivation. Black & White"
+        }
+      }
+    ],
+    "Get row(s) in sheet": [
+      {
+        "json": {
+          "row_number": 2,
+          "s.no": 1,
+          "idea": "\"Discipline Over Motivation: The Real Secret to Getting Fit\"\n→ Talk about how waiting to feel motivated won’t get results—building discipline and showing up every day is what creates transformation.",
+          "status": "new",
+          "final_video": ""
+        }
+      }
+    ],
+    "Voice Gen1": [
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "8aefc7dc-9501-4ae0-8d50-b9ebf5418078",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/8aefc7dc-9501-4ae0-8d50-b9ebf5418078",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/8aefc7dc-9501-4ae0-8d50-b9ebf5418078/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/8aefc7dc-9501-4ae0-8d50-b9ebf5418078/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 0
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "e78c8409-2698-44f8-920a-9b961b7e02c0",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/e78c8409-2698-44f8-920a-9b961b7e02c0",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/e78c8409-2698-44f8-920a-9b961b7e02c0/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/e78c8409-2698-44f8-920a-9b961b7e02c0/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 0
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "5a913582-b3e5-4a25-a70c-e69008ca6e54",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/5a913582-b3e5-4a25-a70c-e69008ca6e54",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/5a913582-b3e5-4a25-a70c-e69008ca6e54/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/5a913582-b3e5-4a25-a70c-e69008ca6e54/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 0
+        }
+      }
+    ],
+    "Get Voice": [
+      {
+        "json": {
+          "audio": {
+            "url": "https://v3.fal.media/files/penguin/WoIdccd9ZHWVfaPxmQoqc_output.mp3",
+            "content_type": "audio/mpeg",
+            "file_name": "output.mp3",
+            "file_size": 102445
+          },
+          "timestamps": null
+        }
+      },
+      {
+        "json": {
+          "audio": {
+            "url": "https://v3.fal.media/files/elephant/MGuU40edR5DyIoN_CeSmD_output.mp3",
+            "content_type": "audio/mpeg",
+            "file_name": "output.mp3",
+            "file_size": 109968
+          },
+          "timestamps": null
+        }
+      },
+      {
+        "json": {
+          "audio": {
+            "url": "https://v3.fal.media/files/panda/QSskQqhb38PFBR4aOXqgu_output.mp3",
+            "content_type": "audio/mpeg",
+            "file_name": "output.mp3",
+            "file_size": 91160
+          },
+          "timestamps": null
+        }
+      }
+    ]
+  },
+  "versionId": "e6b7938a-d11f-4503-8e75-e6bc289ee258",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-19T06:49:40.279Z",
+      "createdAt": "2025-12-19T06:49:40.279Z",
+      "role": "workflow:owner",
+      "workflowId": "mG4g4vnZHUZ14c53",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
