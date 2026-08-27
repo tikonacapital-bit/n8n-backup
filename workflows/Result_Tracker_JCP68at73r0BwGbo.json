@@ -1,0 +1,609 @@
+{
+  "updatedAt": "2026-08-14T12:51:01.303Z",
+  "createdAt": "2025-10-12T04:33:26.926Z",
+  "id": "JCP68at73r0BwGbo",
+  "name": "Result Tracker",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        160
+      ],
+      "id": "d54edb1d-0bd3-4b31-aa8e-8f484c4172fa",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "You are a financial analyst specializing in quarterly earnings reports for Indian companies. Analyze the quarterly results document and extract the following information with precision:\n\nCRITICAL INSTRUCTIONS:\n1. Identify the EXACT company name as mentioned in the document header\n2. Identify the quarter and financial year (e.g., Q2 FY26)\n3. Use CONSOLIDATED financial statements if available, otherwise use STANDALONE\n4. All values must be reported in INR Crores (Cr) - convert if necessary\n5. Calculate Year-on-Year (YoY) growth by comparing current quarter vs same quarter previous year\n6. Do NOT show calculation steps - only provide final numbers\n\nREQUIRED METRICS:\n\n**1. REVENUE FROM OPERATIONS:**\n- Current Quarter Value (in Cr)\n- Previous Year Same Quarter Value (in Cr)\n- YoY Growth %\n- Use the line item: \"Revenue from operations\" or \"Total revenue from operations\"\n\n**2. EBITDA:**\n- Current Quarter Value (in Cr)\n- Previous Year Same Quarter Value (in Cr)\n- YoY Growth %\n- Calculate as: Profit before tax + Finance costs + Depreciation and amortization expenses\n- If \"EBITDA\" is explicitly mentioned in the document, use that value directly\n\n**3. NET PROFIT / PAT:**\n- Current Quarter Value (in Cr)\n- Previous Year Same Quarter Value (in Cr)\n- YoY Growth %\n- Use: \"Profit for the period\" OR \"Profit after tax\" OR \"Net Profit\"\n\n**4. EBITDA MARGIN:**\n- Current Quarter EBITDA Margin % (calculate as: EBITDA / Revenue × 100)\n- Previous Year Same Quarter EBITDA Margin %\n\nOUTPUT FORMAT (STRICTLY FOLLOW THIS):\n\nCompany Name: [Full company name]\nQuarter: [Q# FY##]\nStatement Type: [Consolidated/Standalone]\n\nRevenue: Rs [Current] Cr (↑/↓ [Growth]%) vs Rs [Previous] Cr (YoY)\nEBITDA: Rs [Current] Cr (↑/↓ [Growth]%) vs Rs [Previous] Cr (YoY)\nNet Profit: Rs [Current] Cr (↑/↓ [Growth]%) vs Rs [Previous] Cr (YoY)\nEBITDA Margin: [Current]% vs [Previous]% (YoY)\n\nFORMATTING RULES:\n- Use ↑ for positive growth, ↓ for negative growth\n- Round all rupee values to nearest whole number (no decimals)\n- Round percentages to 1 decimal place (e.g., 34.8%)\n- Use \"Rs\" before all currency values\n- Use \"Cr\" after all currency values\n- Always include \"(YoY)\" after each comparison\n\nEXAMPLE OUTPUT:\n\nCompany Name: Oberoi Realty Limited\nQuarter: Q2 FY26\nStatement Type: Consolidated\n\nRevenue: Rs 1,779 Cr (↑ 34.8%) vs Rs 1,320 Cr (YoY)\nEBITDA: Rs 1,098 Cr (↑ 28.4%) vs Rs 855 Cr (YoY)\nNet Profit: Rs 760 Cr (↑ 29.0%) vs Rs 589 Cr (YoY)\nEBITDA Margin: 61.7% vs 64.8% (YoY)\n\nIf you cannot find a specific value in the document, respond with \"Data not available\" for that metric. Do not make assumptions or estimates.",
+        "documentUrls": "={{ $json.ATTACHMENT_link }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        -512
+      ],
+      "id": "f8e4aee1-f0b2-40cb-8c31-a3d5dccb70db",
+      "name": "Analyze document",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GaCvOMdqQCMm3lhY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        624
+      ],
+      "id": "3c224cb1-9ec7-402b-93a9-24f4928eb726",
+      "name": "Analyze document1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nmcibSv4C4So3mQw",
+          "name": "Google Gemini(PaLM) Api account 0"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nfunction formatSubmissionDate(dateStr) {\n  if (!dateStr) return '';\n  const d = new Date(dateStr);\n  if (isNaN(d.getTime())) return dateStr;\n  \n  const day = String(d.getDate()).padStart(2, '0');\n  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];\n  const month = monthNames[d.getMonth()];\n  const year = d.getFullYear();\n  const hours = String(d.getHours()).padStart(2, '0');\n  const minutes = String(d.getMinutes()).padStart(2, '0');\n\n  return `${day} ${month} ${year}, ${hours}:${minutes}`;\n}\n\nreturn items.map((item, index) => {\n  let text = '';\n  if (item.json.content && item.json.content.parts && item.json.content.parts[0]) {\n    text = item.json.content.parts[0].text;\n  } else if (item.json.text) {\n    text = item.json.text;\n  } else {\n    text = String(item.json);\n  }\n\n  const jsData = $('Code in JavaScript').all()[index]?.json || {};\n  const parsedMetrics = $('Code in JavaScript4').all()[index]?.json?.metrics || {};\n\n  const nseCode = jsData.NSE_CODE || '';\n  const pdfLink = jsData.ATTACHMENT_link || 'https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        1152
+      ],
+      "id": "0067c532-1fad-44a0-a7a3-dd69f46fc405",
+      "name": "Analyze document2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nmcibSv4C4So3mQw",
+          "name": "Google Gemini(PaLM) Api account 0"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst formattedMessages = items.map(item => {\n  // 1. Extract the text from the LLM response\n  let text = '';\n  if (item.json.content && item.json.content.parts) {\n    text = item.json.content.parts[0].text;\n  } else if (item.json.text) {\n    text = item.json.text;\n  } else if (typeof item.json === 'string') {\n    text = item.json;\n  } else {\n    text = JSON.stringify(item.json);\n  }\n  \n  // 2. Prepare variables\n  const lines = text.split('\\n').map(l => l.trim()).filter(l => l);\n  \n  let companyName = '';\n  let eventType = '';\n  let headline = '';\n  \n  // Arrays to hold content for sections\n  let newsLines = [];\n  let fundamentalLines = [];\n  let technicalLines = [];\n  \n  // State machine for parsing\n  let currentSection = 'header'; \n\n  // 3. Parse the output line by line\n  lines.forEach(line => {\n    // -- SECTION DETECTION --\n    if (line.includes('NEWS ANALYSIS:') || line.includes('**📰 NEWS ANALYSIS:**')) {\n      currentSection = 'news';\n      return; \n    } else if (line.includes('FUNDAMENTAL CONTEXT:') || line.includes('**🧠 FUNDAMENTAL CONTEXT:**')) {\n      currentSection = 'fundamental';\n      return;\n    } else if (line.includes('TECHNICAL CONTEXT:') || line.includes('**📈 TECHNICAL CONTEXT:**')) {\n      currentSection = 'technical';\n      return;\n    }\n\n    // -- HEADER PARSING --\n    if (currentSection === 'header') {\n      if (line.startsWith('Company:')) {\n        companyName = line.replace('Company:', '').trim();\n      } else if (line.startsWith('Event:')) {\n        eventType = line.replace('Event:', '').trim();\n      } else if (line.startsWith('##')) {\n        // This is the Headline (e.g., \"## 🚀 Wins Rs 500Cr Order\")\n        headline = line.replace(/##/g, '').trim();\n      }\n    }\n    // -- CONTENT PARSING --\n    else if (currentSection === 'news') {\n      newsLines.push(line);\n    } else if (currentSection === 'fundamental') {\n      fundamentalLines.push(line);\n    } else if (currentSection === 'technical') {\n      technicalLines.push(line);\n    }\n  });\n\n  // 4. HTML Helper Functions\n  const escapeHtml = (text) => {\n    if (!text) return '';\n    return text\n      .replace(/&/g, '&amp;')\n      .replace(/</g, '&lt;')\n      .replace(/>/g, '&gt;')\n      .replace(/\"/g, '&quot;')\n      .replace(/'/g, '&#039;');\n  };\n\n  const formatMarkdown = (text) => {\n      if (!text) return '';\n      let formatted = escapeHtml(text);\n      // Bold: **text** -> <b>text</b>\n      formatted = formatted.replace(/\\*\\*(.*?)\\*\\*/g, '<b>$1</b>');\n      // Bullet points clean up (optional)\n      if (formatted.startsWith('•')) {\n          formatted = '• ' + formatted.substring(1).trim();\n      }\n      return formatted;\n  };\n\n  // 5. Build the HTML Blocks\n  \n  // News Block\n  let newsHtml = '';\n  if (newsLines.length > 0) {\n      newsHtml = `<b>📰 NEWS ANALYSIS:</b>\\n` + \n      newsLines.map(l => formatMarkdown(l)).join('\\n');\n  }\n\n  // Fundamental Block\n  let fundamentalHtml = '';\n  if (fundamentalLines.length > 0) {\n      fundamentalHtml = `\\n\\n<b>🧠 FUNDAMENTAL CONTEXT:</b>\\n` + \n      fundamentalLines.map(l => formatMarkdown(l)).join('\\n');\n  }\n\n  // Technical Block\n  let technicalHtml = '';\n  if (technicalLines.length > 0) {\n      technicalHtml = `\\n\\n<b>📈 TECHNICAL CONTEXT:</b>\\n` + \n      technicalLines.map(l => formatMarkdown(l)).join('\\n');\n  }\n\n  // 6. Links Section (Dynamic based on NSE Code input)\n  // Note: Ensure your input node passes 'NSE_CODE' or similar\n  const nse_code = $('Watchlist Results').first().json.NSE_CODE || ''; \n  const pdfLink = $('Watchlist Results').first().json.ATTACHMENT_link || \"#\";\n  const timestamp = $('Watchlist Results').first().json.News_submission_dt || '';\n\n  const formattedTimestamp = timestamp ? new Date(timestamp).toLocaleString('en-IN', {\n    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false\n  }) : '';\n\n  let linksHtml = `\n━━━━━━━━━━━━━━━━━━━━━━━━\n🔗 <b>LINKS:</b>\n📄 <a href=\"${pdfLink}\">Source Document</a>`;\n  \n  if (nse_code) {\n    linksHtml += `\n\n📊 <a href=\"https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        1984
+      ],
+      "id": "c5c254c9-cec9-4c3d-9aac-7efd27f5466e",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "O9TUEIPHEYHKBEVk",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Nh6X_okasLs7hQOlu49tokgvCibv2EQPH8kRQth6c7w",
+          "mode": "list",
+          "cachedResultName": "Earning Estimation v/s Actual ",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1,
+        "position": [
+          -384,
+          -512
+        ],
+        "id": "f8e4aee1-f0b2-40cb-8c31-a3d5dccb70db",
+        "name": "Analyze document",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GaCvOMdqQCMm3lhY",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1,
+        "position": [
+          2576,
+          624
+        ],
+        "id": "3c224cb1-9ec7-402b-93a9-24f4928eb726",
+        "name": "Analyze document1",
+        "retryOnFail": true,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "googlePalmApi": {
+            "id": "nmcibSv4C4So3mQw",
+            "name": "Google Gemini(PaLM) Api account 0"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nfunction formatSubmissionDate(dateStr) {\n  if (!dateStr) return '';\n  const d = new Date(dateStr);\n  if (isNaN(d.getTime())) return dateStr;\n  \n  const day = String(d.getDate()).padStart(2, '0');\n  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];\n  const month = monthNames[d.getMonth()];\n  const year = d.getFullYear();\n  const hours = String(d.getHours()).padStart(2, '0');\n  const minutes = String(d.getMinutes()).padStart(2, '0');\n\n  return `${day} ${month} ${year}, ${hours}:${minutes}`;\n}\n\nreturn items.map((item, index) => {\n  let text = '';\n  if (item.json.content && item.json.content.parts && item.json.content.parts[0]) {\n    text = item.json.content.parts[0].text;\n  } else if (item.json.text) {\n    text = item.json.text;\n  } else {\n    text = String(item.json);\n  }\n\n  const jsData = $('Code in JavaScript').all()[index]?.json || {};\n  const parsedMetrics = $('Code in JavaScript4').all()[index]?.json?.metrics || {};\n\n  const nseCode = jsData.NSE_CODE || '';\n  const pdfLink = jsData.ATTACHMENT_link || 'https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1,
+        "position": [
+          1408,
+          1152
+        ],
+        "id": "0067c532-1fad-44a0-a7a3-dd69f46fc405",
+        "name": "Analyze document2",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "nmcibSv4C4So3mQw",
+            "name": "Google Gemini(PaLM) Api account 0"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nconst formattedMessages = items.map(item => {\n  // 1. Extract the text from the LLM response\n  let text = '';\n  if (item.json.content && item.json.content.parts) {\n    text = item.json.content.parts[0].text;\n  } else if (item.json.text) {\n    text = item.json.text;\n  } else if (typeof item.json === 'string') {\n    text = item.json;\n  } else {\n    text = JSON.stringify(item.json);\n  }\n  \n  // 2. Prepare variables\n  const lines = text.split('\\n').map(l => l.trim()).filter(l => l);\n  \n  let companyName = '';\n  let eventType = '';\n  let headline = '';\n  \n  // Arrays to hold content for sections\n  let newsLines = [];\n  let fundamentalLines = [];\n  let technicalLines = [];\n  \n  // State machine for parsing\n  let currentSection = 'header'; \n\n  // 3. Parse the output line by line\n  lines.forEach(line => {\n    // -- SECTION DETECTION --\n    if (line.includes('NEWS ANALYSIS:') || line.includes('**📰 NEWS ANALYSIS:**')) {\n      currentSection = 'news';\n      return; \n    } else if (line.includes('FUNDAMENTAL CONTEXT:') || line.includes('**🧠 FUNDAMENTAL CONTEXT:**')) {\n      currentSection = 'fundamental';\n      return;\n    } else if (line.includes('TECHNICAL CONTEXT:') || line.includes('**📈 TECHNICAL CONTEXT:**')) {\n      currentSection = 'technical';\n      return;\n    }\n\n    // -- HEADER PARSING --\n    if (currentSection === 'header') {\n      if (line.startsWith('Company:')) {\n        companyName = line.replace('Company:', '').trim();\n      } else if (line.startsWith('Event:')) {\n        eventType = line.replace('Event:', '').trim();\n      } else if (line.startsWith('##')) {\n        // This is the Headline (e.g., \"## 🚀 Wins Rs 500Cr Order\")\n        headline = line.replace(/##/g, '').trim();\n      }\n    }\n    // -- CONTENT PARSING --\n    else if (currentSection === 'news') {\n      newsLines.push(line);\n    } else if (currentSection === 'fundamental') {\n      fundamentalLines.push(line);\n    } else if (currentSection === 'technical') {\n      technicalLines.push(line);\n    }\n  });\n\n  // 4. HTML Helper Functions\n  const escapeHtml = (text) => {\n    if (!text) return '';\n    return text\n      .replace(/&/g, '&amp;')\n      .replace(/</g, '&lt;')\n      .replace(/>/g, '&gt;')\n      .replace(/\"/g, '&quot;')\n      .replace(/'/g, '&#039;');\n  };\n\n  const formatMarkdown = (text) => {\n      if (!text) return '';\n      let formatted = escapeHtml(text);\n      // Bold: **text** -> <b>text</b>\n      formatted = formatted.replace(/\\*\\*(.*?)\\*\\*/g, '<b>$1</b>');\n      // Bullet points clean up (optional)\n      if (formatted.startsWith('•')) {\n          formatted = '• ' + formatted.substring(1).trim();\n      }\n      return formatted;\n  };\n\n  // 5. Build the HTML Blocks\n  \n  // News Block\n  let newsHtml = '';\n  if (newsLines.length > 0) {\n      newsHtml = `<b>📰 NEWS ANALYSIS:</b>\\n` + \n      newsLines.map(l => formatMarkdown(l)).join('\\n');\n  }\n\n  // Fundamental Block\n  let fundamentalHtml = '';\n  if (fundamentalLines.length > 0) {\n      fundamentalHtml = `\\n\\n<b>🧠 FUNDAMENTAL CONTEXT:</b>\\n` + \n      fundamentalLines.map(l => formatMarkdown(l)).join('\\n');\n  }\n\n  // Technical Block\n  let technicalHtml = '';\n  if (technicalLines.length > 0) {\n      technicalHtml = `\\n\\n<b>📈 TECHNICAL CONTEXT:</b>\\n` + \n      technicalLines.map(l => formatMarkdown(l)).join('\\n');\n  }\n\n  // 6. Links Section (Dynamic based on NSE Code input)\n  // Note: Ensure your input node passes 'NSE_CODE' or similar\n  const nse_code = $('Watchlist Results').first().json.NSE_CODE || ''; \n  const pdfLink = $('Watchlist Results').first().json.ATTACHMENT_link || \"#\";\n  const timestamp = $('Watchlist Results').first().json.News_submission_dt || '';\n\n  const formattedTimestamp = timestamp ? new Date(timestamp).toLocaleString('en-IN', {\n    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false\n  }) : '';\n\n  let linksHtml = `\n━━━━━━━━━━━━━━━━━━━━━━━━\n🔗 <b>LINKS:</b>\n📄 <a href=\"${pdfLink}\">Source Document</a>`;\n  \n  if (nse_code) {\n    linksHtml += `\n\n📊 <a href=\"https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+        "typeVersion": 1,
+        "position": [
+          2800,
+          1984
+        ],
+        "id": "c5c254c9-cec9-4c3d-9aac-7efd27f5466e",
+        "name": "OpenRouter Chat Model",
+        "credentials": {
+          "openRouterApi": {
+            "id": "O9TUEIPHEYHKBEVk",
+            "name": "OpenRouter account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1Nh6X_okasLs7hQOlu49tokgvCibv2EQPH8kRQth6c7w",
+            "mode": "list",
+            "cachedResultName": "Earning Estimation v/s Actual ",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Nh6X_okasLs7hQOlu49tokgvCibv2EQPH8kRQth6c7w/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 8143584,
+            "mode": "list",
+            "cachedResultName": "N8N Result",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Nh6X_okasLs7hQOlu49tokgvCibv2EQPH8kRQth6c7w/edit#gid=8143584"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Last Check Time": "={{ $json.News_submission_dt }}",
+              "row_number": 2
+            },
+            "matchingColumns": [
+              "row_number"
+            ],
+            "schema": [
+              {
+                "id": "Last Check Time",
+                "displayName": "Last Check Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {
+            "cellFormat": "USER_ENTERED"
+          }
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1056,
+          736
+        ],
+        "id": "e6978326-31a8-437a-bf27-e810665a08d4",
+        "name": "Update row in sheet2",
+        "executeOnce": true,
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://www.screener.in/company/{{ $json.NSE_CODE }}/consolidated/",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+              },
+              {
+                "name": "Cookie",
+                "value": "sessionid=3j2dfphjekqihef8rmrztj6l9h06urxl; csrftoken=82pey2LvCFzGknAXOxzigvGWfaxnwgHp"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          2096,
+          624
+        ],
+        "id": "92bb8bca-8010-4b56-9336-783d05ffc3d9",
+        "name": "Fetch Live Price"
+      },
+      {
+        "parameters": {
+          "jsCode": "const html = $input.item.json.data || $input.item.json.body || '';\n\nfunction cleanText(str) {\n  if (!str) return 'N/A';\n  return str.replace(/<[^>]*>/g, '').replace(/,/g, '').replace(/\\s+/g, ' ').trim() || 'N/A';\n}\n\nfunction getTopCardMetric(label, htmlString) {\n  const regex = new RegExp(`<li[^>]*>[\\\\s\\\\S]*?<span class=\"name\">\\\\s*${label}\\\\s*<\\\\/span>[\\\\s\\\\S]*?<span class=\"number\">(.*?)<\\\\/span>`, 'i');\n  const match = htmlString.match(regex);\n  return match ? cleanText(match[1]) : 'N/A';\n}\n\n// Fixed CMP & Precise Change % Extraction\nfunction getLivePriceDetails(htmlString) {\n  let price = getTopCardMetric('Current Price', htmlString);\n  let changePct = '';\n  let priceTime = '';\n\n  if (price === 'N/A') {\n    const rawPrice = htmlString.match(/₹\\s*([0-9,]+(?:\\.[0-9]+)?)/);\n    if (rawPrice) price = rawPrice[1].replace(/,/g, '').trim();\n  }\n\n  // Scrape direct class element for green/red percentage change\n  const priceChangeMatch = htmlString.match(/<span[^>]*class=\"[^\\\"]*(green|red)[^\\\"]*\"[^>]*>\\s*([+-]?\\s*[0-9]+(?:\\.[0-9]+)?%)\\s*<\\/span>/i) ||\n                           htmlString.match(/(?:green|red)[^>]*>\\s*([+-]?\\d+(?:\\.\\d+)?%)/i);\n\n  if (priceChangeMatch) {\n    const isRed = priceChangeMatch[0].toLowerCase().includes('red');\n    let rawPct = priceChangeMatch[2] || priceChangeMatch[1];\n    rawPct = rawPct.replace(/\\s+/g, '');\n    if (!rawPct.startsWith('+') && !rawPct.startsWith('-')) {\n      changePct = isRed ? `-${rawPct}` : `+${rawPct}`;\n    } else {\n      changePct = rawPct;\n    }\n  }\n\n  // Scrape timestamp e.g. \"29 Jul 2:49 p.m.\"\n  const timeMatch = htmlString.match(/(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{1,2}:\\d{2}\\s*(?:a\\.m\\.|p\\.m\\.|AM|PM)?)/i);\n  if (timeMatch) {\n    priceTime = timeMatch[1].replace(/\\s+/g, ' ').trim();\n  }\n\n  return { price, changePct, priceTime };\n}\n\nfunction getHighLowMetric(htmlString) {\n  const regex = new RegExp(`<li[^>]*>[\\\\s\\\\S]*?<span class=\"name\">\\\\s*High\\\\s*\\\\/\\\\s*Low\\\\s*<\\\\/span>([\\\\s\\\\S]*?)<\\\\/li>`, 'i');\n  const match = htmlString.match(regex);\n  if (!match) return 'N/A';\n  \n  const numbers = [];\n  const numRegex = /<span class=\"number\">(.*?)<\\/span>/gi;\n  let numMatch;\n  while ((numMatch = numRegex.exec(match[1])) !== null) {\n    numbers.push(cleanText(numMatch[1]));\n  }\n  \n  if (numbers.length >= 2) return `${numbers[0]} / ${numbers[1]}`;\n  if (numbers.length === 1) return numbers[0];\n  return 'N/A';\n}\n\nconst liveDetails = getLivePriceDetails(html);\nconst marketCap = getTopCardMetric('Market Cap', html);\nconst stockPE = getTopCardMetric('Stock P/E', html);\nconst highLow = getHighLowMetric(html);\nconst bookValue = getTopCardMetric('Book Value', html);\nconst roce = getTopCardMetric('ROCE', html);\nconst roe = getTopCardMetric('ROE', html);\n\nlet industryPE = getTopCardMetric('Industry PE', html);\nif (industryPE === 'N/A') {\n  const matchA = html.match(/(?:Industry|Sector)\\s*P\\/?E\\s*[:|-]?\\s*<[^>]*>?\\s*([0-9]+(?:\\.[0-9]+)?)/i);\n  if (matchA) industryPE = matchA[1];\n}\n\nlet debtToEquity = getTopCardMetric('Debt to equity', html);\nlet pegRatio = getTopCardMetric('PEG Ratio', html);\n\nlet priceToBook = 'N/A';\nif (liveDetails.price !== 'N/A' && bookValue !== 'N/A' && parseFloat(bookValue) > 0) {\n  priceToBook = (parseFloat(liveDetails.price) / parseFloat(bookValue)).toFixed(2);\n}\n\nreturn {\n  json: {\n    ...$input.item.json,\n    metrics: {\n      market_cap_cr: marketCap,\n      current_price: liveDetails.price,\n      price_change_pct: liveDetails.changePct,\n      price_time: liveDetails.priceTime,\n      stock_pe: stockPE,\n      industry_pe: industryPE,\n      high_low: highLow,\n      book_value: bookValue,\n      price_to_book: priceToBook,\n      roe_percent: roe,\n      roce_percent: roce,\n      peg_ratio: pegRatio,\n      debt_to_equity: debtToEquity\n    }\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2336,
+          624
+        ],
+        "id": "7f559f49-56da-4478-9cd8-21c44b5fcc9c",
+        "name": "Code in JavaScript4"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [$input.first()];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2960,
+          432
+        ],
+        "id": "06d4d7c4-ccd9-49d2-8b6a-1d61e5893677",
+        "name": "Code in JavaScript5"
+      }
+    ],
+    "connections": {
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Last_Check_Time",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Last_Check_Time": {
+        "main": [
+          [
+            {
+              "node": "Announcements",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Announcements": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Analyze document": {
+        "main": [
+          [
+            {
+              "node": "Formatting",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Formatting": {
+        "main": [
+          []
+        ]
+      },
+      "Analyze document1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a text message": {
+        "main": [
+          []
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Estimates": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter Results": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Fetch Live Price",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Portfolio/Watchlist",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Watchlist2": {
+        "main": [
+          []
+        ]
+      },
+      "Result": {
+        "main": [
+          [
+            {
+              "node": "Filter Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Portfolio/Watchlist": {
+        "main": [
+          [
+            {
+              "node": "Watchlist Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Analyze document2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "Send a text message2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Watchlist Results": {
+        "main": [
+          []
+        ]
+      },
+      "Send a text message2": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Analyze document2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Update row in sheet1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Live Price": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript4": {
+        "main": [
+          [
+            {
+              "node": "Analyze document1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript5": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update row in sheet2": {
+        "main": [
+          [
+            {
+              "node": "Estimates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version 8a29cce0",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
