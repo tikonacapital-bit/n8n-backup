@@ -1,0 +1,750 @@
+{
+  "updatedAt": "2026-08-18T09:40:43.118Z",
+  "createdAt": "2025-11-11T05:26:52.963Z",
+  "id": "eWNrzgLEhPgjF1sJ",
+  "name": "Razorpay Redirect",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00e5b784-703c-4394-a324-67452f54a690",
+              "name": "messageId",
+              "value": "={{$json[\"id\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "9938bf23-4fa7-4d47-897e-37cd79449a7d",
+              "name": "emailDate",
+              "value": "={{ new Date($json[\"date\"]).toLocaleString(\"en-GB\", { timeZone: \"Asia/Kolkata\", hour12: false }).replace(\",\", \"\").split(\" \")[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "86848ab9-a777-4b4c-9bdf-98651df4cb83",
+              "name": "emailTime",
+              "value": "={{ new Date($json[\"date\"]).toLocaleString(\"en-GB\", { timeZone: \"Asia/Kolkata\", hour12: false }).split(\" \")[1] }}",
+              "type": "string"
+            },
+            {
+              "id": "9c4732d9-6244-478d-a863-27684735936e",
+              "name": "fromEmail",
+              "value": "={{$json[\"from\"][\"value\"][0][\"address\"]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        1760
+      ],
+      "id": "80a597c6-79a3-4fb2-a43c-64c5472a3b88",
+      "name": "extract email metadata"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Gmail Email Data Extraction for Razorpay (multi-email/format safe) ===\n\nfunction decodeHTMLEntities(str) {\n  if (!str) return \"\";\n  return str\n    .replace(/&#39;/g, \"'\")\n    .replace(/&quot;/g, '\"')\n    .replace(/&amp;/g, \"&\")\n    .replace(/&lt;/g, \"<\")\n    .replace(/&gt;/g, \">\")\n    .replace(/&nbsp;/g, \" \");\n}\n\nconst results = [];\n\nfor (const item of items) {\n  let html = item.json.html || \"\";\n  html = decodeHTMLEntities(html);\n\n  const result = {\n    payment_id: null,\n    amount: null,\n    payer_email: null,\n    mobile_number: null,\n    paid_on: null,\n    Name: \"Customer\",\n    method: \"UPI\",\n  };\n\n  // --- Payment ID ---\n  const payMatch = html.match(/Payment\\s*Id[:\\s]*([a-zA-Z0-9_]+)/i);\n  if (payMatch) {\n    result.payment_id = payMatch[1].trim();\n  }\n\n  // --- Amount ---\n  const amtMatch = html.match(/₹\\s*([0-9,]+(?:\\.\\d{1,2})?)/);\n  if (amtMatch) {\n    result.amount = amtMatch[1].trim();\n  }\n\n  // --- Customer Email ---\n  const emailMatch = html.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/);\n  if (emailMatch) {\n    result.payer_email = emailMatch[0].trim();\n  }\n\n  // --- Customer Mobile ---\n  const phoneMatch = html.match(/(\\+91[\\d]{10}|\\b\\d{10}\\b)/);\n  if (phoneMatch) {\n    result.mobile_number = phoneMatch[0].trim();\n  }\n\n  // --- Paid On ---\n  const paidMatch = html.match(/Paid\\s*On[:\\s]*([^<\\n\\r]+)/i);\n  if (paidMatch) {\n    result.paid_on = paidMatch[1].replace(/<\\/?[^>]+(>|$)/g, \"\").trim();\n  } else {\n    result.paid_on = new Date().toLocaleDateString(\"en-GB\", { timeZone: \"Asia/Kolkata\" });\n  }\n\n  // --- Name ---\n  const nameMatch = html.match(/Name[:\\s]*([^<\\n\\r]+)/i);\n  if (nameMatch) {\n    result.Name = nameMatch[1].replace(/<\\/?[^>]+(>|$)/g, \"\").trim();\n  } else {\n    if (result.payer_email) {\n      const prefix = result.payer_email.split('@')[0];\n      result.Name = prefix.charAt(0).toUpperCase() + prefix.slice(1);\n    }\n  }\n\n  // --- Method ---\n  const methodMatch = html.match(/Method[:\\s]*([^<\\n\\r]+)/i);\n  if (methodMatch) {\n    result.method = methodMatch[1].replace(/<\\/?[^>]+(>|$)/g, \"\").trim();\n  }\n\n  results.push({ json: result });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        1952
+      ],
+      "id": "e9e177ed-a5da-4505-89a2-53f768a79c3e",
+      "name": "extract razorpay payment details (HTML)"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1344,
+        1856
+      ],
+      "id": "a85ac4fd-0b10-4bb0-9617-7d8d4b85f608",
+      "name": "merge metadata and HTML data"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Z-V_gInrLywfVybpw-V9jM0njwzfPd_CCb6FMGVMZ1w",
+          "mode": "list",
+          "cachedResultName": "Sale -BGV1",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/\n  );\n  if (emailMatch) result.customer_email = emailMatch[0].trim();\n\n  // --- Customer Mobile ---\n  const phoneMatch = html.match(/(\\+91[\\d]{10}|\\b\\d{10}\\b)/);\n  if (phoneMatch) result.customer_mobile = phoneMatch[0].trim();\n\n  // --- Failure Reason ---\n  let failReason = null;\n\n  // 1️⃣ Table-style\n  let match = html.match(\n    /Failure\\s*Reason[^<]*<\\/td>\\s*<td[^>]*>(.*?)<\\/td>/i\n  );\n  if (match) failReason = match[1];\n\n  // 2️⃣ Bold label format\n  if (!failReason) {\n    match = html.match(\n      /<b[^>]*>\\s*Failure\\s*Reason\\s*<\\/b>[:\\s-]*([^<]+)/i\n    );\n    if (match) failReason = match[1];\n  }\n\n  // 3️⃣ Fallback: sentence beginning with “Your payment…”\n  if (!failReason) {\n    match = html.match(/(Your\\s+payment[^<]+(?:\\.\\s*[^<]+){0,2})/i);\n    if (match) failReason = match[1];\n  }\n\n  if (failReason) {\n    result.failure_reason = decodeHTMLEntities(\n      failReason.replace(/[\\n\\r\\t]+/g, \" \").replace(/\\s{2,}/g, \" \").trim()\n    );\n  }\n\n  // --- Status ---\n  if (/Payment\\s*Failed/i.test(html)) {\n    result.status = \"Failed\";\n  } else if (/Payment\\s*Successful|Payment\\s*Success/i.test(html)) {\n    result.status = \"Success\";\n  } else {\n    result.status = \"Unknown\";\n  }\n\n  // --- Email Date + Time (IST) ---\n  try {\n    const dateObj = new Date(emailDateRaw);\n    if (!isNaN(dateObj.getTime())) {\n      const istOffset = 5.5 * 60 * 60 * 1000;\n      const istDate = new Date(dateObj.getTime() + istOffset);\n      const yyyy = istDate.getFullYear();\n      const mm = String(istDate.getMonth() + 1).padStart(2, \"0\");\n      const dd = String(istDate.getDate()).padStart(2, \"0\");\n      const hh = String(istDate.getHours()).padStart(2, \"0\");\n      const min = String(istDate.getMinutes()).padStart(2, \"0\");\n      const ss = String(istDate.getSeconds()).padStart(2, \"0\");\n      result.email_datetime = `${dd}-${mm}-${yyyy} ${hh}:${min}:${ss}`;\n    }\n  } catch (e) {}\n\n  // Push each email’s extracted data to results\n  results.push({ json: result });\n}\n\n// Return all processed emails\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        1856
+      ],
+      "id": "c898cc4e-c098-4233-aa03-81de9f4ed8df",
+      "name": "extract failed payment details"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Z-V_gInrLywfVybpw-V9jM0njwzfPd_CCb6FMGVMZ1w",
+          "mode": "list",
+          "cachedResultName": "Sale -BGV1",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@razorpay.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        1840
+      ],
+      "id": "c7df8d20-b951-4a3e-96a0-475f8a902a71",
+      "name": "Gmail Trigger (Failure)",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mZmjo128EUktXn99",
+          "name": "Tikona Ops Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "razorpay-payments",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        336,
+        1104
+      ],
+      "id": "2b85c685-4737-4af5-ae98-ccc8055798ec",
+      "name": "Webhook",
+      "webhookId": "c4e8e904-b45e-4fd3-a7c8-b689ebb5a6a3"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "payment.captured",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0bcf3da8-809a-439b-b8ca-2b8ee277f10f"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8257ceef-1a0b-45df-a095-7b67b7f4c2ba",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "payment.failed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        544,
+        1104
+      ],
+      "id": "b3729ada-d8a3-4fc3-823d-bec3ed584662",
+      "name": "Switch"
+    }
+  ],
+  "connections": {
+    "extract email metadata": {
+      "main": [
+        [
+          {
+            "node": "merge metadata and HTML data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract razorpay payment details (HTML)": {
+      "main": [
+        [
+          {
+            "node": "merge metadata and HTML data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "merge metadata and HTML data": {
+      "main": [
+        []
+      ]
+    },
+    "add successful payment to sheet": {
+      "main": [
+        [
+          {
+            "node": "trigger whatsapp message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trigger whatsapp message": {
+      "main": [
+        [
+          {
+            "node": "update whatsapp status in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update whatsapp status in sheet": {
+      "main": [
+        [
+          {
+            "node": "download book PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "download book PDF": {
+      "main": [
+        [
+          {
+            "node": "send book via gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send book via gmail": {
+      "main": [
+        [
+          {
+            "node": "update email status in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update email status in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "extract failed payment details": {
+      "main": [
+        []
+      ]
+    },
+    "add failed payment to sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Gmail Trigger (Success)": {
+      "main": [
+        []
+      ]
+    },
+    "Gmail Trigger (Failure)": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "add successful payment to sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "add failed payment to sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "EY8cog9qMUoNM12zirmiT"
+  },
+  "staticData": {
+    "node:Gmail Trigger": {
+      "Gmail Trigger": {
+        "lastTimeChecked": 1762949530,
+        "possibleDuplicates": [
+          "19a77fb0893918c9"
+        ]
+      }
+    },
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    },
+    "node:Schedule Trigger1": {
+      "recurrenceRules": []
+    },
+    "node:Trigger (3 min)": {
+      "recurrenceRules": []
+    },
+    "node:trigger (3 min)": {
+      "recurrenceRules": []
+    },
+    "node:Gmail Trigger (Success)": {
+      "Gmail Trigger (Success)": {
+        "lastTimeChecked": 1784105236,
+        "possibleDuplicates": [
+          "19f64f57cb65b43f"
+        ]
+      }
+    },
+    "node:Gmail Trigger (Failure)": {
+      "Gmail Trigger (Failure)": {
+        "lastTimeChecked": 1783583961
+      }
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b5568bbb-988d-4939-a5a0-b922be815df5",
+  "activeVersionId": "b5568bbb-988d-4939-a5a0-b922be815df5",
+  "triggerCount": 3,
+  "shared": [
+    {
+      "updatedAt": "2025-11-11T05:26:52.968Z",
+      "createdAt": "2025-11-11T05:26:52.968Z",
+      "role": "workflow:owner",
+      "workflowId": "eWNrzgLEhPgjF1sJ",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-08-18T09:40:45.000Z",
+    "createdAt": "2026-08-18T09:40:43.120Z",
+    "versionId": "b5568bbb-988d-4939-a5a0-b922be815df5",
+    "workflowId": "eWNrzgLEhPgjF1sJ",
+    "nodes": [
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "00e5b784-703c-4394-a324-67452f54a690",
+                "name": "messageId",
+                "value": "={{$json[\"id\"]}}",
+                "type": "string"
+              },
+              {
+                "id": "9938bf23-4fa7-4d47-897e-37cd79449a7d",
+                "name": "emailDate",
+                "value": "={{ new Date($json[\"date\"]).toLocaleString(\"en-GB\", { timeZone: \"Asia/Kolkata\", hour12: false }).replace(\",\", \"\").split(\" \")[0] }}",
+                "type": "string"
+              },
+              {
+                "id": "86848ab9-a777-4b4c-9bdf-98651df4cb83",
+                "name": "emailTime",
+                "value": "={{ new Date($json[\"date\"]).toLocaleString(\"en-GB\", { timeZone: \"Asia/Kolkata\", hour12: false }).split(\" \")[1] }}",
+                "type": "string"
+              },
+              {
+                "id": "9c4732d9-6244-478d-a863-27684735936e",
+                "name": "fromEmail",
+                "value": "={{$json[\"from\"][\"value\"][0][\"address\"]}}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1120,
+          1760
+        ],
+        "id": "80a597c6-79a3-4fb2-a43c-64c5472a3b88",
+        "name": "extract email metadata"
+      },
+      {
+        "parameters": {
+          "jsCode": "// === Gmail Email Data Extraction for Razorpay (multi-email/format safe) ===\n\nfunction decodeHTMLEntities(str) {\n  if (!str) return \"\";\n  return str\n    .replace(/&#39;/g, \"'\")\n    .replace(/&quot;/g, '\"')\n    .replace(/&amp;/g, \"&\")\n    .replace(/&lt;/g, \"<\")\n    .replace(/&gt;/g, \">\")\n    .replace(/&nbsp;/g, \" \");\n}\n\nconst results = [];\n\nfor (const item of items) {\n  let html = item.json.html || \"\";\n  html = decodeHTMLEntities(html);\n\n  const result = {\n    payment_id: null,\n    amount: null,\n    payer_email: null,\n    mobile_number: null,\n    paid_on: null,\n    Name: \"Customer\",\n    method: \"UPI\",\n  };\n\n  // --- Payment ID ---\n  const payMatch = html.match(/Payment\\s*Id[:\\s]*([a-zA-Z0-9_]+)/i);\n  if (payMatch) {\n    result.payment_id = payMatch[1].trim();\n  }\n\n  // --- Amount ---\n  const amtMatch = html.match(/₹\\s*([0-9,]+(?:\\.\\d{1,2})?)/);\n  if (amtMatch) {\n    result.amount = amtMatch[1].trim();\n  }\n\n  // --- Customer Email ---\n  const emailMatch = html.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/);\n  if (emailMatch) {\n    result.payer_email = emailMatch[0].trim();\n  }\n\n  // --- Customer Mobile ---\n  const phoneMatch = html.match(/(\\+91[\\d]{10}|\\b\\d{10}\\b)/);\n  if (phoneMatch) {\n    result.mobile_number = phoneMatch[0].trim();\n  }\n\n  // --- Paid On ---\n  const paidMatch = html.match(/Paid\\s*On[:\\s]*([^<\\n\\r]+)/i);\n  if (paidMatch) {\n    result.paid_on = paidMatch[1].replace(/<\\/?[^>]+(>|$)/g, \"\").trim();\n  } else {\n    result.paid_on = new Date().toLocaleDateString(\"en-GB\", { timeZone: \"Asia/Kolkata\" });\n  }\n\n  // --- Name ---\n  const nameMatch = html.match(/Name[:\\s]*([^<\\n\\r]+)/i);\n  if (nameMatch) {\n    result.Name = nameMatch[1].replace(/<\\/?[^>]+(>|$)/g, \"\").trim();\n  } else {\n    if (result.payer_email) {\n      const prefix = result.payer_email.split('@')[0];\n      result.Name = prefix.charAt(0).toUpperCase() + prefix.slice(1);\n    }\n  }\n\n  // --- Method ---\n  const methodMatch = html.match(/Method[:\\s]*([^<\\n\\r]+)/i);\n  if (methodMatch) {\n    result.method = methodMatch[1].replace(/<\\/?[^>]+(>|$)/g, \"\").trim();\n  }\n\n  results.push({ json: result });\n}\n\nreturn results;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          1952
+        ],
+        "id": "e9e177ed-a5da-4505-89a2-53f768a79c3e",
+        "name": "extract razorpay payment details (HTML)"
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1344,
+          1856
+        ],
+        "id": "a85ac4fd-0b10-4bb0-9617-7d8d4b85f608",
+        "name": "merge metadata and HTML data"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1Z-V_gInrLywfVybpw-V9jM0njwzfPd_CCb6FMGVMZ1w",
+            "mode": "list",
+            "cachedResultName": "Sale -BGV1",
+            "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/\n  );\n  if (emailMatch) result.customer_email = emailMatch[0].trim();\n\n  // --- Customer Mobile ---\n  const phoneMatch = html.match(/(\\+91[\\d]{10}|\\b\\d{10}\\b)/);\n  if (phoneMatch) result.customer_mobile = phoneMatch[0].trim();\n\n  // --- Failure Reason ---\n  let failReason = null;\n\n  // 1️⃣ Table-style\n  let match = html.match(\n    /Failure\\s*Reason[^<]*<\\/td>\\s*<td[^>]*>(.*?)<\\/td>/i\n  );\n  if (match) failReason = match[1];\n\n  // 2️⃣ Bold label format\n  if (!failReason) {\n    match = html.match(\n      /<b[^>]*>\\s*Failure\\s*Reason\\s*<\\/b>[:\\s-]*([^<]+)/i\n    );\n    if (match) failReason = match[1];\n  }\n\n  // 3️⃣ Fallback: sentence beginning with “Your payment…”\n  if (!failReason) {\n    match = html.match(/(Your\\s+payment[^<]+(?:\\.\\s*[^<]+){0,2})/i);\n    if (match) failReason = match[1];\n  }\n\n  if (failReason) {\n    result.failure_reason = decodeHTMLEntities(\n      failReason.replace(/[\\n\\r\\t]+/g, \" \").replace(/\\s{2,}/g, \" \").trim()\n    );\n  }\n\n  // --- Status ---\n  if (/Payment\\s*Failed/i.test(html)) {\n    result.status = \"Failed\";\n  } else if (/Payment\\s*Successful|Payment\\s*Success/i.test(html)) {\n    result.status = \"Success\";\n  } else {\n    result.status = \"Unknown\";\n  }\n\n  // --- Email Date + Time (IST) ---\n  try {\n    const dateObj = new Date(emailDateRaw);\n    if (!isNaN(dateObj.getTime())) {\n      const istOffset = 5.5 * 60 * 60 * 1000;\n      const istDate = new Date(dateObj.getTime() + istOffset);\n      const yyyy = istDate.getFullYear();\n      const mm = String(istDate.getMonth() + 1).padStart(2, \"0\");\n      const dd = String(istDate.getDate()).padStart(2, \"0\");\n      const hh = String(istDate.getHours()).padStart(2, \"0\");\n      const min = String(istDate.getMinutes()).padStart(2, \"0\");\n      const ss = String(istDate.getSeconds()).padStart(2, \"0\");\n      result.email_datetime = `${dd}-${mm}-${yyyy} ${hh}:${min}:${ss}`;\n    }\n  } catch (e) {}\n\n  // Push each email’s extracted data to results\n  results.push({ json: result });\n}\n\n// Return all processed emails\nreturn results;\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          512,
+          1856
+        ],
+        "id": "c898cc4e-c098-4233-aa03-81de9f4ed8df",
+        "name": "extract failed payment details"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1Z-V_gInrLywfVybpw-V9jM0njwzfPd_CCb6FMGVMZ1w",
+            "mode": "list",
+            "cachedResultName": "Sale -BGV1",
+            "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@razorpay.com"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.gmailTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          1920,
+          1840
+        ],
+        "id": "c7df8d20-b951-4a3e-96a0-475f8a902a71",
+        "name": "Gmail Trigger (Failure)",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "mZmjo128EUktXn99",
+            "name": "Tikona Ops Gmail"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "razorpay-payments",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          336,
+          1104
+        ],
+        "id": "2b85c685-4737-4af5-ae98-ccc8055798ec",
+        "name": "Webhook",
+        "webhookId": "c4e8e904-b45e-4fd3-a7c8-b689ebb5a6a3"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.body.event }}",
+                      "rightValue": "payment.captured",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "0bcf3da8-809a-439b-b8ca-2b8ee277f10f"
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "8257ceef-1a0b-45df-a095-7b67b7f4c2ba",
+                      "leftValue": "={{ $json.body.event }}",
+                      "rightValue": "payment.failed",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          544,
+          1104
+        ],
+        "id": "b3729ada-d8a3-4fc3-823d-bec3ed584662",
+        "name": "Switch"
+      }
+    ],
+    "connections": {
+      "extract email metadata": {
+        "main": [
+          [
+            {
+              "node": "merge metadata and HTML data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "extract razorpay payment details (HTML)": {
+        "main": [
+          [
+            {
+              "node": "merge metadata and HTML data",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "merge metadata and HTML data": {
+        "main": [
+          []
+        ]
+      },
+      "add successful payment to sheet": {
+        "main": [
+          [
+            {
+              "node": "trigger whatsapp message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "trigger whatsapp message": {
+        "main": [
+          [
+            {
+              "node": "update whatsapp status in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "update whatsapp status in sheet": {
+        "main": [
+          [
+            {
+              "node": "download book PDF",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "download book PDF": {
+        "main": [
+          [
+            {
+              "node": "send book via gmail",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "send book via gmail": {
+        "main": [
+          [
+            {
+              "node": "update email status in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "update email status in sheet": {
+        "main": [
+          []
+        ]
+      },
+      "extract failed payment details": {
+        "main": [
+          []
+        ]
+      },
+      "add failed payment to sheet": {
+        "main": [
+          []
+        ]
+      },
+      "Gmail Trigger (Success)": {
+        "main": [
+          []
+        ]
+      },
+      "Gmail Trigger (Failure)": {
+        "main": [
+          []
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "add successful payment to sheet",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "add failed payment to sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version b5568bbb",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": [
+    {
+      "updatedAt": "2025-07-07T02:47:29.277Z",
+      "createdAt": "2025-07-07T02:47:29.277Z",
+      "id": "usBpWvKJ18XVI8DB",
+      "name": "🟢 Done"
+    }
+  ]
+}
