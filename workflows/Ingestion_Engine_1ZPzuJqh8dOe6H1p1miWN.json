@@ -123,43 +123,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const webhookData = $('Webhook1').first().json.body;\nconst sessionId = webhookData.sessionId || webhookData.session_id;\nconst driveFileId = webhookData.driveFileId || webhookData.drive_file_id || webhookData.file_id;\nconst fileName = webhookData.fileName || webhookData.file_name;\n\nconst SUPABASE_URL = 'https://bmpvcjbfeyvkkbvclwkb.supabase.co';\nconst SUPABASE_KEY = '[REDACTED_SECRET]';\n\n// Use metadata to find chunks from THIS specific file (race-condition safe)\n// The Default Data Loader stores session_id and drive_file_id in metadata JSON\nconst response = await this.helpers.httpRequest({\n  method: 'PATCH',\n  url: `${SUPABASE_URL}/rest/v1/document_embeddings?session_id=is.null&metadata->>drive_file_id=eq.${driveFileId}`,\n  headers: {\n    'apikey': SUPABASE_KEY,\n    'Authorization': `Bearer ${SUPABASE_KEY}`,\n    'Content-Type': 'application/json',\n    'Prefer': 'return=headers-only'\n  },\n  body: {\n    session_id: sessionId,\n    drive_file_id: driveFileId,\n    file_name: fileName\n  },\n  json: true,\n  returnFullResponse: true\n});\n\nreturn [{\n  json: {\n    success: true,\n    sessionId,\n    driveFileId,\n    fileName,\n    status: response.statusCode || 'done'\n  }\n}];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1520,
-        652
-      ],
-      "id": "b71d21ca-f433-41f4-ba5c-8a812826916f",
-      "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
-        "modelId": {
-          "__rl": true,
-          "value": "gpt-4o",
-          "mode": "list",
-          "cachedResultName": "GPT-4O"
-        },
-        "responses": {
-          "values": [
-            {
-              "role": "system",
-              "content": "You generate search queries for retrieving relevant document chunks from a vector database.\nGiven a company name and section prompt, generate exactly 5 specific search queries.\nEach query should approach the topic from a different angle.\nReturn ONLY a JSON array of 5 strings. No explanation."
-            },
-            {
-              "content": "=Company: {{ $json.body.companyName }}\n\nSection to write:\n{{ $json.body.sectionPrompt }}\n\nOriginal keywords: {{ $json.body.searchKeywords.join(', ') }}\n\nGenerate 5 search queries that would find the most relevant document chunks for writing this section about {{ $json.body.companyName }}.\n"
-            }
-          ]
-        },
-        "builtInTools": {},
-        "options": {
-          "maxTokens": 300,
-          "temperature": 0.5
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.openAi",
+        "jsCode": "const webhookData = $('Webhook1').first().json.body;\nconst sessionId = webhookData.sessionId || webhookData.session_id;\nconst driveFileId = webhookData.driveFileId || webhookData.drive_file_id || webhookData.file_id;\nconst fileName = webhookData.fileName || webhookData.file_name;\n\nconst SUPABASE_URL = 'https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
         128,
@@ -223,135 +187,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const queries = $input.first().json.queries;\nconst OPENROUTER_KEY = '[REDACTED_SECRET]';\n\n// OpenRouter uses the same OpenAI-compatible format\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://openrouter.ai/api/v1/embeddings',\n  headers: {\n    'Authorization': `Bearer ${OPENROUTER_KEY}`,\n    'Content-Type': 'application/json'\n  },\n  body: {\n    model: 'openai/text-embedding-ada-002',\n    input: queries\n  },\n  json: true\n});\n\nconst embeddings = response.data.map(d => d.embedding);\n\nreturn [{\n  json: {\n    ...$input.first().json,\n    embeddings: embeddings\n  }\n}];\n  "
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        704,
-        1232
-      ],
-      "id": "7db60db2-663e-4089-8304-9387bef92e94",
-      "name": "Code in JavaScript2"
-    },
-    {
-      "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst SUPABASE_URL = 'https://bmpvcjbfeyvkkbvclwkb.supabase.co';\nconst SUPABASE_KEY = '[REDACTED_SECRET]';\n\nconst headers = {\n  'apikey': SUPABASE_KEY,\n  'Authorization': `Bearer ${SUPABASE_KEY}`,\n  'Content-Type': 'application/json'\n};\n\n// Vector search for each embedding\nconst vectorResults = [];\nfor (const embedding of data.embeddings) {\n  const chunks = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${SUPABASE_URL}/rest/v1/rpc/match_documents`,\n    headers,\n    body: {\n      query_embedding: embedding,\n      filter_session_id: data.sessionId,\n      filter_doc_ids: data.selectedDocIds.length > 0 ? data.selectedDocIds : null,\n      match_count: 10\n    },\n    json: true\n  });\n  vectorResults.push(Array.isArray(chunks) ? chunks : []);\n}\n\n// Full-text search with original keywords\nconst keywordQuery = data.searchKeywords.join(' ');\nlet ftsResults = [];\ntry {\n  ftsResults = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${SUPABASE_URL}/rest/v1/rpc/search_documents_text`,\n    headers,\n    body: {\n      query_text: keywordQuery,\n      filter_session_id: data.sessionId,\n      filter_doc_ids: data.selectedDocIds.length > 0 ? data.selectedDocIds : null,\n      match_count: 10\n    },\n    json: true\n  });\n  if (!Array.isArray(ftsResults)) ftsResults = [];\n} catch (e) {\n  ftsResults = [];\n}\n\nreturn [{\n  json: {\n    ...data,\n    vectorResults,\n    ftsResults\n  }\n}];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        928,
-        1232
-      ],
-      "id": "2da5f678-da38-49ab-bdd3-c0dcffc961b6",
-      "name": "Code in JavaScript3"
-    },
-    {
-      "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst k = 60;\n\nconst allResultSets = [...data.vectorResults, data.ftsResults];\n\nconst scoreMap = new Map();\n\nfor (const resultSet of allResultSets) {\n  if (!Array.isArray(resultSet)) continue;\n  resultSet.forEach((chunk, rank) => {\n    const id = chunk.id;\n    const rrfScore = 1 / (k + rank + 1);\n\n    if (scoreMap.has(id)) {\n      scoreMap.get(id).score += rrfScore;\n    } else {\n      scoreMap.set(id, {\n        chunk: {\n          id: chunk.id,\n          content: chunk.content,\n          file_name: chunk.file_name || null\n        },\n        score: rrfScore\n      });\n    }\n  });\n}\n\nconst candidates = Array.from(scoreMap.values())\n  .sort((a, b) => b.score - a.score)\n  .slice(0, 30);\n\nreturn [{\n  json: {\n    sessionId: data.sessionId,\n    companyName: data.companyName,\n    sectionPrompt: data.sectionPrompt,\n    maxChunks: data.maxChunks,\n    candidates: candidates.map(c => c.chunk)\n  }\n}];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1152,
-        1232
-      ],
-      "id": "76b848a8-f8e9-4997-b80b-49c0044507a7",
-      "name": "Code in JavaScript4"
-    },
-    {
-      "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst maxChunks = data.maxChunks || 20;\nconst candidates = data.candidates;\nconst llmOutput = data.rerankOutput || '';\n\nlet scores = [];\ntry {\n  const match = llmOutput.match(/\\[[\\s\\S]*\\]/);\n  scores = match ? JSON.parse(match[0]) : [];\n} catch (e) {\n  return [{\n    json: {\n      chunks: candidates.slice(0, maxChunks).map(c => ({\n        id: c.id,\n        content: c.content,\n        file_name: c.file_name\n      }))\n    }\n  }];\n}\n\nconst scoreMap = new Map();\nfor (const s of scores) {\n  scoreMap.set(Number(s.id), s.score);\n}\n\nconst rankedChunks = candidates\n  .map(c => ({\n    ...c,\n    relevanceScore: scoreMap.get(c.id) ?? 5\n  }))\n  .filter(c => c.relevanceScore >= 6)\n  .sort((a, b) => b.relevanceScore - a.relevanceScore)\n  .slice(0, maxChunks)\n  .map(({ relevanceScore, ...chunk }) => chunk);\n\nconst finalChunks = rankedChunks.length >= 3\n  ? rankedChunks\n  : candidates.slice(0, maxChunks);\n\n// Return only essential fields — no extra data\nreturn [{\n  json: {\n    chunks: finalChunks.map(c => ({\n      id: c.id,\n      content: c.content,\n      file_name: c.file_name || null\n    }))\n  }\n}];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1600,
-        1232
-      ],
-      "id": "91e8e6ee-340a-45ad-9504-2afa57319fd7",
-      "name": "Code in JavaScript5"
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify($json) }}",
-        "options": {
-          "responseHeaders": {
-            "entries": [
-              {
-                "name": "Content-Type:",
-                "value": "application/json"
-              }
-            ]
-          }
-        }
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        1824,
-        1232
-      ],
-      "id": "e7e2d904-4abc-4f55-ad2c-bacbfe345617",
-      "name": "Respond to Webhook"
-    },
-    {
-      "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst OPENROUTER_KEY = '[REDACTED_SECRET]';\n\nconst chunkList = data.candidates\n  .map(c => `--- CHUNK ${c.id} ---\\n${c.content.substring(0, 500)}`)\n  .join('\\n\\n');\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://openrouter.ai/api/v1/chat/completions',\n  headers: {\n    'Authorization': `Bearer ${OPENROUTER_KEY}`,\n    'Content-Type': 'application/json'\n  },\n  body: {\n    model: 'google/gemini-2.0-flash-001',\n    temperature: 0,\n    max_tokens: 1000,\n    messages: [\n      {\n        role: 'system',\n        content: 'You are a relevance scorer. Given a section topic and document chunks, score each chunk from 1-10 for relevance. Return ONLY a JSON array: [{\"id\": chunk_id, \"score\": number}]. No explanation. No markdown.'\n      },\n      {\n        role: 'user',\n        content: `Company: ${data.companyName}\\n\\nSection to write:\\n${data.sectionPrompt}\\n\\nScore each chunk 1 (irrelevant) to 10 (highly relevant):\\n\\n${chunkList}`\n      }\n    ]\n  },\n  json: true\n});\n\nconst llmOutput = response.choices[0].message.content;\n\nreturn [{\n  json: {\n    candidates: data.candidates,\n    maxChunks: data.maxChunks,\n    rerankOutput: llmOutput\n  }\n}];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1376,
-        1232
-      ],
-      "id": "70ccfc5c-ac9f-4aeb-9dc8-2d0ef652ea5d",
-      "name": "Code in JavaScript6"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "8881514a-71da-4956-8c5e-b69a76346700",
-              "leftValue": "={{ $('Webhook1').first().json.body.file_name }}",
-              "rightValue": ".pdf",
-              "operator": {
-                "type": "string",
-                "operation": "endsWith"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        352,
-        652
-      ],
-      "id": "1a2a9afd-0e4a-4acb-9ccd-f30cd87ff30c",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "chunkSize": 1500,
-        "chunkOverlap": 200,
-        "options": {
-          "splitCode": "markdown"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+        "jsCode": "const queries = $input.first().json.queries;\nconst OPENROUTER_KEY = '[REDACTED_SECRET]';\n\n// OpenRouter uses the same OpenAI-compatible format\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
       "typeVersion": 1,
       "position": [
         1232,
@@ -847,43 +683,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const webhookData = $('Webhook1').first().json.body;\nconst sessionId = webhookData.sessionId || webhookData.session_id;\nconst driveFileId = webhookData.driveFileId || webhookData.drive_file_id || webhookData.file_id;\nconst fileName = webhookData.fileName || webhookData.file_name;\n\nconst SUPABASE_URL = 'https://bmpvcjbfeyvkkbvclwkb.supabase.co';\nconst SUPABASE_KEY = '[REDACTED_SECRET]';\n\n// Use metadata to find chunks from THIS specific file (race-condition safe)\n// The Default Data Loader stores session_id and drive_file_id in metadata JSON\nconst response = await this.helpers.httpRequest({\n  method: 'PATCH',\n  url: `${SUPABASE_URL}/rest/v1/document_embeddings?session_id=is.null&metadata->>drive_file_id=eq.${driveFileId}`,\n  headers: {\n    'apikey': SUPABASE_KEY,\n    'Authorization': `Bearer ${SUPABASE_KEY}`,\n    'Content-Type': 'application/json',\n    'Prefer': 'return=headers-only'\n  },\n  body: {\n    session_id: sessionId,\n    drive_file_id: driveFileId,\n    file_name: fileName\n  },\n  json: true,\n  returnFullResponse: true\n});\n\nreturn [{\n  json: {\n    success: true,\n    sessionId,\n    driveFileId,\n    fileName,\n    status: response.statusCode || 'done'\n  }\n}];\n"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          1296,
-          652
-        ],
-        "id": "b71d21ca-f433-41f4-ba5c-8a812826916f",
-        "name": "Code in JavaScript"
-      },
-      {
-        "parameters": {
-          "modelId": {
-            "__rl": true,
-            "value": "gpt-4o",
-            "mode": "list",
-            "cachedResultName": "GPT-4O"
-          },
-          "responses": {
-            "values": [
-              {
-                "role": "system",
-                "content": "You generate search queries for retrieving relevant document chunks from a vector database.\nGiven a company name and section prompt, generate exactly 5 specific search queries.\nEach query should approach the topic from a different angle.\nReturn ONLY a JSON array of 5 strings. No explanation."
-              },
-              {
-                "content": "=Company: {{ $json.body.companyName }}\n\nSection to write:\n{{ $json.body.sectionPrompt }}\n\nOriginal keywords: {{ $json.body.searchKeywords.join(', ') }}\n\nGenerate 5 search queries that would find the most relevant document chunks for writing this section about {{ $json.body.companyName }}.\n"
-              }
-            ]
-          },
-          "builtInTools": {},
-          "options": {
-            "maxTokens": 300,
-            "temperature": 0.5
-          }
-        },
-        "type": "@n8n/n8n-nodes-langchain.openAi",
+          "jsCode": "const webhookData = $('Webhook1').first().json.body;\nconst sessionId = webhookData.sessionId || webhookData.session_id;\nconst driveFileId = webhookData.driveFileId || webhookData.drive_file_id || webhookData.file_id;\nconst fileName = webhookData.fileName || webhookData.file_name;\n\nconst SUPABASE_URL = 'https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.openAi",
         "typeVersion": 2.1,
         "position": [
           128,
@@ -947,135 +747,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const queries = $input.first().json.queries;\nconst OPENROUTER_KEY = '[REDACTED_SECRET]';\n\n// OpenRouter uses the same OpenAI-compatible format\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://openrouter.ai/api/v1/embeddings',\n  headers: {\n    'Authorization': `Bearer ${OPENROUTER_KEY}`,\n    'Content-Type': 'application/json'\n  },\n  body: {\n    model: 'openai/text-embedding-ada-002',\n    input: queries\n  },\n  json: true\n});\n\nconst embeddings = response.data.map(d => d.embedding);\n\nreturn [{\n  json: {\n    ...$input.first().json,\n    embeddings: embeddings\n  }\n}];\n  "
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          704,
-          1232
-        ],
-        "id": "7db60db2-663e-4089-8304-9387bef92e94",
-        "name": "Code in JavaScript2"
-      },
-      {
-        "parameters": {
-          "jsCode": "const data = $input.first().json;\nconst SUPABASE_URL = 'https://bmpvcjbfeyvkkbvclwkb.supabase.co';\nconst SUPABASE_KEY = '[REDACTED_SECRET]';\n\nconst headers = {\n  'apikey': SUPABASE_KEY,\n  'Authorization': `Bearer ${SUPABASE_KEY}`,\n  'Content-Type': 'application/json'\n};\n\n// Vector search for each embedding\nconst vectorResults = [];\nfor (const embedding of data.embeddings) {\n  const chunks = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${SUPABASE_URL}/rest/v1/rpc/match_documents`,\n    headers,\n    body: {\n      query_embedding: embedding,\n      filter_session_id: data.sessionId,\n      filter_doc_ids: data.selectedDocIds.length > 0 ? data.selectedDocIds : null,\n      match_count: 10\n    },\n    json: true\n  });\n  vectorResults.push(Array.isArray(chunks) ? chunks : []);\n}\n\n// Full-text search with original keywords\nconst keywordQuery = data.searchKeywords.join(' ');\nlet ftsResults = [];\ntry {\n  ftsResults = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${SUPABASE_URL}/rest/v1/rpc/search_documents_text`,\n    headers,\n    body: {\n      query_text: keywordQuery,\n      filter_session_id: data.sessionId,\n      filter_doc_ids: data.selectedDocIds.length > 0 ? data.selectedDocIds : null,\n      match_count: 10\n    },\n    json: true\n  });\n  if (!Array.isArray(ftsResults)) ftsResults = [];\n} catch (e) {\n  ftsResults = [];\n}\n\nreturn [{\n  json: {\n    ...data,\n    vectorResults,\n    ftsResults\n  }\n}];\n"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          928,
-          1232
-        ],
-        "id": "2da5f678-da38-49ab-bdd3-c0dcffc961b6",
-        "name": "Code in JavaScript3"
-      },
-      {
-        "parameters": {
-          "jsCode": "const data = $input.first().json;\nconst k = 60;\n\nconst allResultSets = [...data.vectorResults, data.ftsResults];\n\nconst scoreMap = new Map();\n\nfor (const resultSet of allResultSets) {\n  if (!Array.isArray(resultSet)) continue;\n  resultSet.forEach((chunk, rank) => {\n    const id = chunk.id;\n    const rrfScore = 1 / (k + rank + 1);\n\n    if (scoreMap.has(id)) {\n      scoreMap.get(id).score += rrfScore;\n    } else {\n      scoreMap.set(id, {\n        chunk: {\n          id: chunk.id,\n          content: chunk.content,\n          file_name: chunk.file_name || null\n        },\n        score: rrfScore\n      });\n    }\n  });\n}\n\nconst candidates = Array.from(scoreMap.values())\n  .sort((a, b) => b.score - a.score)\n  .slice(0, 30);\n\nreturn [{\n  json: {\n    sessionId: data.sessionId,\n    companyName: data.companyName,\n    sectionPrompt: data.sectionPrompt,\n    maxChunks: data.maxChunks,\n    candidates: candidates.map(c => c.chunk)\n  }\n}];\n"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          1152,
-          1232
-        ],
-        "id": "76b848a8-f8e9-4997-b80b-49c0044507a7",
-        "name": "Code in JavaScript4"
-      },
-      {
-        "parameters": {
-          "jsCode": "const data = $input.first().json;\nconst maxChunks = data.maxChunks || 20;\nconst candidates = data.candidates;\nconst llmOutput = data.rerankOutput || '';\n\nlet scores = [];\ntry {\n  const match = llmOutput.match(/\\[[\\s\\S]*\\]/);\n  scores = match ? JSON.parse(match[0]) : [];\n} catch (e) {\n  return [{\n    json: {\n      chunks: candidates.slice(0, maxChunks).map(c => ({\n        id: c.id,\n        content: c.content,\n        file_name: c.file_name\n      }))\n    }\n  }];\n}\n\nconst scoreMap = new Map();\nfor (const s of scores) {\n  scoreMap.set(Number(s.id), s.score);\n}\n\nconst rankedChunks = candidates\n  .map(c => ({\n    ...c,\n    relevanceScore: scoreMap.get(c.id) ?? 5\n  }))\n  .filter(c => c.relevanceScore >= 6)\n  .sort((a, b) => b.relevanceScore - a.relevanceScore)\n  .slice(0, maxChunks)\n  .map(({ relevanceScore, ...chunk }) => chunk);\n\nconst finalChunks = rankedChunks.length >= 3\n  ? rankedChunks\n  : candidates.slice(0, maxChunks);\n\n// Return only essential fields — no extra data\nreturn [{\n  json: {\n    chunks: finalChunks.map(c => ({\n      id: c.id,\n      content: c.content,\n      file_name: c.file_name || null\n    }))\n  }\n}];\n"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          1600,
-          1232
-        ],
-        "id": "91e8e6ee-340a-45ad-9504-2afa57319fd7",
-        "name": "Code in JavaScript5"
-      },
-      {
-        "parameters": {
-          "respondWith": "json",
-          "responseBody": "={{ JSON.stringify($json) }}",
-          "options": {
-            "responseHeaders": {
-              "entries": [
-                {
-                  "name": "Content-Type:",
-                  "value": "application/json"
-                }
-              ]
-            }
-          }
-        },
-        "type": "n8n-nodes-base.respondToWebhook",
-        "typeVersion": 1.5,
-        "position": [
-          1824,
-          1232
-        ],
-        "id": "e7e2d904-4abc-4f55-ad2c-bacbfe345617",
-        "name": "Respond to Webhook"
-      },
-      {
-        "parameters": {
-          "jsCode": "const data = $input.first().json;\nconst OPENROUTER_KEY = '[REDACTED_SECRET]';\n\nconst chunkList = data.candidates\n  .map(c => `--- CHUNK ${c.id} ---\\n${c.content.substring(0, 500)}`)\n  .join('\\n\\n');\n\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://openrouter.ai/api/v1/chat/completions',\n  headers: {\n    'Authorization': `Bearer ${OPENROUTER_KEY}`,\n    'Content-Type': 'application/json'\n  },\n  body: {\n    model: 'google/gemini-2.0-flash-001',\n    temperature: 0,\n    max_tokens: 1000,\n    messages: [\n      {\n        role: 'system',\n        content: 'You are a relevance scorer. Given a section topic and document chunks, score each chunk from 1-10 for relevance. Return ONLY a JSON array: [{\"id\": chunk_id, \"score\": number}]. No explanation. No markdown.'\n      },\n      {\n        role: 'user',\n        content: `Company: ${data.companyName}\\n\\nSection to write:\\n${data.sectionPrompt}\\n\\nScore each chunk 1 (irrelevant) to 10 (highly relevant):\\n\\n${chunkList}`\n      }\n    ]\n  },\n  json: true\n});\n\nconst llmOutput = response.choices[0].message.content;\n\nreturn [{\n  json: {\n    candidates: data.candidates,\n    maxChunks: data.maxChunks,\n    rerankOutput: llmOutput\n  }\n}];\n"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          1376,
-          1232
-        ],
-        "id": "70ccfc5c-ac9f-4aeb-9dc8-2d0ef652ea5d",
-        "name": "Code in JavaScript6"
-      },
-      {
-        "parameters": {
-          "conditions": {
-            "options": {
-              "caseSensitive": true,
-              "leftValue": "",
-              "typeValidation": "strict",
-              "version": 3
-            },
-            "conditions": [
-              {
-                "id": "8881514a-71da-4956-8c5e-b69a76346700",
-                "leftValue": "={{ $('Webhook1').first().json.body.file_name }}",
-                "rightValue": ".pdf",
-                "operator": {
-                  "type": "string",
-                  "operation": "endsWith"
-                }
-              }
-            ],
-            "combinator": "and"
-          },
-          "options": {}
-        },
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2.3,
-        "position": [
-          352,
-          652
-        ],
-        "id": "1a2a9afd-0e4a-4acb-9ccd-f30cd87ff30c",
-        "name": "If"
-      },
-      {
-        "parameters": {
-          "chunkSize": 1500,
-          "chunkOverlap": 200,
-          "options": {
-            "splitCode": "markdown"
-          }
-        },
-        "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+          "jsCode": "const queries = $input.first().json.queries;\nconst OPENROUTER_KEY = '[REDACTED_SECRET]';\n\n// OpenRouter uses the same OpenAI-compatible format\nconst response = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
         "typeVersion": 1,
         "position": [
           1008,
@@ -1403,7 +1075,7 @@
         ]
       }
     },
-    "authors": "[REDACTED_SECRET]",
+    "authors": "Sumit Poddar",
     "name": "Version 14503cc1",
     "description": "",
     "autosaved": false
