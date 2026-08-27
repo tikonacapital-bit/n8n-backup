@@ -1,0 +1,2566 @@
+{
+  "updatedAt": "2026-08-07T10:15:39.973Z",
+  "createdAt": "2026-01-24T07:12:18.056Z",
+  "id": "dL63KhLGSHNhDJ6JWbskE",
+  "name": "fetch-vault-pdfs",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "delete-file",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1408,
+        -48
+      ],
+      "id": "7830e61d-54e5-440c-86bd-9247093a8288",
+      "name": "Webhook2",
+      "webhookId": "2c75ec26-c04f-46bf-bf8f-e36144b6caf6"
+    },
+    {
+      "parameters": {
+        "operation": "deleteFile",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.body.file_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1184,
+        -48
+      ],
+      "id": "14152575-8cbb-46ae-b3d9-1749f18b9b1d",
+      "name": "Delete a file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fetch-company",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "925b7f78-607d-42d8-80e1-3d3c35c09de0",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1408,
+        1376
+      ],
+      "webhookId": "fetch-company-data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nreturn [{ json: data }];"
+      },
+      "id": "90fed2de-4595-48f9-ac2c-a634004c02e6",
+      "name": "Parse JSON Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        1280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "70447241-8034-4273-a565-2cca8f8c7db0",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        1280
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://72.61.226.16:5050/fetch-company?code={{ $json.body.code }}",
+        "options": {
+          "timeout": 50000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1184,
+        1280
+      ],
+      "id": "0173963b-ad46-4115-b019-47bcc4857f7e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "equity_universe",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "nse_code",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook').first().json.body.code }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "broad_sector",
+              "fieldValue": "={{ $json.all_flat.broad_sector }}"
+            },
+            {
+              "fieldId": "sector",
+              "fieldValue": "={{ $json.all_flat.sector }}"
+            },
+            {
+              "fieldId": "broad_industry",
+              "fieldValue": "={{ $json.all_flat.broad_industry }}"
+            },
+            {
+              "fieldId": "industry",
+              "fieldValue": "={{ $json.all_flat.industry }}"
+            },
+            {
+              "fieldId": "market_cap",
+              "fieldValue": "={{ $json.all_flat.market_cap }}"
+            },
+            {
+              "fieldId": "current_price",
+              "fieldValue": "={{ $json.all_flat.current_price }}"
+            },
+            {
+              "fieldId": "high_52_week",
+              "fieldValue": "={{ $json.all_flat.high_52_week }}"
+            },
+            {
+              "fieldId": "low_52_week",
+              "fieldValue": "={{ $json.all_flat.low_52_week }}"
+            },
+            {
+              "fieldId": "volume",
+              "fieldValue": "={{ $json.all_flat.volume }}"
+            },
+            {
+              "fieldId": "sales_latest_qtr",
+              "fieldValue": "={{ $json.all_flat.sales_latest_qtr }}"
+            },
+            {
+              "fieldId": "op_profit_latest_qtr",
+              "fieldValue": "={{ $json.all_flat.op_profit_latest_qtr }}"
+            },
+            {
+              "fieldId": "pat_latest_qtr",
+              "fieldValue": "={{ $json.all_flat.pat_latest_qtr }}"
+            },
+            {
+              "fieldId": "ebitda_margin_latest_qtr",
+              "fieldValue": "={{ $json.all_flat.ebitda_margin_latest_qtr }}"
+            },
+            {
+              "fieldId": "pat_margin_latest_qtr",
+              "fieldValue": "={{ $json.all_flat.pat_margin_latest_qtr }}"
+            },
+            {
+              "fieldId": "sales_preceding_qtr",
+              "fieldValue": "={{ $json.all_flat.sales_preceding_qtr }}"
+            },
+            {
+              "fieldId": "op_profit_preceding_qtr",
+              "fieldValue": "={{ $json.all_flat.op_profit_preceding_qtr }}"
+            },
+            {
+              "fieldId": "pat_preceding_qtr",
+              "fieldValue": "={{ $json.all_flat.pat_preceding_qtr }}"
+            },
+            {
+              "fieldId": "revenue_growth_qoq",
+              "fieldValue": "={{ $json.all_flat.revenue_growth_qoq }}"
+            },
+            {
+              "fieldId": "ebitda_growth_qoq",
+              "fieldValue": "={{ $json.all_flat.ebitda_growth_qoq }}"
+            },
+            {
+              "fieldId": "pat_growth_qoq",
+              "fieldValue": "={{ $json.all_flat.pat_growth_qoq }}"
+            },
+            {
+              "fieldId": "sales_growth_yoy_qtr",
+              "fieldValue": "={{ $json.all_flat.sales_growth_yoy_qtr }}"
+            },
+            {
+              "fieldId": "profit_growth_yoy_qtr",
+              "fieldValue": "={{ $json.all_flat.profit_growth_yoy_qtr }}"
+            },
+            {
+              "fieldId": "sales_ttm_screener",
+              "fieldValue": "={{ $json.all_flat.sales_ttm_screener }}"
+            },
+            {
+              "fieldId": "op_profit_ttm",
+              "fieldValue": "={{ $json.all_flat.op_profit_ttm }}"
+            },
+            {
+              "fieldId": "pat_ttm_screener",
+              "fieldValue": "={{ $json.all_flat.pat_ttm_screener }}"
+            },
+            {
+              "fieldId": "ebitda_margin_ttm",
+              "fieldValue": "={{ $json.all_flat.ebitda_margin_ttm }}"
+            },
+            {
+              "fieldId": "opm_last_year",
+              "fieldValue": "={{ $json.all_flat.opm_last_year }}"
+            },
+            {
+              "fieldId": "pat_margin_ttm",
+              "fieldValue": "={{ $json.all_flat.pat_margin_ttm }}"
+            },
+            {
+              "fieldId": "num_equity_shares",
+              "fieldValue": "={{ $json.all_flat.num_equity_shares }}"
+            },
+            {
+              "fieldId": "eps_ttm_actual",
+              "fieldValue": "={{ $json.all_flat.eps_ttm_actual }}"
+            },
+            {
+              "fieldId": "debt",
+              "fieldValue": "={{ $json.all_flat.debt }}"
+            },
+            {
+              "fieldId": "cash_equivalents",
+              "fieldValue": "={{ $json.all_flat.cash_equivalents }}"
+            },
+            {
+              "fieldId": "net_debt",
+              "fieldValue": "={{ $json.all_flat.net_debt }}"
+            },
+            {
+              "fieldId": "net_worth",
+              "fieldValue": "={{ $json.all_flat.net_worth }}"
+            },
+            {
+              "fieldId": "book_value",
+              "fieldValue": "={{ $json.all_flat.book_value }}"
+            },
+            {
+              "fieldId": "enterprise_value",
+              "fieldValue": "={{ $json.all_flat.enterprise_value }}"
+            },
+            {
+              "fieldId": "promoter_holding_pct",
+              "fieldValue": "={{ $json.all_flat.promoter_holding_pct }}"
+            },
+            {
+              "fieldId": "unpledged_promoter_holding_pct",
+              "fieldValue": "={{ $json.all_flat.unpledged_promoter_holding_pct }}"
+            },
+            {
+              "fieldId": "working_capital_to_sales_ratio",
+              "fieldValue": "={{ $json.all_flat.working_capital_to_sales_ratio }}"
+            },
+            {
+              "fieldId": "roe",
+              "fieldValue": "={{ $json.all_flat.roe }}"
+            },
+            {
+              "fieldId": "roce",
+              "fieldValue": "={{ $json.all_flat.roce }}"
+            },
+            {
+              "fieldId": "roic",
+              "fieldValue": "={{ $json.all_flat.roic }}"
+            },
+            {
+              "fieldId": "net_block",
+              "fieldValue": "={{ $json.all_flat.net_block }}"
+            },
+            {
+              "fieldId": "cwip",
+              "fieldValue": "={{ $json.all_flat.cwip }}"
+            },
+            {
+              "fieldId": "cwip_to_net_block_ratio",
+              "fieldValue": "={{ $json.all_flat.cwip_to_net_block_ratio }}"
+            },
+            {
+              "fieldId": "revenue_ttm",
+              "fieldValue": "={{ $json.all_flat.revenue_ttm }}"
+            },
+            {
+              "fieldId": "revenue_cagr_hist_2yr",
+              "fieldValue": "={{ $json.all_flat.revenue_cagr_hist_2yr }}"
+            },
+            {
+              "fieldId": "revenue_cagr_fwd_2yr",
+              "fieldValue": "={{ $json.all_flat.revenue_cagr_fwd }}"
+            },
+            {
+              "fieldId": "ebitda_cagr_hist_2yr",
+              "fieldValue": "={{ $json.all_flat.ebitda_cagr_hist_2yr }}"
+            },
+            {
+              "fieldId": "pat_ttm",
+              "fieldValue": "={{ $json.all_flat.pat_ttm }}"
+            },
+            {
+              "fieldId": "pat_cagr_hist_2yr",
+              "fieldValue": "={{ $json.all_flat.pat_cagr_hist_2yr }}"
+            },
+            {
+              "fieldId": "pat_cagr_fwd_2yr",
+              "fieldValue": "={{ $json.all_flat.pat_cagr_fwd }}"
+            },
+            {
+              "fieldId": "eps_ttm",
+              "fieldValue": "={{ $json.all_flat.eps_ttm }}"
+            },
+            {
+              "fieldId": "eps_cagr_hist_2yr",
+              "fieldValue": "={{ $json.all_flat.eps_cagr_hist_2yr }}"
+            },
+            {
+              "fieldId": "pe_ttm",
+              "fieldValue": "={{ $json.all_flat.pe_ttm }}"
+            },
+            {
+              "fieldId": "pe_fy2026e",
+              "fieldValue": "={{ $json.all_flat.pe_fy26e }}"
+            },
+            {
+              "fieldId": "ev_ebitda_ttm",
+              "fieldValue": "={{ $json.all_flat.ev_ebitda_ttm }}"
+            },
+            {
+              "fieldId": "ps_ttm",
+              "fieldValue": "={{ $json.all_flat.ps_ttm }}"
+            },
+            {
+              "fieldId": "pe_avg_3yr",
+              "fieldValue": "={{ $json.all_flat.pe_avg_3yr }}"
+            },
+            {
+              "fieldId": "consensus_target_price",
+              "fieldValue": "={{ $json.all_flat.consensus_target }}"
+            },
+            {
+              "fieldId": "consensus_upside_pct",
+              "fieldValue": "={{ $json.all_flat.consensus_upside }}"
+            },
+            {
+              "fieldId": "return_down_from_52w_high",
+              "fieldValue": "={{ $json.all_flat.return_down_from_52w_high }}"
+            },
+            {
+              "fieldId": "return_up_from_52w_low",
+              "fieldValue": "={{ $json.all_flat.return_up_from_52w_low }}"
+            },
+            {
+              "fieldId": "dividend_yield",
+              "fieldValue": "={{ $json.all_flat.dividend_yield }}"
+            },
+            {
+              "fieldId": "face_value",
+              "fieldValue": "={{ $json.all_flat.face_value }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        1280
+      ],
+      "id": "ca4f0d01-2fac-47b6-85e0-1ae423db78d2",
+      "name": "Update a row3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "0G7QiEV7evRjasbP",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stock-chart",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1408,
+        1056
+      ],
+      "id": "0712c8ae-0629-43d5-b671-e8a8c6269d19",
+      "name": "Webhook6",
+      "webhookId": "3009b3bd-34aa-4e5c-a8ac-037da7c2d163"
+    },
+    {
+      "parameters": {
+        "url": "=https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -1456,
+        -640
+      ],
+      "id": "479154fd-b030-47bc-8caa-8b660a48915d",
+      "name": "sort folder1",
+      "credentials": {
+        "openAiApi": {
+          "id": "TMMS3pMqjiGuuWVj",
+          "name": "RAG 23-12-2025"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "=name = '{{ $json.output[0].content[0].text.replace(/'/g, \"\\\\'\") }}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false\n",
+        "filter": {
+          "driveId": {
+            "__rl": true,
+            "value": "0AEuW1s1xlgD1Uk9PVA",
+            "mode": "list",
+            "cachedResultName": "Tikona Capital Research & Automation OS",
+            "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.1,
+        "position": [
+          -1456,
+          -640
+        ],
+        "id": "479154fd-b030-47bc-8caa-8b660a48915d",
+        "name": "sort folder1",
+        "credentials": {
+          "openAiApi": {
+            "id": "TMMS3pMqjiGuuWVj",
+            "name": "RAG 23-12-2025"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "searchMethod": "query",
+          "queryString": "=name = '{{ $json.output[0].content[0].text.replace(/'/g, \"\\\\'\") }}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false\n",
+          "filter": {
+            "driveId": {
+              "__rl": true,
+              "value": "0AEuW1s1xlgD1Uk9PVA",
+              "mode": "list",
+              "cachedResultName": "Tikona Capital Research & Automation OS",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+            },
+            "folderId": {
+              "__rl": true,
+              "value": "1jVbvNk4UskV4GMVxxcRhvNJs7izYlliY",
+              "mode": "list",
+              "cachedResultName": "Research Report Automation",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/1jVbvNk4UskV4GMVxxcRhvNJs7izYlliY"
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          -1104,
+          -640
+        ],
+        "id": "f37847b8-f03e-4e03-9b52-789a31384d8b",
+        "name": "Search files and folders1",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "searchMethod": "query",
+          "queryString": "=name = '{{ $('Webhook3').item.json.body.nse_symbol.replace(/'/g, \"\\\\'\") }}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false\n",
+          "filter": {
+            "driveId": {
+              "__rl": true,
+              "value": "0AEuW1s1xlgD1Uk9PVA",
+              "mode": "list",
+              "cachedResultName": "Tikona Capital Research & Automation OS",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+            },
+            "folderId": {
+              "__rl": true,
+              "value": "={{ $json.id }}",
+              "mode": "id"
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          -880,
+          -640
+        ],
+        "id": "52aab1bf-2bc9-44b4-aa57-04005cb03b67",
+        "name": "Search Company Folder1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "ce267ebc-60f4-4962-a378-401ac770b078",
+                "leftValue": "={{ $json.id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -688,
+          -640
+        ],
+        "id": "36a9bcd9-cb80-4dc7-8a19-4f65530a644a",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "22920f4c-401a-4dd6-9c59-87507490b7a6",
+                "name": "id",
+                "value": "={{ $json.id }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          48,
+          -736
+        ],
+        "id": "cbc49144-8e83-4f3d-90c0-fa1e4c112c36",
+        "name": "Final Folder ID1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst cleanItems = [];\n\nfor (const item of items) {\n    const data = item.json;\n    if (!data.url) continue;\n    \n    // Clean URL\n    const cleanUrl = data.url.trim();\n    const url = cleanUrl.toLowerCase();\n    \n    const isSwiggy = url.includes('swiggy.com');\n    const isBSE = url.includes('bseindia.com');\n    \n    cleanItems.push({\n        json: {\n            ...data,\n            url: cleanUrl,\n            source: isSwiggy ? 'swiggy' : (isBSE ? 'bse' : 'other')\n        }\n    });\n}\n\nreturn cleanItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          896,
+          -736
+        ],
+        "id": "57b0c5ae-63ad-491b-b038-e452963de25b",
+        "name": "Code in JavaScript6"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.url }}",
+          "options": {
+            "redirect": {
+              "redirect": {
+                "maxRedirects": 10
+              }
+            },
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            },
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1120,
+          -736
+        ],
+        "id": "330ecd1a-2f58-45fc-aa39-a4369c62b179",
+        "name": "HTTP Request4"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst successful = [];\n\nfor (let i = 0; i < items.length; i++) {\n    const item = items[i];\n    if (item.error) continue;\n    if (!item.binary || !item.binary.data) continue;\n    successful.push(item);\n}\n\nreturn successful;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1344,
+          -736
+        ],
+        "id": "226c19a6-40d5-45ea-93ba-7f14f9f05a86",
+        "name": "Code in JavaScript7"
+      },
+      {
+        "parameters": {
+          "jsCode": "const root = \"https://www.screener.in\";\nconst results = [];\n\nconst item = $input.first().json;\n\n// Get NSE Symbol\nlet nseSymbol = \"UNKNOWN\";\ntry {\n    nseSymbol = $('Webhook3').first().json.body.nse_symbol;\n} catch (e) {\n    if (item.body && item.body.nse_symbol) nseSymbol = item.body.nse_symbol;\n}\n\n// --- 1. ANNUAL REPORT ---\nif (item.annual_report) {\n    let url = item.annual_report;\n    if (url.startsWith('/')) url = root + url;\n    \n    let today = new Date();\n    let calYear = today.getFullYear();\n    let arFYNum = today.getMonth() >= 6 ? (calYear % 100) : ((calYear - 1) % 100);\n    let arFYString = `FY${arFYNum}`;\n\n    results.push({\n        url: url,\n        filename: `${nseSymbol} - ${arFYString} - Annual Report.pdf`,\n        type: \"Annual Report\",\n        quarter: arFYString\n    });\n}\n\n// --- 2. CONCALL LINKS & PPTS ---\nif (item.concall_links && Array.isArray(item.concall_links)) {\n    let transcriptCount = 0;\n    let pptCount = 0;\n    \n    for (let i = 0; i < item.concall_links.length; i++) {\n        const htmlChunk = item.concall_links[i];\n        \n        // Extract all <a> tags inside the block\n        const linkMatches = htmlChunk.match(/<a\\b[^>]*href=[\"']([^\"']+)[\"'][^>]*>([\\s\\S]*?)<\\/a>/gi) || [];\n        \n        for (const linkHtml of linkMatches) {\n            const hrefMatch = linkHtml.match(/href=[\"']([^\"']+)[\"']/i);\n            if (!hrefMatch) continue;\n            \n            let url = hrefMatch[1];\n            if (url.startsWith('/')) url = root + url;\n            \n            const lowerUrl = url.toLowerCase();\n            const lowerText = linkHtml.replace(/<[^>]+>/g, '').toLowerCase().trim();\n            \n            // Derive a quarter label or fallback to sequence number\n            const qMatch = htmlChunk.match(/Q[1-4]\\s*FY\\d{2,4}/i);\n            const quarterLabel = qMatch ? qMatch[0].toUpperCase() : `Recent ${transcriptCount + 1}`;\n\n            // Check for Concall Transcript\n            if ((lowerUrl.includes('transcript') || lowerText.includes('transcript')) && !lowerUrl.includes('youtube') && transcriptCount < 4) {\n                transcriptCount++;\n                results.push({\n                    url: url,\n                    filename: `${nseSymbol} - ${quarterLabel} - Concall Transcript.pdf`,\n                    type: \"Concall Transcript\",\n                    quarter: quarterLabel\n                });\n            }\n            \n            // Check for Investor PPT\n            if ((lowerUrl.includes('presentation') || lowerUrl.includes('ppt') || lowerText.includes('ppt') || lowerText.includes('presentation')) && pptCount < 1) {\n                pptCount++;\n                results.push({\n                    url: url,\n                    filename: `${nseSymbol} - ${quarterLabel} - Investor PPT.pdf`,\n                    type: \"Investor PPT\",\n                    quarter: quarterLabel\n                });\n            }\n        }\n        \n        if (transcriptCount >= 4 && pptCount >= 1) break;\n    }\n}\n\nreturn results.map(res => ({ json: res }));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          -736
+        ],
+        "id": "1f1c2e7f-ad34-44f3-8749-3e6620624806",
+        "name": "Code in JavaScript8"
+      },
+      {
+        "parameters": {
+          "numberInputs": 3
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1568,
+          -656
+        ],
+        "id": "1eba85d1-c978-49ca-b5de-d78d98d659c7",
+        "name": "Merge"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          2016,
+          -640
+        ],
+        "id": "e98e1f6f-1c14-47e0-a474-4bfd7714c533",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "searchMethod": "query",
+          "queryString": "=name = '{{ $json.type.replace(/'/g, \"\\\\'\") }}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+          "filter": {
+            "driveId": {
+              "__rl": true,
+              "value": "0AEuW1s1xlgD1Uk9PVA",
+              "mode": "list",
+              "cachedResultName": "Tikona Capital Research & Automation OS",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+            },
+            "folderId": {
+              "__rl": true,
+              "value": "={{ $('Final Folder ID1').first().json.id }}",
+              "mode": "id"
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          2240,
+          -848
+        ],
+        "id": "c5f1c624-77a4-4b7d-8fd5-b942a6f03e42",
+        "name": "Search files and folders",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "4963700d-0928-4f44-a103-fdd5cc60d877",
+                "leftValue": "={{ $json.id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          2464,
+          -848
+        ],
+        "id": "c14335c3-5c5f-4c91-88ef-d259ffd633ec",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "resource": "folder",
+          "name": "={{ $('Loop Over Items').item.json.type }}",
+          "driveId": {
+            "__rl": true,
+            "value": "0AEuW1s1xlgD1Uk9PVA",
+            "mode": "list",
+            "cachedResultName": "Tikona Capital Research & Automation OS",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $('Final Folder ID1').first().json.id }}",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          2688,
+          -784
+        ],
+        "id": "ec6229e8-56b8-4cdf-ad82-6684f4d08dd1",
+        "name": "Create folder",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "709ba235-a408-4e95-909f-14484fe73970",
+                "name": "subfolder_id",
+                "value": "={{ $json.id }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2912,
+          -848
+        ],
+        "id": "a43bf428-63f7-416e-9e2e-76c68a2080c1",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "searchMethod": "query",
+          "queryString": "=name = '{{ $('Loop Over Items').item.json.filename.replace(/'/g, \"\\\\'\") }}' and trashed = false",
+          "filter": {
+            "driveId": {
+              "__rl": true,
+              "value": "0AEuW1s1xlgD1Uk9PVA",
+              "mode": "list",
+              "cachedResultName": "Tikona Capital Research & Automation OS",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+            },
+            "folderId": {
+              "__rl": true,
+              "value": "={{ $json.subfolder_id }}",
+              "mode": "id"
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          3360,
+          -848
+        ],
+        "id": "18cba984-6253-41b1-b223-70638c296618",
+        "name": "Search files and folders2",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "cbfd1bbe-1c07-45be-9011-dc18f6dedd1a",
+                "leftValue": "={{ $json.id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          3584,
+          -784
+        ],
+        "id": "0281a056-bbee-4c44-b621-36084400a917",
+        "name": "If2"
+      },
+      {
+        "parameters": {
+          "name": "={{ $('Loop Over Items').item.json.filename }}",
+          "driveId": {
+            "__rl": true,
+            "value": "0AEuW1s1xlgD1Uk9PVA",
+            "mode": "list",
+            "cachedResultName": "Tikona Capital Research & Automation OS",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $('Edit Fields1').first().json.subfolder_id }}",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          4032,
+          -704
+        ],
+        "id": "82af57ad-16e7-478a-8b54-f0f3095439b9",
+        "name": "Upload file",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "searchMethod": "query",
+          "queryString": "mimeType = 'application/vnd.google-apps.folder'",
+          "filter": {
+            "driveId": {
+              "__rl": true,
+              "value": "0AEuW1s1xlgD1Uk9PVA",
+              "mode": "list",
+              "cachedResultName": "Tikona Capital Research & Automation OS",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+            },
+            "folderId": {
+              "__rl": true,
+              "value": "={{ $('Final Folder ID1').first().json.id }}",
+              "mode": "id"
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          2240,
+          -1088
+        ],
+        "id": "0e7c1993-881c-4f5c-b6b3-c67836ab9340",
+        "name": "Search files and folders3",
+        "executeOnce": true,
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "returnAll": true,
+          "filter": {
+            "driveId": {
+              "__rl": true,
+              "value": "0AEuW1s1xlgD1Uk9PVA",
+              "mode": "list",
+              "cachedResultName": "Tikona Capital Research & Automation OS",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+            },
+            "folderId": {
+              "__rl": true,
+              "value": "={{ $json.id }}",
+              "mode": "id"
+            }
+          },
+          "options": {
+            "fields": [
+              "*"
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          2464,
+          -1088
+        ],
+        "id": "3c0f63be-f4b3-447e-b41e-cd29b302c83c",
+        "name": "Search files and folders4",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const allFiles = $input.all();\nconst folderInfo = $('Final Folder ID1').first().json;\nconst nseSymbol = $('Webhook3').first().json.body.nse_symbol;\n\n// Sort files by createdTime descending (newest first)\nconst sortedFiles = allFiles.map(item => item.json).sort((a, b) => {\n    return new Date(b.createdTime || 0) - new Date(a.createdTime || 0);\n});\n\nconst cleanFiles = [];\nconst seenNames = new Set();\n\nfor (const f of sortedFiles) {\n    if (!f.name) continue;\n    \n    // Clean name and check for duplicates\n    const cleanName = f.name.trim();\n    if (seenNames.has(cleanName)) continue;\n    seenNames.add(cleanName);\n    \n    // Explicitly check the file name to assign the perfect category\n    let docType = \"Document\";\n    if (cleanName.includes(\"Concall Transcript\")) {\n        docType = \"Concall Transcript\";\n    } else if (cleanName.includes(\"Annual Report\")) {\n        docType = \"Annual Report\";\n    } else if (cleanName.includes(\"Investor PPT\")) {\n        docType = \"Investor PPT\";\n    } else if (cleanName.includes(\"Financial Model\") || cleanName.includes(\"Excel\")) {\n        docType = \"Financial Model\";\n    } else if (cleanName.includes(\"Podcast\") || cleanName.includes(\"Audio\")) {\n        docType = \"Podcast\";\n    } else if (cleanName.includes(\"Video\")) {\n        docType = \"Video\";\n    }\n\n    cleanFiles.push({\n        id: f.id,\n        name: cleanName,\n        type: docType, \n        webViewLink: f.webViewLink || \"Link not fetched\",\n        webContentLink: f.webContentLink || \"Download not fetched\",\n        createdTime: f.createdTime\n    });\n}\n\n// Optional: Sort cleanFiles alphabetically by name for a cleaner UI list\ncleanFiles.sort((a, b) => a.name.localeCompare(b.name));\n\nreturn [{\n    json: {\n        status: \"success\",\n        company: nseSymbol,\n        main_folder_id: folderInfo.id,\n        total_files: cleanFiles.length,\n        files: cleanFiles\n    }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2688,
+          -1088
+        ],
+        "id": "db677f19-111d-438e-b532-5eeb0f78910f",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          2912,
+          -1088
+        ],
+        "id": "e65b161d-aa94-45c2-b77a-dfee70e40917",
+        "name": "Respond to Webhook9"
+      },
+      {
+        "parameters": {
+          "jsCode": "const staticData = $getWorkflowStaticData('global');\nreturn [{\n  json: {\n    url: staticData.__currentUrl || '',\n    filename: staticData.__currentFilename || ''\n  },\n  pairedItem: { item: 0 }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3808,
+          -784
+        ],
+        "id": "b918039c-a423-4851-9817-3929b5e2eb09",
+        "name": "Restore Binary"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.url }}",
+          "options": {
+            "redirect": {
+              "redirect": {
+                "maxRedirects": 10
+              }
+            },
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            },
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          4016,
+          -784
+        ],
+        "id": "b9a63b6e-748b-45fa-903a-e95321dee343",
+        "name": "Download File",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\n// Seed folders to ensure they are created\nconst seedFolders = [\n  { type: \"Annual Report\", filename: \"\" },\n  { type: \"Concall Transcript\", filename: \"\" },\n  { type: \"Investor PPT\", filename: \"\" },\n  { type: \"Financial Model\", filename: \"\" },\n  { type: \"Research Report\", filename: \"\" },\n  { type: \"Broker Report\", filename: \"\" }, // <-- ADDED BROKER REPORT\n  { type: \"Podcast\", filename: \"\" },\n  { type: \"Video\", filename: \"\" },\n  { type: \"Other Documents\", filename: \"\" } \n];\n\nconst result = [];\n\n// 1. Keep original items and preserve their pairing\nfor (let i = 0; i < items.length; i++) {\n  result.push({\n    json: items[i].json,\n    binary: items[i].binary,\n    pairedItem: {\n      item: i\n    }\n  });\n}\n\n// 2. Append seed folders and pair them with the first input item (index 0)\nfor (const folder of seedFolders) {\n  result.push({\n    json: folder,\n    pairedItem: {\n      item: 0\n    }\n  });\n}\n\nreturn result;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1792,
+          -640
+        ],
+        "id": "ca325ad9-50a9-43b4-a35e-335bb3373eb9",
+        "name": "Add Seed Folders"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "check-filename-not-empty",
+                "leftValue": "={{ $('Loop Over Items').item.json.filename }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          3136,
+          -848
+        ],
+        "id": "98549746-8306-4f37-aee6-b0abbf039389",
+        "name": "Is File Real?"
+      },
+      {
+        "parameters": {
+          "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst item = $input.first();\nstaticData.__currentUrl = item.json.url || '';\nstaticData.__currentFilename = item.json.filename || '';\nreturn [item];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2128,
+          -752
+        ],
+        "id": "70ce9375-d417-4a4a-bd95-7463d29ae44f",
+        "name": "Cache URL"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{ \"status\": \"success\" }",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "name": "Access-Control-Allow-Methods",
+                  "value": "POST, OPTIONS"
+                },
+                {
+                  "name": "Access-Control-Allow-Headers",
+                  "value": "Content-Type"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          -960,
+          -48
+        ],
+        "id": "e5132848-6c3d-4125-8c8d-471412bcdd0e",
+        "name": "Respond to Webhook2"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "upload-document",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          1152,
+          0
+        ],
+        "id": "72f3b42d-7d31-4983-b691-789585d5535a",
+        "name": "Webhook1",
+        "webhookId": "2e063edc-d1d7-4b49-9746-5aa46c3abddf"
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json.body;\n\nlet mimeType = 'application/pdf';\nconst filename = item.file_name ? item.file_name.toLowerCase() : '';\nif (filename.endsWith('.pptx')) {\n    mimeType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';\n} else if (filename.endsWith('.xlsx')) {\n    mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';\n} else if (filename.endsWith('.docx')) {\n    mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';\n}\n\n// Default to 'Other Documents' if no subfolder_name is explicitly provided\nconst subfolderName = item.subfolder_name || 'Other Documents';\n\nconst staticData = $getWorkflowStaticData('global');\nstaticData.__fileName = item.file_name || '';\nstaticData.__folderId = item.folder_id || '';\nstaticData.__subfolderName = subfolderName;\nstaticData.__fileBase64 = item.file_base64 || '';\nstaticData.__mimeType = mimeType;\n\nreturn {\n    json: {\n        fileName: item.file_name,\n        folderId: item.folder_id,\n        subfolderName: subfolderName\n    }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1376,
+          0
+        ],
+        "id": "9c56f5eb-bd3c-42ba-ab4c-5ab70a4f2437",
+        "name": "Prepare"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "has-subfolder-cond",
+                "leftValue": "={{ $json.subfolderName }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1600,
+          0
+        ],
+        "id": "6380d7bf-17f6-4cf6-9dcf-9fca24723027",
+        "name": "Has Subfolder?"
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "searchMethod": "query",
+          "queryString": "=name = '{{ $json.subfolderName.replace(/'/g, \"\\\\'\") }}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+          "filter": {
+            "driveId": {
+              "__rl": true,
+              "value": "0AEuW1s1xlgD1Uk9PVA",
+              "mode": "list",
+              "cachedResultName": "Tikona Capital Research & Automation OS",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+            },
+            "folderId": {
+              "__rl": true,
+              "value": "={{ $json.folderId }}",
+              "mode": "id"
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1824,
+          -128
+        ],
+        "id": "bb3691d7-5a96-458d-acfe-52aac6b97a48",
+        "name": "Search Subfolder",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "subfolder-found-cond",
+                "leftValue": "={{ $json.id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          2048,
+          -128
+        ],
+        "id": "22bc83ab-63f4-4efe-a438-fd973be747ed",
+        "name": "Subfolder Found?"
+      },
+      {
+        "parameters": {
+          "resource": "folder",
+          "name": "={{ $getWorkflowStaticData('global').__subfolderName }}",
+          "driveId": {
+            "__rl": true,
+            "value": "0AEuW1s1xlgD1Uk9PVA",
+            "mode": "list",
+            "cachedResultName": "Tikona Capital Research & Automation OS",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $getWorkflowStaticData('global').__folderId }}",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          2272,
+          -224
+        ],
+        "id": "b67b5780-3ece-4204-95d4-0d74f24cef2d",
+        "name": "Create Subfolder",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "target-company-folder-set",
+                "name": "targetFolderId",
+                "value": "={{ $json.folderId }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1824,
+          128
+        ],
+        "id": "996a4cd3-42d0-49ac-8258-e325dc11f85d",
+        "name": "Target = Company Folder"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "target-existing-subfolder-set",
+                "name": "targetFolderId",
+                "value": "={{ $json.id }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2272,
+          -64
+        ],
+        "id": "4f999651-3ffb-46e9-a783-6eb21027c5c1",
+        "name": "Target = Existing Subfolder"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "target-new-subfolder-set",
+                "name": "targetFolderId",
+                "value": "={{ $json.id }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2496,
+          -224
+        ],
+        "id": "23429fe1-dd92-4e0e-9564-2d64b68e9f43",
+        "name": "Target = New Subfolder"
+      },
+      {
+        "parameters": {
+          "jsCode": "const targetFolderId = $input.first().json.targetFolderId;\nconst staticData = $getWorkflowStaticData('global');\n\nreturn {\n    json: {\n        fileName: staticData.__fileName,\n        folderId: targetFolderId\n    },\n    binary: {\n        data: {\n            data: staticData.__fileBase64,\n            mimeType: staticData.__mimeType,\n            fileName: staticData.__fileName\n        }\n    },\n    pairedItem: { item: 0 }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2720,
+          0
+        ],
+        "id": "94c08fb7-73ec-40ab-9afc-b37a8bb46340",
+        "name": "Build Binary"
+      },
+      {
+        "parameters": {
+          "name": "={{ $json.fileName }}",
+          "driveId": {
+            "__rl": true,
+            "value": "0AEuW1s1xlgD1Uk9PVA",
+            "mode": "list",
+            "cachedResultName": "Tikona Capital Research & Automation OS",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+          },
+          "folderId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $json.folderId }}"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          2944,
+          0
+        ],
+        "id": "9591438a-7642-4a72-9719-c9f2c453fd69",
+        "name": "Upload file1",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"status\": \"success\",\n  \"file\": {{ JSON.stringify($json) }} \n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          3168,
+          0
+        ],
+        "id": "89eb1169-3e2f-47df-987f-a6f89dce430b",
+        "name": "Respond to Webhook1"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Get Company Folder ID from previous step (either existing or newly created)\nconst companyFolderId = $json.id;\n\n// Format current date as YYYYMMDD\nconst today = new Date();\nconst year = today.getFullYear();\nconst month = String(today.getMonth() + 1).padStart(2, '0');\nconst day = String(today.getDate()).padStart(2, '0');\nconst dateStr = `${year}${month}${day}`;\n\nreturn [{\n  json: {\n    company_folder_id: companyFolderId,\n    date_str: dateStr\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1040,
+          -320
+        ],
+        "id": "73c9ba60-a75e-43f9-905e-1ec3a752a711",
+        "name": "Generate Date String"
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "searchMethod": "query",
+          "queryString": "=name = '{{ $json.date_str }}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+          "filter": {
+            "driveId": {
+              "__rl": true,
+              "value": "0AEuW1s1xlgD1Uk9PVA",
+              "mode": "list",
+              "cachedResultName": "Tikona Capital Research & Automation OS",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+            },
+            "folderId": {
+              "__rl": true,
+              "value": "={{ $json.company_folder_id }}",
+              "mode": "id"
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          -864,
+          -320
+        ],
+        "id": "83a9c639-b959-473d-a850-5a4182cd4c0f",
+        "name": "Search Date Folder",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "67bd3483-9d0e-42ba-9cfc-50e72ffd1518",
+                "leftValue": "={{ $json.id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -688,
+          -320
+        ],
+        "id": "640f4284-f18c-4388-a944-a330fa6936d2",
+        "name": "If Date Folder Exists"
+      },
+      {
+        "parameters": {
+          "resource": "folder",
+          "name": "=={{ $('Generate Date String').first().json.date_str }}",
+          "driveId": {
+            "__rl": true,
+            "value": "0AEuW1s1xlgD1Uk9PVA",
+            "mode": "list",
+            "cachedResultName": "Tikona Capital Research & Automation OS",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/0AEuW1s1xlgD1Uk9PVA"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $('Generate Date String').first().json.company_folder_id }}",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          -432,
+          -224
+        ],
+        "id": "f601f40b-1efd-4d99-914a-ecc1c02beaea",
+        "name": "Create Date Folder",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook2": {
+        "main": [
+          [
+            {
+              "node": "Delete a file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Delete a file": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse JSON Output": {
+        "main": [
+          [
+            {
+              "node": "Update a row3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get Live Price",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Parse JSON Output",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update a row3": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook6": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request1": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Sheet Data": {
+        "main": [
+          [
+            {
+              "node": "Merge Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge Data": {
+        "main": [
+          [
+            {
+              "node": "Update Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Data": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Live Price": {
+        "main": [
+          [
+            {
+              "node": "Get Sheet Data (Raw)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook7": {
+        "main": [
+          [
+            {
+              "node": "Get Sheet Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Data1": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Average Data": {
+        "main": [
+          [
+            {
+              "node": "Update Data1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Sheet Data (Raw)": {
+        "main": [
+          [
+            {
+              "node": "Parse Average Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Screener API": {
+        "main": [
+          [
+            {
+              "node": "Calculate Financials1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook8": {
+        "main": [
+          [
+            {
+              "node": "Screener API",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calculate Financials1": {
+        "main": [
+          [
+            {
+              "node": "Update Data2",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Respond to Webhook7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Data2": {
+        "main": [
+          []
+        ]
+      },
+      "Screener API1": {
+        "main": [
+          [
+            {
+              "node": "Merge Data",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Webhook9": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request5": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload file2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript5": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook10": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request6": {
+        "main": [
+          [
+            {
+              "node": "If3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If3": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request7",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond to Webhook11",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request7": {
+        "main": [
+          [
+            {
+              "node": "Upload file3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload file3": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Files": {
+        "main": [
+          [
+            {
+              "node": "No PDFs?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "No PDFs?": {
+        "main": [
+          [
+            {
+              "node": "Respond Empty",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Google Drive - Download PDF",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Drive - Download PDF": {
+        "main": [
+          [
+            {
+              "node": "Shape Document Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Shape Document Payload": {
+        "main": [
+          [
+            {
+              "node": "Build Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Response": {
+        "main": [
+          [
+            {
+              "node": "Respond PDFs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook4": {
+        "main": [
+          [
+            {
+              "node": "Prepare Files",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTML1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request2": {
+        "main": [
+          [
+            {
+              "node": "HTML1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook3": {
+        "main": [
+          [
+            {
+              "node": "sort folder1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Company Folder1": {
+        "main": [
+          [
+            {
+              "node": "Generate Date String",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "sort folder1": {
+        "main": [
+          [
+            {
+              "node": "Search files and folders1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search files and folders1": {
+        "main": [
+          [
+            {
+              "node": "Search Company Folder1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search Company Folder1": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Generate Date String",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Create Company Folder1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Final Folder ID1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript6": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request4": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript7": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript8": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Add Seed Folders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [
+            {
+              "node": "Search files and folders3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Cache URL",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cache URL": {
+        "main": [
+          [
+            {
+              "node": "Search files and folders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search files and folders": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Create folder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create folder": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "Is File Real?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search files and folders2": {
+        "main": [
+          [
+            {
+              "node": "If2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If2": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Restore Binary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload file": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search files and folders3": {
+        "main": [
+          [
+            {
+              "node": "Search files and folders4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search files and folders4": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook9",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Restore Binary": {
+        "main": [
+          [
+            {
+              "node": "Download File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Download File": {
+        "main": [
+          [
+            {
+              "node": "Upload file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add Seed Folders": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Is File Real?": {
+        "main": [
+          [
+            {
+              "node": "Search files and folders2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Subfolder": {
+        "main": [
+          [
+            {
+              "node": "Target = New Subfolder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Target = New Subfolder": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Upload file1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Build Binary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook1": {
+        "main": [
+          [
+            {
+              "node": "Prepare",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare": {
+        "main": [
+          [
+            {
+              "node": "Has Subfolder?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has Subfolder?": {
+        "main": [
+          [
+            {
+              "node": "Search Subfolder",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Target = Company Folder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search Subfolder": {
+        "main": [
+          [
+            {
+              "node": "Subfolder Found?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Subfolder Found?": {
+        "main": [
+          [
+            {
+              "node": "Target = Existing Subfolder",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Create Subfolder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Target = Company Folder": {
+        "main": [
+          [
+            {
+              "node": "Build Binary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Target = Existing Subfolder": {
+        "main": [
+          [
+            {
+              "node": "Build Binary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Binary": {
+        "main": [
+          [
+            {
+              "node": "Upload file1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload file1": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate Date String": {
+        "main": [
+          [
+            {
+              "node": "Search Date Folder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search Date Folder": {
+        "main": [
+          [
+            {
+              "node": "If Date Folder Exists",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Date Folder Exists": {
+        "main": [
+          [
+            {
+              "node": "Final Folder ID1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Create Date Folder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create Date Folder": {
+        "main": [
+          [
+            {
+              "node": "Final Folder ID1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version 4a73f319",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
