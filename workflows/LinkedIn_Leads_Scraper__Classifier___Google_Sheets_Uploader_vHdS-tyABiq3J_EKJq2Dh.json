@@ -1,0 +1,188 @@
+{
+  "updatedAt": "2026-08-14T08:49:43.819Z",
+  "createdAt": "2026-06-13T12:44:08.849Z",
+  "id": "vHdS-tyABiq3J_EKJq2Dh",
+  "name": "LinkedIn Leads Scraper, Classifier & Google Sheets Uploader",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "4b226ae3-a475-48fe-91b9-736a37a9c35f",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        864,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "hour": 9
+            }
+          ]
+        }
+      },
+      "id": "1aef64c1-c194-419b-af91-888086c6d507",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        864,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://72.61.226.16:3005/scrape",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"searchQueries\": [\n    \"CIO Mumbai\",\n    \"Chief Investment Officer Mumbai\",\n    \"Equity Fund Manager Mumbai\",\n    \"Equity Portfolio Manager Delhi\",\n    \"CFO India\",\n    \"CEO India\",\n    \"CMO India\",\n    \"Vice President India\",\n    \"AVP India\",\n    \"President India\"\n  ],\n  \"locations\": [],\n  \"maxItems\": 50\n}\n",
+        "options": {
+          "timeout": 1200000
+        }
+      },
+      "id": "d4e2446e-f244-4a83-bf3b-3a85f3e87b92",
+      "name": "Trigger Scraper API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1104,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst inputData = $input.all()[0]?.json;\nconst leads = Array.isArray(inputData?.data) ? inputData.data : [];\n\n// Helper to check title matching\nfunction clean(str) {\n  return (str || '').toLowerCase().trim();\n}\n\nconst indianCities = ['mumbai', 'delhi', 'gurgaon', 'gurugram', 'bangalore', 'bengaluru', 'chennai', 'pune', 'hyderabad', 'kolkata', 'ahmedabad', 'noida'];\n\nfor (const lead of leads) {\n  const headline = clean(lead.headline);\n  const location = clean(lead.location);\n  const firstName = lead.firstName || lead.fullName?.split(' ')[0] || '';\n\n  // Must be restricted to India\n  const isIndia = location.includes('india') || indianCities.some(city => location.includes(city));\n  if (!isIndia) {\n    continue; // Skip lead if it's not in India\n  }\n\n  let category = null;\n  let templateType = Math.random() < 0.5 ? 1 : 2; // Alternating templates randomly\n  let draftMessage = '';\n\n  // 1. Check for Category 1: CIO, Fund Manager, Portfolio Manager in specific cities\n  const isCat1Title = headline.includes('chief investment officer') ||\n                      /\\bcio\\b/i.test(headline) ||\n                      headline.includes('equity fund manager') ||\n                      headline.includes('equity portfolio manager');\n  \n  const isCat1Location = ['mumbai', 'delhi', 'gurgaon', 'gurugram', 'bangalore', 'bengaluru', 'chennai', 'pune'].some(city => location.includes(city));\n\n  if (isCat1Title && isCat1Location) {\n    category = 'CAT-1';\n    if (templateType === 1) {\n      draftMessage = `Hi ${firstName}, I work in institutional equity research — always looking to connect with fund managers and investment professionals who track Indian equities seriously. No pitch, just building a quality network.`;\n    } else {\n      draftMessage = `Hi ${firstName}, I work in equity research — covering mid and smallcap ideas — always looking to connect with portfolio managers who follow this space closely. No pitch, just building a quality network.`;\n    }\n  } \n  \n  // 2. Check for Category 3 first (so AVP / Assistant Vice President doesn't get caught by VP checks)\n  else if (\n    headline.includes('assistant vice president') ||\n    /\\bavp\\b/i.test(headline) ||\n    (headline.includes('president') && !headline.includes('vice president') && !headline.includes('vp'))\n  ) {\n    category = 'CAT-3';\n    if (templateType === 1) {\n      draftMessage = `Hi ${firstName}, I work in institutional equity research — always looking to connect with finance and business professionals who are serious about markets and long-term investing. No pitch, just building a quality network.`;\n    } else {\n      draftMessage = `Hi ${firstName}, I work in equity research with a focus on high-conviction mid and smallcap ideas — always looking to connect with driven professionals who follow Indian markets closely. No pitch, just building a quality network.`;\n    }\n  }\n\n  // 3. Check for Category 2: CFO, CEO, CMO, VP\n  else if (\n    headline.includes('chief financial officer') || /\\bcfo\\b/i.test(headline) ||\n    headline.includes('chief executive officer') || /\\bceo\\b/i.test(headline) ||\n    headline.includes('chief marketing officer') || /\\bcmo\\b/i.test(headline) ||\n    headline.includes('vice president') || /\\bvp\\b/i.test(headline)\n  ) {\n    category = 'CAT-2';\n    if (templateType === 1) {\n      draftMessage = `Hi ${firstName}, I work in institutional equity research — always looking to connect with senior leaders and executives who think seriously about capital allocation and wealth creation. No pitch, just building a quality network.`;\n    } else {\n      draftMessage = `Hi ${firstName}, I work in equity research focused on wealth creation — always looking to connect with CxOs and senior professionals who are building long-term financial depth alongside their careers. No pitch, just building a quality network.`;\n    }\n  }\n\n  if (category) {\n    results.push({\n      json: {\n        ...lead,\n        category,\n        draftMessage,\n        dateAdded: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-')\n      }\n    });\n  }\n}\n\nreturn results;"
+      },
+      "id": "66e42662-c1d7-493b-9932-f2047bff0ee4",
+      "name": "Classify & Generate Messages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14X0BNjiqUS-ZFAYtnSZAVmX3DjlpljKNGBFHqBce6eA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1327935833,
+          "mode": "list",
+          "cachedResultName": "🔗 LinkedIn Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14X0BNjiqUS-ZFAYtnSZAVmX3DjlpljKNGBFHqBce6eA/edit#gid=1327935833"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3f814e4d-9bc7-47a0-b549-622a627ba22f",
+      "name": "Google Sheets: Append Lead",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.2,
+      "position": [
+        1552,
+        464
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TSkkuRLhdX056rOY",
+          "name": "Tikona ops"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Trigger Scraper API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Trigger Scraper API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Scraper API": {
+      "main": [
+        [
+          {
+            "node": "Classify & Generate Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify & Generate Messages": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Append Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "a2e05ee9-128f-4882-a325-c3dc4c656697",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-06-13T12:44:08.861Z",
+      "createdAt": "2026-06-13T12:44:08.861Z",
+      "role": "workflow:owner",
+      "workflowId": "vHdS-tyABiq3J_EKJq2Dh",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
