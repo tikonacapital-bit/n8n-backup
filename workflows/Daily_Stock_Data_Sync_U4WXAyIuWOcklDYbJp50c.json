@@ -1,0 +1,2165 @@
+{
+  "updatedAt": "2026-06-23T06:09:09.670Z",
+  "createdAt": "2026-02-24T03:22:53.935Z",
+  "id": "U4WXAyIuWOcklDYbJp50c",
+  "name": "Daily Stock Data Sync",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "id": "7652456b-a769-440a-88b0-850f2ffa38cb",
+      "name": "Weekly Trigger (Mon 7:30 AM IST)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1456,
+        -512
+      ],
+      "disabled": true,
+      "notes": "Runs every Monday at 02:00 UTC = 07:30 IST. Source: screener_full.\nUpdates: All Screener.in data including per-FY financials (revenue/ebitda/pat/eps for FY23-FY25), ratios, balance sheet, quarterly P&L, shareholding, sectors."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:5001/webhook/weekly",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-API-Secret",
+              "value": "TikonaSync2024@SecureKey!xK9mP3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"async\": true\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "d1a49e92-8634-4b9b-aad6-b9b0946199fe",
+      "name": "Trigger Weekly Sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1232,
+        -512
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "id": "6c9025dd-64ab-4aed-b7ec-d798938a1a5c",
+      "name": "Wait 2 Mins1",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1008,
+        -512
+      ],
+      "webhookId": "73d3cced-78ae-4caf-affe-19c5c0722e15"
+    },
+    {
+      "parameters": {
+        "url": "=http://172.17.0.1:5001/job/{{ $('Trigger Weekly Sync').item.json.job_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Secret",
+              "value": "=TikonaSync2024@SecureKey!xK9mP3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f09b98b7-6eee-480d-aa1e-100e71de88c2",
+      "name": "Check Status1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -784,
+        -592
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a2fdc590-27ba-4e6f-8071-c9e4c9df4dcc",
+      "name": "If Completed1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        -592
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "error",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fcdd204f-5455-4d3f-9340-9cfc3c81e00f",
+      "name": "If Error1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f509e37f-f07e-4156-bd2e-5c06d9d58168",
+      "name": "Success Log1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -336,
+        -640
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "88875bfa-6036-498b-bd4e-d0fe4b0360ae",
+      "name": "Error Log1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 3
+            },
+            {
+              "triggerAtHour": 3
+            }
+          ]
+        }
+      },
+      "id": "f2866ef2-29f7-481d-a90d-016fd1825702",
+      "name": "Biweekly Trigger (1st & 15th, 8:30 AM IST)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1472,
+        48
+      ],
+      "disabled": true,
+      "notes": "Runs on 1st and 15th of every month at 03:00 UTC = 08:30 IST.\nSources: trendlyne + go_india_stocks (Selenium-based, slow).\nUpdates: target_price_high/low, consensus_target_price, revenue/ebitda/pat/eps estimates for FY26E-FY28E."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:5001/webhook/biweekly",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-API-Secret",
+              "value": "TikonaSync2024@SecureKey!xK9mP3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"async\": true\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "e32df962-68b5-4120-92a5-c800317d204e",
+      "name": "Trigger Biweekly Sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1232,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "id": "cca5f655-7a96-4e3b-b585-b068f77f33ed",
+      "name": "Wait 2 Mins2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1056,
+        48
+      ],
+      "webhookId": "cd52b909-dbb5-458e-9473-83bf1f668a38"
+    },
+    {
+      "parameters": {
+        "url": "=http://172.17.0.1:5001/job/{{ $('Trigger Biweekly Sync').item.json.job_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Secret",
+              "value": "=TikonaSync2024@SecureKey!xK9mP3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d5bb47be-c97a-452c-a8f6-b1ec05e9b4f5",
+      "name": "Check Status2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -864,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "328673a9-96a6-4171-9698-252d942d2405",
+      "name": "If Completed2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "error",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "34431be4-08da-4b92-92db-3a43e69015d0",
+      "name": "If Error2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c2d47a1a-99df-402d-8833-77f0849376af",
+      "name": "Success Log2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -464,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "b3009ce9-1697-4c45-932f-0039fa0776cc",
+      "name": "Error Log2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -256,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 4
+            }
+          ]
+        }
+      },
+      "id": "8204adb8-86a7-48ed-8edf-87020305190a",
+      "name": "Monthly Trigger (1st of every month)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1632,
+        784
+      ],
+      "disabled": true,
+      "notes": "Runs on 1st of every month at 04:00 UTC = 09:30 IST.\nThe Code node filters for quarterly months only (Jan, Apr, Jul, Oct).\nSources: trendlyne + go_india_stocks + screener_full (FULL REFRESH).\nUpdates: ALL columns in equity_universe."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:5001/webhook/quarterly",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-API-Secret",
+              "value": "TikonaSync2024@SecureKey!xK9mP3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"async\": true\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "479222f0-d8c4-4558-9e3c-918b6d863383",
+      "name": "Trigger Quarterly Sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1408,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "id": "fd57dd65-bce0-4648-b39b-9a6825efaa01",
+      "name": "Wait 2 Mins3",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1184,
+        784
+      ],
+      "webhookId": "ef3a5e78-bb8b-4435-88a1-1339b1674586"
+    },
+    {
+      "parameters": {
+        "url": "=http://172.17.0.1:5001/job/{{ $('Trigger Quarterly Sync').item.json.job_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Secret",
+              "value": "=TikonaSync2024@SecureKey!xK9mP3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3914821-9a50-48bd-96c6-8ffbbb3bae83",
+      "name": "Check Status3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -960,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3e5219be-daba-4d83-9e47-b9516f3ce5ee",
+      "name": "If Completed3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "error",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "236d3bf5-44ce-4721-a868-8761f3b4d185",
+      "name": "If Error3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "70d13eeb-7b26-4d14-ab65-277c65abcc7c",
+      "name": "Success Log3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "15290a87-110d-4f8c-9fe4-b850f2ade4ca",
+      "name": "Error Log3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -288,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 1
+            }
+          ]
+        }
+      },
+      "id": "561c2125-b038-4f29-8f13-3c5edf6bf597",
+      "name": "Daily Trigger (6:30 AM IST)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1424,
+        -1024
+      ],
+      "disabled": true,
+      "notes": "Runs daily at 01:00 UTC = 06:30 IST. Sources: yahoo_finance + screener_daily.\nUpdates: current_price, market_cap, volume, 52w high/low, returns, enterprise_value, dividend_yield, TTM P&L, ratios, balance sheet, quarterly results, sectors, shareholding."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:5001/webhook/daily",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-API-Secret",
+              "value": "=TikonaSync2024@SecureKey!xK9mP3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"async\": true\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "eaff59a8-b4fa-4973-8585-a92bf6c0d6cd",
+      "name": "Trigger Daily Sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1200,
+        -1024
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "id": "ced146eb-3564-4bc0-bd5d-3d7aa3134982",
+      "name": "Wait 2 Mins",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1024,
+        -1024
+      ],
+      "webhookId": "c0053e54-78f9-4b8f-bf37-4662fe450d41"
+    },
+    {
+      "parameters": {
+        "url": "=http://172.17.0.1:5001/job/{{ $('Trigger Daily Sync').first().json.job_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Secret",
+              "value": "=TikonaSync2024@SecureKey!xK9mP3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2f7f456e-d6bc-498d-bbcf-d19b68c06f11",
+      "name": "Check Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -832,
+        -1024
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "24f4b88b-c6c9-4a9f-977e-546fb6d1c1a2",
+      "name": "If Completed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -624,
+        -1024
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "error",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7aed6f53-42f5-4db4-a0ec-ab46b3a473b4",
+      "name": "If Error",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        -864
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "90d6aae1-edc5-411b-a226-40e8638c9bee",
+      "name": "Success Log",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -432,
+        -1184
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "3052430d-b89c-4b9f-87a2-3062580bb7dd",
+      "name": "Error Log",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        -976
+      ]
+    }
+  ],
+  "connections": {
+    "Weekly Trigger (Mon 7:30 AM IST)": {
+      "main": [
+        [
+          {
+            "node": "Trigger Weekly Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Weekly Sync": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 Mins1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 Mins1": {
+      "main": [
+        [
+          {
+            "node": "Check Status1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Status1": {
+      "main": [
+        [
+          {
+            "node": "If Completed1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Completed1": {
+      "main": [
+        [
+          {
+            "node": "Success Log1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Error1": {
+      "main": [
+        [
+          {
+            "node": "Error Log1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 Mins1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Biweekly Trigger (1st & 15th, 8:30 AM IST)": {
+      "main": [
+        [
+          {
+            "node": "Trigger Biweekly Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Biweekly Sync": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 Mins2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 Mins2": {
+      "main": [
+        [
+          {
+            "node": "Check Status2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Status2": {
+      "main": [
+        [
+          {
+            "node": "If Completed2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Completed2": {
+      "main": [
+        [
+          {
+            "node": "Success Log2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If Error2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Error2": {
+      "main": [
+        [
+          {
+            "node": "Error Log2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 Mins2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monthly Trigger (1st of every month)": {
+      "main": [
+        [
+          {
+            "node": "Trigger Quarterly Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Quarterly Sync": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 Mins3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 Mins3": {
+      "main": [
+        [
+          {
+            "node": "Check Status3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Status3": {
+      "main": [
+        [
+          {
+            "node": "If Completed3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Completed3": {
+      "main": [
+        [
+          {
+            "node": "Success Log3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If Error3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Error3": {
+      "main": [
+        [
+          {
+            "node": "Error Log3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 Mins3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Trigger (6:30 AM IST)": {
+      "main": [
+        [
+          {
+            "node": "Trigger Daily Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Daily Sync": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 Mins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 Mins": {
+      "main": [
+        [
+          {
+            "node": "Check Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Status": {
+      "main": [
+        [
+          {
+            "node": "If Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Completed": {
+      "main": [
+        [
+          {
+            "node": "Success Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Error": {
+      "main": [
+        [
+          {
+            "node": "Error Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 Mins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Daily Trigger (6:30 AM IST)": [
+      {
+        "json": {
+          "timestamp": "2026-06-03T17:19:59.491+05:30",
+          "Readable date": "June 3rd 2026, 5:19:59 pm",
+          "Readable time": "5:19:59 pm",
+          "Day of week": "Wednesday",
+          "Year": "2026",
+          "Month": "June",
+          "Day of month": "03",
+          "Hour": "17",
+          "Minute": "19",
+          "Second": "59",
+          "Timezone": "Asia/Kolkata (UTC+05:30)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "dee1943c-8052-49b1-b57e-d7485e6204ed",
+  "activeVersionId": "bbe7bde5-e034-4442-8b1b-ddc69b40fc88",
+  "triggerCount": 4,
+  "shared": [
+    {
+      "updatedAt": "2026-02-24T03:22:53.944Z",
+      "createdAt": "2026-02-24T03:22:53.944Z",
+      "role": "workflow:owner",
+      "workflowId": "U4WXAyIuWOcklDYbJp50c",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-06-03T08:16:02.000Z",
+    "createdAt": "2026-06-03T08:15:42.542Z",
+    "versionId": "bbe7bde5-e034-4442-8b1b-ddc69b40fc88",
+    "workflowId": "U4WXAyIuWOcklDYbJp50c",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 1
+              }
+            ]
+          }
+        },
+        "id": "dc881218-4f3f-44aa-b1f0-644f8aa38705",
+        "name": "Daily Trigger (6:30 AM IST)",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -1344,
+          -1040
+        ],
+        "notes": "Runs daily at 01:00 UTC = 06:30 IST. Sources: yahoo_finance + screener_daily.\nUpdates: current_price, market_cap, volume, 52w high/low, returns, enterprise_value, dividend_yield, TTM P&L, ratios, balance sheet, quarterly results, sectors, shareholding."
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://172.17.0.1:5001/webhook/daily",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "X-API-Secret",
+                "value": "TikonaSync2024@SecureKey!xK9mP3"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"async\": true\n}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "2333ce64-56dc-42b7-91da-5391da11488e",
+        "name": "Trigger Daily Sync",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1120,
+          -1040
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 2,
+          "unit": "minutes"
+        },
+        "id": "0d65cbfa-bffa-4758-8e2a-9cf5badd8bd8",
+        "name": "Wait 2 Mins",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -944,
+          -1040
+        ],
+        "webhookId": "1a258d74-10fd-48a9-b850-61682418cb54"
+      },
+      {
+        "parameters": {
+          "url": "=http://localhost:5001/job/{{ $('Trigger Daily Sync').item.json.job_id }}}}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-API-Secret",
+                "value": "={{$env.API_SECRET}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "7bcf91cf-64e1-457d-9bf2-545fa0381703",
+        "name": "Check Status",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -752,
+          -1040
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "c1",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "completed",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "4be9f81a-277e-4b3b-a187-ccff73fda9f7",
+        "name": "If Completed",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -544,
+          -1040
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "c2",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "error",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "f2310d2e-0c44-40c6-8cc5-6deba1662ce2",
+        "name": "If Error",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -352,
+          -880
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "f9393292-fa18-42e2-aa7c-44473a3d1b5c",
+        "name": "Success Log",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -352,
+          -1184
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "cf07b1e1-22e8-4c57-a335-e3df67718614",
+        "name": "Error Log",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -144,
+          -992
+        ]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 2
+              }
+            ]
+          }
+        },
+        "id": "7652456b-a769-440a-88b0-850f2ffa38cb",
+        "name": "Weekly Trigger (Mon 7:30 AM IST)",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -1456,
+          -512
+        ],
+        "notes": "Runs every Monday at 02:00 UTC = 07:30 IST. Source: screener_full.\nUpdates: All Screener.in data including per-FY financials (revenue/ebitda/pat/eps for FY23-FY25), ratios, balance sheet, quarterly P&L, shareholding, sectors."
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://172.17.0.1:5001/webhook/weekly",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "X-API-Secret",
+                "value": "TikonaSync2024@SecureKey!xK9mP3"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"async\": true\n}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "d1a49e92-8634-4b9b-aad6-b9b0946199fe",
+        "name": "Trigger Weekly Sync",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1232,
+          -512
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 2,
+          "unit": "minutes"
+        },
+        "id": "6c9025dd-64ab-4aed-b7ec-d798938a1a5c",
+        "name": "Wait 2 Mins1",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1008,
+          -512
+        ],
+        "webhookId": "73d3cced-78ae-4caf-affe-19c5c0722e15"
+      },
+      {
+        "parameters": {
+          "url": "=http://172.17.0.1:5001/job/{{ $('Trigger Weekly Sync').item.json.job_id }}}}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-API-Secret",
+                "value": "={{$env.API_SECRET}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "f09b98b7-6eee-480d-aa1e-100e71de88c2",
+        "name": "Check Status1",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -784,
+          -592
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "c1",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "completed",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "a2fdc590-27ba-4e6f-8071-c9e4c9df4dcc",
+        "name": "If Completed1",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -560,
+          -592
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "c2",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "error",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "fcdd204f-5455-4d3f-9340-9cfc3c81e00f",
+        "name": "If Error1",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -336,
+          -416
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "f509e37f-f07e-4156-bd2e-5c06d9d58168",
+        "name": "Success Log1",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -336,
+          -640
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "88875bfa-6036-498b-bd4e-d0fe4b0360ae",
+        "name": "Error Log1",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -112,
+          -416
+        ]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 3
+              },
+              {
+                "triggerAtHour": 3
+              }
+            ]
+          }
+        },
+        "id": "f2866ef2-29f7-481d-a90d-016fd1825702",
+        "name": "Biweekly Trigger (1st & 15th, 8:30 AM IST)",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -1472,
+          48
+        ],
+        "notes": "Runs on 1st and 15th of every month at 03:00 UTC = 08:30 IST.\nSources: trendlyne + go_india_stocks (Selenium-based, slow).\nUpdates: target_price_high/low, consensus_target_price, revenue/ebitda/pat/eps estimates for FY26E-FY28E."
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://172.17.0.1:5001/webhook/biweekly",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "X-API-Secret",
+                "value": "TikonaSync2024@SecureKey!xK9mP3"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"async\": true\n}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "e32df962-68b5-4120-92a5-c800317d204e",
+        "name": "Trigger Biweekly Sync",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1232,
+          48
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 2,
+          "unit": "minutes"
+        },
+        "id": "cca5f655-7a96-4e3b-b585-b068f77f33ed",
+        "name": "Wait 2 Mins2",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1056,
+          48
+        ],
+        "webhookId": "cd52b909-dbb5-458e-9473-83bf1f668a38"
+      },
+      {
+        "parameters": {
+          "url": "=http://172.17.0.1:5001/job/{{ $('Trigger Biweekly Sync').item.json.job_id }}}}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-API-Secret",
+                "value": "={{$env.API_SECRET}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "d5bb47be-c97a-452c-a8f6-b1ec05e9b4f5",
+        "name": "Check Status2",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -864,
+          48
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "c1",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "completed",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "328673a9-96a6-4171-9698-252d942d2405",
+        "name": "If Completed2",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -656,
+          48
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "c2",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "error",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "34431be4-08da-4b92-92db-3a43e69015d0",
+        "name": "If Error2",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -464,
+          192
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "c2d47a1a-99df-402d-8833-77f0849376af",
+        "name": "Success Log2",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -464,
+          -112
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "b3009ce9-1697-4c45-932f-0039fa0776cc",
+        "name": "Error Log2",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -256,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 4
+              }
+            ]
+          }
+        },
+        "id": "8204adb8-86a7-48ed-8edf-87020305190a",
+        "name": "Monthly Trigger (1st of every month)",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -1632,
+          776
+        ],
+        "notes": "Runs on 1st of every month at 04:00 UTC = 09:30 IST.\nThe Code node filters for quarterly months only (Jan, Apr, Jul, Oct).\nSources: trendlyne + go_india_stocks + screener_full (FULL REFRESH).\nUpdates: ALL columns in equity_universe."
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://172.17.0.1:5001/webhook/quarterly",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "X-API-Secret",
+                "value": "TikonaSync2024@SecureKey!xK9mP3"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"async\": true\n}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "479222f0-d8c4-4558-9e3c-918b6d863383",
+        "name": "Trigger Quarterly Sync",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1408,
+          776
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 2,
+          "unit": "minutes"
+        },
+        "id": "fd57dd65-bce0-4648-b39b-9a6825efaa01",
+        "name": "Wait 2 Mins3",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1184,
+          776
+        ],
+        "webhookId": "ef3a5e78-bb8b-4435-88a1-1339b1674586"
+      },
+      {
+        "parameters": {
+          "url": "=http://172.17.0.1:5001/job/{{ $('Trigger Quarterly Sync').item.json.job_id }}}}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-API-Secret",
+                "value": "={{$env.API_SECRET}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "c3914821-9a50-48bd-96c6-8ffbbb3bae83",
+        "name": "Check Status3",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -960,
+          704
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "c1",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "completed",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "3e5219be-daba-4d83-9e47-b9516f3ce5ee",
+        "name": "If Completed3",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -736,
+          704
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "c2",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "error",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "236d3bf5-44ce-4721-a868-8761f3b4d185",
+        "name": "If Error3",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -512,
+          872
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "70d13eeb-7b26-4d14-ab65-277c65abcc7c",
+        "name": "Success Log3",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -512,
+          656
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "15290a87-110d-4f8c-9fe4-b850f2ade4ca",
+        "name": "Error Log3",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -288,
+          872
+        ]
+      }
+    ],
+    "connections": {
+      "Daily Trigger (6:30 AM IST)": {
+        "main": [
+          [
+            {
+              "node": "Trigger Daily Sync",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trigger Daily Sync": {
+        "main": [
+          [
+            {
+              "node": "Wait 2 Mins",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 2 Mins": {
+        "main": [
+          [
+            {
+              "node": "Check Status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Status": {
+        "main": [
+          [
+            {
+              "node": "If Completed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Completed": {
+        "main": [
+          [
+            {
+              "node": "Success Log",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "If Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Error": {
+        "main": [
+          [
+            {
+              "node": "Error Log",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait 2 Mins",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Weekly Trigger (Mon 7:30 AM IST)": {
+        "main": [
+          [
+            {
+              "node": "Trigger Weekly Sync",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trigger Weekly Sync": {
+        "main": [
+          [
+            {
+              "node": "Wait 2 Mins1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 2 Mins1": {
+        "main": [
+          [
+            {
+              "node": "Check Status1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Status1": {
+        "main": [
+          [
+            {
+              "node": "If Completed1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Completed1": {
+        "main": [
+          [
+            {
+              "node": "Success Log1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "If Error1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Error1": {
+        "main": [
+          [
+            {
+              "node": "Error Log1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait 2 Mins1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Biweekly Trigger (1st & 15th, 8:30 AM IST)": {
+        "main": [
+          [
+            {
+              "node": "Trigger Biweekly Sync",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trigger Biweekly Sync": {
+        "main": [
+          [
+            {
+              "node": "Wait 2 Mins2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 2 Mins2": {
+        "main": [
+          [
+            {
+              "node": "Check Status2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Status2": {
+        "main": [
+          [
+            {
+              "node": "If Completed2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Completed2": {
+        "main": [
+          [
+            {
+              "node": "Success Log2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "If Error2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Error2": {
+        "main": [
+          [
+            {
+              "node": "Error Log2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait 2 Mins2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Monthly Trigger (1st of every month)": {
+        "main": [
+          [
+            {
+              "node": "Trigger Quarterly Sync",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trigger Quarterly Sync": {
+        "main": [
+          [
+            {
+              "node": "Wait 2 Mins3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 2 Mins3": {
+        "main": [
+          [
+            {
+              "node": "Check Status3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Status3": {
+        "main": [
+          [
+            {
+              "node": "If Completed3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Completed3": {
+        "main": [
+          [
+            {
+              "node": "Success Log3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "If Error3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If Error3": {
+        "main": [
+          [
+            {
+              "node": "Error Log3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait 2 Mins3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "NEW_UPDATED_DATABASE_SYNC_CODE",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
