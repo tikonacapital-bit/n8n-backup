@@ -1,0 +1,263 @@
+{
+  "updatedAt": "2026-07-10T13:09:04.955Z",
+  "createdAt": "2025-09-17T02:09:48.178Z",
+  "id": "uE3U2iWOLBxWEY4R",
+  "name": "Trendlyne Automated Stock Screener & Scraper",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        16,
+        32
+      ],
+      "id": "b516a146-8cfe-442f-a9e7-3c42d6f5270d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "runCustomScript",
+        "scriptCode": "\n// Assume input from previous node provides username and password\nconst username = 'sumitpoddar@gmail.com' ; // Pull from input data (e.g., secrets)\nconst password = 'Tikona@2022';\n\nif (!username || !password) {\n  console.error('Missing username or password');\n  return [{ error: 'Credentials not provided', ...$json }];\n}\n\n// Set user agent and viewport (as before)\nawait $page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');\nawait $page.setViewport({ width: 1920, height: 1080 });\n\n// Step 1: Navigate to the login page\nawait $page.goto('https://trendlyne.com/accounts/login/', { waitUntil: 'networkidle2', timeout: 30000 });\n\n// Step 2: Fill in the login form (update selectors if needed)\nawait $page.waitForSelector('input[name=\"login\"]', { timeout: 10000 });  // Wait for username field\nawait $page.type('input[name=\"login\"]', username);  // Type username\n\nawait $page.waitForSelector('input[name=\"password\"]', { timeout: 10000 });  // Wait for password field\nawait $page.type('input[name=\"password\"]', password);  // Type password\n\n// Step 3: Submit the form (click the login button)\nawait $page.click('button[type=\"submit\"]');  // Update selector to match the submit button\n\n// Step 4: Wait for login to complete (e.g., redirect or element presence)\nawait $page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 });  // Wait for redirect\n// Alternatively, wait for a post-login element: await $page.waitForSelector('.user-profile', { timeout: 15000 });\n\n// Navigate to the URL\n// await $page.goto('https://trendlyne.com/fundamentals/stock-screener/722157/idea-generator-dashboard/index/NIFTY500/nifty-500/', {\n//   waitUntil: 'networkidle2',  // Wait for page to fully load\n//   timeout: 30000  // Overall navigation timeout\n// });\nawait $page.goto('https://trendlyne.com/fundamentals/stock-screener/11793/dvm-high-performing-highly-durable-companies-subscription/', {\n  waitUntil: 'networkidle2',  // Wait for page to fully load\n  timeout: 30000  // Overall navigation timeout\n});\n\n// Wait for the table rows to be present (up to 25 seconds)\nawait $page.waitForSelector('table.trendlyne-screener-table tbody tr', { timeout: 25000 });\n\n// Extract names by evaluating JS in the browser context\nconst names = await $page.evaluate(() => {\n  const rows = document.querySelectorAll('table.trendlyne-screener-table tbody tr');\n  const extractedNames = [];\n  rows.forEach(row => {\n    const anchor = row.querySelector('a.stockrow');\n    if (anchor) {\n      const text = anchor.textContent.trim();\n      if (text) extractedNames.push(text);\n    }\n  });\n  // Deduplicate and filter empties\n  const seen = new Set();\n  return extractedNames.filter(n => {\n    if (n && !seen.has(n)) {\n      seen.add(n);\n      return true;\n    }\n    return false;\n  });\n});\n\n// Debug logs (will appear in n8n execution logs)\nconsole.log('Extracted company names:', names);\n\n// Return the names in n8n-friendly format (array of items, similar to sample)\nreturn names.map(name => ({ companyName: name, ...$json }));",
+        "options": {
+          "headless": true
+        }
+      },
+      "type": "n8n-nodes-puppeteer.puppeteer",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -96
+      ],
+      "id": "cfe2696f-a248-4087-a60f-775df29e09fd",
+      "name": "Puppeteer"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY",
+          "mode": "list",
+          "cachedResultName": "Portfolio tracker ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1335957943,
+          "mode": "list",
+          "cachedResultName": "Idea Generator Screener",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY/edit#gid=1335957943"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company Name": "={{ $json.companyName }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Trendlyne Link",
+              "displayName": "Trendlyne Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        688,
+        -32
+      ],
+      "id": "e2a8efde-2c41-4611-be7e-81f499ab2607",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "runCustomScript",
+        "scriptCode": "// Set user agent and viewport (if not configurable in node params)\nawait $page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');\nawait $page.setViewport({ width: 1920, height: 1080 });\n\n// Navigate to the URL\nawait $page.goto('https://trendlyne.com/fundamentals/stock-screener/722157/idea-generator-dashboard/index/NIFTY500/nifty-500/', {\n  waitUntil: 'networkidle2',  // Wait for page to fully load\n  timeout: 30000  // Overall navigation timeout\n});\n\n// Wait for the table rows to be present (up to 25 seconds)\nawait $page.waitForSelector('table.trendlyne-screener-table tbody tr', { timeout: 25000 });\n\n// Extract names by evaluating JS in the browser context\nconst names = await $page.evaluate(() => {\n  const rows = document.querySelectorAll('table.trendlyne-screener-table tbody tr');\n  const extractedNames = [];\n  rows.forEach(row => {\n    const anchor = row.querySelector('a.stockrow');\n    if (anchor) {\n      const text = anchor.textContent.trim();\n      if (text) extractedNames.push(text);\n    }\n  });\n  // Deduplicate and filter empties\n  const seen = new Set();\n  return extractedNames.filter(n => {\n    if (n && !seen.has(n)) {\n      seen.add(n);\n      return true;\n    }\n    return false;\n  });\n});\n\n// Debug logs (will appear in n8n execution logs)\nconsole.log('Extracted company names:', names);\n\n// Return the names in n8n-friendly format (array of items, similar to sample)\nreturn names.map(name => ({ companyName: name, ...$json }));",
+        "options": {
+          "headless": true
+        }
+      },
+      "type": "n8n-nodes-puppeteer.puppeteer",
+      "typeVersion": 1,
+      "position": [
+        736,
+        -144
+      ],
+      "id": "127f66cc-0fa3-4395-be8d-ad155cc3c010",
+      "name": "Puppeteer1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY",
+          "mode": "list",
+          "cachedResultName": "Portfolio tracker ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 402179090,
+          "mode": "list",
+          "cachedResultName": "IDEA Screener",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY/edit#gid=402179090"
+        },
+        "combineFilters": "OR",
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange",
+              "firstDataRow": 3
+            }
+          },
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          },
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        256,
+        48
+      ],
+      "id": "b11d3acc-d026-4ad3-b25c-853d1f6a2d7f",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "42060081-1c1a-4788-b366-ae96c8f56caa",
+              "leftValue": "={{ $json.row_number }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        96
+      ],
+      "id": "7450f0ef-4b2f-42c2-91b0-f49be065e9b5",
+      "name": "Filter"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Puppeteer": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b6564777-c411-424d-ab99-ea6c65a12ae9",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-09-17T02:09:48.188Z",
+      "createdAt": "2025-09-17T02:09:48.188Z",
+      "role": "workflow:owner",
+      "workflowId": "uE3U2iWOLBxWEY4R",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
