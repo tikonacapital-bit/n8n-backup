@@ -1,0 +1,263 @@
+{
+  "updatedAt": "2025-11-24T03:25:49.000Z",
+  "createdAt": "2025-07-03T09:30:17.669Z",
+  "id": "d1c7cJy6b49jJ1tL",
+  "name": "Social Media Automation",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+          "mode": "list",
+          "cachedResultName": "Master Social Media Automation - Content & Posting -v1",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        880,
+        -100
+      ],
+      "id": "b9780c14-9071-4fe7-9ea6-7288bb8e7090",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "mjq78WKVUEoUwbFH",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "77e31d7f-1c51-4735-b659-148b786928c0",
+              "leftValue": "={{ $('Get row(s) in sheet').item.json['Create Image(Image stays for 10 min only)'] }}",
+              "rightValue": "Yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1240,
+        -80
+      ],
+      "id": "37df59e1-6e01-4fee-8f38-e6295129ecea",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+          "mode": "list",
+          "cachedResultName": "Master Social Media Automation - Content & Posting -v1",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1560,
+        -113.68264498421922
+      ],
+      "id": "1f82860a-717a-4915-8efb-5199fed42a16",
+      "name": "Generate an image",
+      "credentials": {
+        "openAiApi": {
+          "id": "mjq78WKVUEoUwbFH",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json['Image URL(Image stays for 10 min only)'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        160
+      ],
+      "id": "7b629056-70f5-4fe9-9e6b-8a754689eeb1",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['Post Status'] }}",
+                    "rightValue": "Generate Content",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7a6f4bd8-ccae-42cf-b88f-580c3b31129e"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f2f9a527-fc83-43f4-bd66-39e9d2062924",
+                    "leftValue": "={{ $json['Post Status'] }}",
+                    "rightValue": "Post Content",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "90b11837-6271-4512-b1f3-33eb23af2341",
+      "name": "Switch1"
+    }
+  ],
+  "connections": {
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "8174eb82-a114-4806-8460-1164b37b80a7",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-07-03T09:30:17.679Z",
+      "createdAt": "2025-07-03T09:30:17.679Z",
+      "role": "workflow:owner",
+      "workflowId": "d1c7cJy6b49jJ1tL",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
