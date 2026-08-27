@@ -1,0 +1,2569 @@
+{
+  "updatedAt": "2026-08-20T11:15:27.323Z",
+  "createdAt": "2026-07-01T07:32:22.723Z",
+  "id": "dVQPkHx_vfdsPNNhhXbvP",
+  "name": "Tikona_Cards",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "id": "9bfe4c1a-6ca3-4265-ad31-0989d51ea8df",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        112,
+        208
+      ],
+      "webhookId": "telegram-card-scanner",
+      "notesInFlow": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "iU8DLvbqYIvAwIaL",
+          "name": "Tikona_Cards"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1659d482-438b-4c19-b135-628ffb5a09ac",
+              "name": "chat_id",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "81b4b39c-78a9-46ba-9329-5f67c6b1d51c",
+              "name": "extracted_data",
+              "value": "=={{ JSON.parse($json.content.parts[0].text) }}",
+              "type": "string"
+            },
+            {
+              "id": "21904806-bc8a-4341-a2d2-9a51c6fc4ab7",
+              "name": "identified_type",
+              "value": "=={{ JSON.parse($json.content.parts[0].text).docType }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        48
+      ],
+      "id": "11ba04fa-7a84-4932-a341-1a8ceaa9bcf5",
+      "name": "Edit Fields",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=📄 Document Type: {{ $json.identified_type }}\n👤 Name: {{ $json.extracted_data.data ? $json.extracted_data.data.name : 'N/A' }}\n📞 Phone: {{ $json.extracted_data.data ? $json.extracted_data.data.phone : 'N/A' }}\n📧 Email: {{ $json.extracted_data.data ? $json.extracted_data.data.email : 'N/A' }}\n🏠 Address: {{ $json.extracted_data.data ? $json.extracted_data.data.address : 'N/A' }}\n🎂 DOB: {{ $json.extracted_data.data ? $json.extracted_data.data.dob : 'N/A' }}\n\nIs this information correct?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Confirm & Save",
+                    "additionalFields": {
+                      "callback_data": "=confirm_{{ $('Edit Fields').item.json.identified_type }}"
+                    }
+                  },
+                  {
+                    "text": "No",
+                    "additionalFields": {
+                      "callback_data": "=confirm_no"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "reply_to_message_id": "={{ $('Telegram Trigger').item.json.message.message_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1424,
+        48
+      ],
+      "id": "ab151d1d-e7ce-4cd1-85e6-94bb4e592327",
+      "name": "Send a text message",
+      "webhookId": "08f966b4-0630-4255-a8ac-f5a9e385d477",
+      "credentials": {
+        "telegramApi": {
+          "id": "iU8DLvbqYIvAwIaL",
+          "name": "Tikona_Cards"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "={{ $json.callback_query.message.reply_markup.inline_keyboard[0][0].callback_data }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "id": "57447a07-4d25-4ae0-8d9e-3ad1c13dfaf4"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Yes"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c911853d-f74a-4cd3-91af-c63ea949aad2",
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "={{ $json.callback_query.message.reply_markup.inline_keyboard[0][1].callback_data }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "No"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        816,
+        480
+      ],
+      "id": "fdc59849-0553-4533-84df-d113d4492c50",
+      "name": "Switch",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const cb = $input.item.json.callback_query;\nconst replyMsg = cb.message?.reply_to_message;\n\n// 1. Get file_id from the original user photo or document\nconst file_id = replyMsg?.document?.file_id || replyMsg?.photo?.slice(-1)[0]?.file_id;\n\n// 2. Parse details from the message text\nconst text = cb.message?.text || '';\n\nconst getField = (regex) => {\n  const match = text.match(regex);\n  return match ? match[1].trim() : '';\n};\n\nconst docTypeMatch = text.match(/Document Type:\\s*(.+)/i);\nconst docType = docTypeMatch ? docTypeMatch[1].trim() : 'Unknown';\n\nconst fields = {\n  name: getField(/Name:\\s*(.+)/i),\n  phone: getField(/Phone:\\s*(.+)/i),\n  email: getField(/Email:\\s*(.+)/i),\n  title_designation: getField(/Designation:\\s*(.+)/i),\n  company: getField(/Company:\\s*(.+)/i),\n  website: getField(/Website:\\s*(.+)/i),\n  address: getField(/Address:\\s*(.+)/i),\n  id_number: getField(/ID Number:\\s*(.+)/i),\n  dob: getField(/DOB:\\s*(.+)/i),\n  father_name: getField(/Father's Name:\\s*(.+)/i)\n};\n\nreturn {\n  json: {\n    file_id: file_id,\n    chat_id: cb.message.chat.id,\n    user_name: cb.from.first_name || 'User',\n    docType: docType,\n    fields: fields\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        336
+      ],
+      "id": "f67c69d1-936d-43c8-9ad7-8b4c629cc751",
+      "name": "Code in JavaScript",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        336
+      ],
+      "id": "38ca52aa-784d-4b61-9dd8-cd07a44fa951",
+      "name": "Get a file",
+      "webhookId": "f661f54d-3edc-48bc-9e2f-26825488d35e",
+      "credentials": {
+        "telegramApi": {
+          "id": "iU8DLvbqYIvAwIaL",
+          "name": "Tikona_Cards"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "=data",
+        "name": "={{ $('Code in JavaScript').item.json.user_name }}_{{ $('Code in JavaScript').item.json.docType }}.pdf",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        816,
+        48
+      ],
+      "id": "947f616b-61a3-4a64-a8b0-89692612306b",
+      "name": "Analyze document",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "FSmi6gZI7NQLr4Z9",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "id": "2007e32b-4460-43ed-9d74-8432b6a5c7fb",
+      "name": "Telegram Trigger1",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        928
+      ],
+      "webhookId": "telegram-card-scanner",
+      "credentials": {
+        "telegramApi": {
+          "id": "iU8DLvbqYIvAwIaL",
+          "name": "Tikona_Cards"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7151fb16-f6f5-4979-8847-ee159d37b22d",
+              "leftValue": "={{ $json.message?.message_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        928
+      ],
+      "id": "6765314a-fb53-46e8-81e5-b628db543db5",
+      "name": "If1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "Analyze this document or image (which may be a PDF or photo).\n\n1. Identify the document type strictly as one of:\n   - \"Visiting Card\"\n   - \"PAN Card\"\n   - \"Aadhaar Card\"\n   - \"Driving License\"\n   - \"Unknown\"\n\n2. Extract all available information into a structured JSON format.\n\nReturn strictly a valid JSON object matching this schema with no Markdown code block wrappers:\n{\n  \"docType\": \"Visiting Card | PAN Card | Aadhaar Card | Driving License | Unknown\",\n  \"data\": {\n    \"name\": \"Full name or empty string\",\n    \"title_designation\": \"Job title (if visiting card)\",\n    \"company\": \"Company/Organization name (if visiting card)\",\n    \"phone\": \"Phone number or empty string\",\n    \"email\": \"Email address or empty string\",\n    \"website\": \"Website URL or empty string\",\n    \"address\": \"Full address or empty string\",\n    \"id_number\": \"ID number / License number / Card number (if applicable)\",\n    \"dob\": \"Date of birth (if applicable)\",\n    \"father_name\": \"Father's name (if applicable)\"\n  }\n}",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        768
+      ],
+      "id": "3ef4d95e-d852-4a9c-9a06-b2dba54845dc",
+      "name": "Analyze document1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "FSmi6gZI7NQLr4Z9",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1659d482-438b-4c19-b135-628ffb5a09ac",
+              "name": "chat_id",
+              "value": "={{ $('Telegram Trigger1').item.json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "81b4b39c-78a9-46ba-9329-5f67c6b1d51c",
+              "name": "extracted_data",
+              "value": "={{ JSON.parse(($json.content?.parts?.[0]?.text || $json.text || '{}').replace(/```json|```/g, '').trim()) }}",
+              "type": "object"
+            },
+            {
+              "id": "21904806-bc8a-4341-a2d2-9a51c6fc4ab7",
+              "name": "identified_type",
+              "value": "={{ JSON.parse(($json.content?.parts?.[0]?.text || $json.text || '{}').replace(/```json|```/g, '').trim()).docType || 'Unknown' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1072,
+        768
+      ],
+      "id": "14e715a7-6cc0-48da-9526-299c4c69ae6a",
+      "name": "Edit Fields1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=📄 Document Type: {{ $json.identified_type }}\n{{ \n  (() => {\n    const t = $json.identified_type;\n    const d = $json.data || {};\n    let out = '';\n\n    if (t === 'Visiting Card') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '💼 Designation: ' + (d.title_designation || 'N/A') + '\\n';\n      out += '🏢 Company: ' + (d.company || 'N/A') + '\\n';\n      out += '📞 Phone: ' + (d.phone || 'N/A') + '\\n';\n      out += '📧 Email: ' + (d.email || 'N/A') + '\\n';\n      out += '🌐 Website: ' + (d.website || 'N/A') + '\\n';\n      out += '🏠 Address: ' + (d.address || 'N/A');\n    } else if (t === 'Aadhaar Card') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '🎂 DOB / Year of Birth: ' + (d.dob || 'N/A') + '\\n';\n      out += '🏠 Address: ' + (d.address || 'N/A') + '\\n';\n      out += '🆔 ID Number: ' + (d.id_number || 'N/A');\n    } else if (t === 'PAN Card') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '👨 Father\\'s Name: ' + (d.father_name || 'N/A') + '\\n';\n      out += '🎂 DOB: ' + (d.dob || 'N/A') + '\\n';\n      out += '💳 PAN Number: ' + (d.id_number || 'N/A');\n    } else if (t === 'Driving License') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '🪪 License Number: ' + (d.id_number || 'N/A') + '\\n';\n      out += '🎂 DOB: ' + (d.dob || 'N/A') + '\\n';\n      out += '🏠 Address: ' + (d.address || 'N/A');\n    } else {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '📞 Phone: ' + (d.phone || 'N/A') + '\\n';\n      out += '📧 Email: ' + (d.email || 'N/A');\n    }\n    return out;\n  })()\n}}\n\nIs this information correct?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Confirm & Save",
+                    "additionalFields": {
+                      "callback_data": "=confirm_yes"
+                    }
+                  },
+                  {
+                    "text": "No",
+                    "additionalFields": {
+                      "callback_data": "confirm_no"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "reply_to_message_id": "={{ $('Telegram Trigger1').item.json.message.message_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1520,
+        768
+      ],
+      "id": "c6c927c8-c307-4a02-a279-2fe97d6b9748",
+      "name": "Send a text message2",
+      "webhookId": "4c320627-d76c-489b-9a53-5b5bd77f19eb",
+      "credentials": {
+        "telegramApi": {
+          "id": "iU8DLvbqYIvAwIaL",
+          "name": "Tikona_Cards"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "confirm_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "id": "57447a07-4d25-4ae0-8d9e-3ad1c13dfaf4"
+                  },
+                  {
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "confirm_no",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "id": "57447a07-4d25-4ae0-8d9e-3ad1c13dfaf5"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Yes"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c911853d-f74a-4cd3-91af-c63ea949aad2",
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "confirm_no",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "No"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        1200
+      ],
+      "id": "f1f5d9c7-adc4-43c9-b53d-fb93fb1e5352",
+      "name": "Switch2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const cb = $input.item.json.callback_query;\nconst replyMsg = cb.message?.reply_to_message;\n\n// 1. Get file_id from original message\nconst file_id = replyMsg?.document?.file_id || replyMsg?.photo?.slice(-1)[0]?.file_id;\n\n// 2. Parse text fields from the confirmation message\nconst text = cb.message?.text || '';\n\nconst getField = (regex) => {\n  const match = text.match(regex);\n  if (!match || !match[1]) return '';\n  const val = match[1].trim();\n  return val === 'N/A' ? '' : val;\n};\n\nconst docTypeMatch = text.match(/Document Type:\\s*=?([^\\n]+)/i);\nconst docType = docTypeMatch ? docTypeMatch[1].trim().replace(/^=/, '') : 'Unknown';\n\nconst fields = {\n  name: getField(/Name:\\s*([^\\n]+)/i),\n  phone: getField(/Phone:\\s*([^\\n]+)/i),\n  email: getField(/Email:\\s*([^\\n]+)/i),\n  title_designation: getField(/Designation:\\s*([^\\n]+)/i),\n  company: getField(/Company:\\s*([^\\n]+)/i),\n  website: getField(/Website:\\s*([^\\n]+)/i),\n  address: getField(/Address:\\s*([^\\n]+)/i),\n  id_number: getField(/(?:ID Number|PAN Number|License Number):\\s*([^\\n]+)/i),\n  dob: getField(/(?:DOB|DOB \\/ Year of Birth):\\s*([^\\n]+)/i),\n  father_name: getField(/Father's Name:\\s*([^\\n]+)/i)\n};\n\nreturn {\n  json: {\n    file_id: file_id,\n    chat_id: cb.message.chat.id,\n    user_name: cb.from?.first_name || 'User',\n    docType: docType,\n    fields: fields\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        1056
+      ],
+      "id": "c74ce231-794f-4c5e-9346-24356ebffbc6",
+      "name": "Code in JavaScript1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        1056
+      ],
+      "id": "aa556513-a871-463a-999c-550c752aa7d1",
+      "name": "Get a file1",
+      "webhookId": "2314bfbe-5596-47ca-a7fd-77219ceb0a83",
+      "credentials": {
+        "telegramApi": {
+          "id": "iU8DLvbqYIvAwIaL",
+          "name": "Tikona_Cards"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Code in JavaScript1').item.json.user_name }}_{{ $('Code in JavaScript1').item.json.docType }}.pdf",
+        "driveId": {
+          "__rl": true,
+          "value": "0ACO9VrqDLbsuUk9PVA",
+          "mode": "list",
+          "cachedResultName": "Tikona Capital Team",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        1728
+      ],
+      "id": "82431e54-5f25-4a5f-94ad-c5b569f6a17c",
+      "name": "Analyze document2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "FSmi6gZI7NQLr4Z9",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawText = $input.item.json.content?.parts?.[0]?.text || $input.item.json.text || '{}';\nconst cleanText = rawText.replace(/```json|```/g, '').trim();\n\nlet parsed = {};\ntry {\n  parsed = JSON.parse(cleanText);\n} catch (e) {\n  parsed = { docType: 'Unknown', data: {} };\n}\n\nconst telegramMsg = $('Telegram Trigger2').item.json.message;\n\nreturn {\n  json: {\n    chat_id: telegramMsg.chat.id,\n    message_id: telegramMsg.message_id,\n    identified_type: parsed.docType || 'Unknown',\n    extracted_data: parsed,\n    data: parsed.data || {}\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        1728
+      ],
+      "id": "5e098b65-bd4a-42ef-b15b-5178750b4a56",
+      "name": "Parse Extracted Data1"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=📄 Document Type: {{ $json.identified_type }}\n{{ \n  (() => {\n    const t = $json.identified_type;\n    const d = $json.data || {};\n    let out = '';\n\n    if (t === 'Visiting Card') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '💼 Designation: ' + (d.title_designation || 'N/A') + '\\n';\n      out += '🏢 Company: ' + (d.company || 'N/A') + '\\n';\n      out += '📞 Phone: ' + (d.phone || 'N/A') + '\\n';\n      out += '📧 Email: ' + (d.email || 'N/A') + '\\n';\n      out += '🌐 Website: ' + (d.website || 'N/A') + '\\n';\n      out += '🏠 Address: ' + (d.address || 'N/A');\n    } else if (t === 'Aadhaar Card') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '🎂 DOB / Year of Birth: ' + (d.dob || 'N/A') + '\\n';\n      out += '🏠 Address: ' + (d.address || 'N/A') + '\\n';\n      out += '🆔 ID Number: ' + (d.id_number || 'N/A');\n    } else if (t === 'PAN Card') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '👨 Father\\'s Name: ' + (d.father_name || 'N/A') + '\\n';\n      out += '🎂 DOB: ' + (d.dob || 'N/A') + '\\n';\n      out += '💳 PAN Number: ' + (d.id_number || 'N/A');\n    } else if (t === 'Driving License') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '🪪 License Number: ' + (d.id_number || 'N/A') + '\\n';\n      out += '🎂 DOB: ' + (d.dob || 'N/A') + '\\n';\n      out += '🏠 Address: ' + (d.address || 'N/A');\n    } else {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '📞 Phone: ' + (d.phone || 'N/A') + '\\n';\n      out += '📧 Email: ' + (d.email || 'N/A');\n    }\n    return out;\n  })()\n}}\n\nIs this information correct?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Confirm & Save",
+                    "additionalFields": {
+                      "callback_data": "=confirm_yes"
+                    }
+                  },
+                  {
+                    "text": "No",
+                    "additionalFields": {
+                      "callback_data": "confirm_no"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "reply_to_message_id": "={{ $('Telegram Trigger2').item.json.message.message_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        1728
+      ],
+      "id": "bdcd7ac7-bb9f-4553-9da9-813f1e90c32a",
+      "name": "Send a text message4",
+      "webhookId": "cad4e004-7d2b-4623-aa60-95f9877502cb",
+      "credentials": {
+        "telegramApi": {
+          "id": "iU8DLvbqYIvAwIaL",
+          "name": "Tikona_Cards"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "confirm_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "id": "57447a07-4d25-4ae0-8d9e-3ad1c13dfaf4"
+                  },
+                  {
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "confirm_no",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "id": "57447a07-4d25-4ae0-8d9e-3ad1c13dfaf5"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Yes"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c911853d-f74a-4cd3-91af-c63ea949aad2",
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "confirm_no",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "No"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        2192
+      ],
+      "id": "fc6fbe5c-43aa-4250-8cc6-9482f60441d6",
+      "name": "Switch4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cb = $input.item.json.callback_query;\nconst replyMsg = cb.message?.reply_to_message;\n\n// 1. Get file_id from original message\nconst file_id = replyMsg?.document?.file_id || replyMsg?.photo?.slice(-1)[0]?.file_id;\n\n// 2. Parse text fields from confirmation message\nconst text = cb.message?.text || '';\n\nconst getField = (regex) => {\n  const match = text.match(regex);\n  if (!match || !match[1]) return '';\n  const val = match[1].trim();\n  return val === 'N/A' ? '' : val;\n};\n\nconst docTypeMatch = text.match(/Document Type:\\s*=?([^\\n]+)/i);\nconst docType = docTypeMatch ? docTypeMatch[1].trim().replace(/^=/, '') : 'Unknown';\n\nconst fields = {\n  name: getField(/Name:\\s*([^\\n]+)/i),\n  phone: getField(/Phone:\\s*([^\\n]+)/i),\n  email: getField(/Email:\\s*([^\\n]+)/i),\n  title_designation: getField(/Designation:\\s*([^\\n]+)/i),\n  company: getField(/Company:\\s*([^\\n]+)/i),\n  website: getField(/Website:\\s*([^\\n]+)/i),\n  address: getField(/Address:\\s*([^\\n]+)/i),\n  id_number: getField(/(?:ID Number|PAN Number|License Number):\\s*([^\\n]+)/i),\n  dob: getField(/(?:DOB|DOB \\/ Year of Birth):\\s*([^\\n]+)/i),\n  father_name: getField(/Father's Name:\\s*([^\\n]+)/i)\n};\n\nreturn {\n  json: {\n    file_id: file_id,\n    chat_id: cb.message.chat.id,\n    user_name: cb.from?.first_name || 'User',\n    docType: docType,\n    fields: fields\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        2176
+      ],
+      "id": "33dcc011-61d3-4a2f-9aa8-2d939e309166",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        2176
+      ],
+      "id": "44d82442-7af8-4751-8e02-9f9ac93f2b0c",
+      "name": "Get a file2",
+      "webhookId": "7cc9064a-01e2-4c18-8cdb-2054a2439896",
+      "credentials": {
+        "telegramApi": {
+          "id": "iU8DLvbqYIvAwIaL",
+          "name": "Tikona_Cards"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ ($('Code in JavaScript2').item.json.fields.name || 'Unknown_Client').replace(/[\\/\\\\:*?\"<>|]/g, '_').trim() }}_{{ $('Code in JavaScript2').item.json.docType }}.pdf",
+        "driveId": {
+          "__rl": true,
+          "value": "0ACO9VrqDLbsuUk9PVA",
+          "mode": "list",
+          "cachedResultName": "Tikona Capital Team",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          816,
+          48
+        ],
+        "id": "947f616b-61a3-4a64-a8b0-89692612306b",
+        "name": "Analyze document",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "FSmi6gZI7NQLr4Z9",
+            "name": "Google Gemini(PaLM) Api account 3"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "updates": [
+            "message",
+            "callback_query"
+          ],
+          "additionalFields": {
+            "download": true
+          }
+        },
+        "id": "2007e32b-4460-43ed-9d74-8432b6a5c7fb",
+        "name": "Telegram Trigger1",
+        "type": "n8n-nodes-base.telegramTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -16,
+          928
+        ],
+        "webhookId": "telegram-card-scanner",
+        "credentials": {
+          "telegramApi": {
+            "id": "iU8DLvbqYIvAwIaL",
+            "name": "Tikona_Cards"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "7151fb16-f6f5-4979-8847-ee159d37b22d",
+                "leftValue": "={{ $json.message?.message_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          192,
+          928
+        ],
+        "id": "6765314a-fb53-46e8-81e5-b628db543db5",
+        "name": "If1",
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "resource": "document",
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "models/gemini-2.5-flash"
+          },
+          "text": "Analyze this document or image (which may be a PDF or photo).\n\n1. Identify the document type strictly as one of:\n   - \"Visiting Card\"\n   - \"PAN Card\"\n   - \"Aadhaar Card\"\n   - \"Driving License\"\n   - \"Unknown\"\n\n2. Extract all available information into a structured JSON format.\n\nReturn strictly a valid JSON object matching this schema with no Markdown code block wrappers:\n{\n  \"docType\": \"Visiting Card | PAN Card | Aadhaar Card | Driving License | Unknown\",\n  \"data\": {\n    \"name\": \"Full name or empty string\",\n    \"title_designation\": \"Job title (if visiting card)\",\n    \"company\": \"Company/Organization name (if visiting card)\",\n    \"phone\": \"Phone number or empty string\",\n    \"email\": \"Email address or empty string\",\n    \"website\": \"Website URL or empty string\",\n    \"address\": \"Full address or empty string\",\n    \"id_number\": \"ID number / License number / Card number (if applicable)\",\n    \"dob\": \"Date of birth (if applicable)\",\n    \"father_name\": \"Father's name (if applicable)\"\n  }\n}",
+          "inputType": "binary",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          688,
+          768
+        ],
+        "id": "3ef4d95e-d852-4a9c-9a06-b2dba54845dc",
+        "name": "Analyze document1",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "FSmi6gZI7NQLr4Z9",
+            "name": "Google Gemini(PaLM) Api account 3"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "1659d482-438b-4c19-b135-628ffb5a09ac",
+                "name": "chat_id",
+                "value": "={{ $('Telegram Trigger1').item.json.message.chat.id }}",
+                "type": "string"
+              },
+              {
+                "id": "81b4b39c-78a9-46ba-9329-5f67c6b1d51c",
+                "name": "extracted_data",
+                "value": "={{ JSON.parse(($json.content?.parts?.[0]?.text || $json.text || '{}').replace(/```json|```/g, '').trim()) }}",
+                "type": "object"
+              },
+              {
+                "id": "21904806-bc8a-4341-a2d2-9a51c6fc4ab7",
+                "name": "identified_type",
+                "value": "={{ JSON.parse(($json.content?.parts?.[0]?.text || $json.text || '{}').replace(/```json|```/g, '').trim()).docType || 'Unknown' }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1072,
+          768
+        ],
+        "id": "14e715a7-6cc0-48da-9526-299c4c69ae6a",
+        "name": "Edit Fields1",
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $json.chat_id }}",
+          "text": "=📄 Document Type: {{ $json.identified_type }}\n{{ \n  (() => {\n    const t = $json.identified_type;\n    const d = $json.data || {};\n    let out = '';\n\n    if (t === 'Visiting Card') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '💼 Designation: ' + (d.title_designation || 'N/A') + '\\n';\n      out += '🏢 Company: ' + (d.company || 'N/A') + '\\n';\n      out += '📞 Phone: ' + (d.phone || 'N/A') + '\\n';\n      out += '📧 Email: ' + (d.email || 'N/A') + '\\n';\n      out += '🌐 Website: ' + (d.website || 'N/A') + '\\n';\n      out += '🏠 Address: ' + (d.address || 'N/A');\n    } else if (t === 'Aadhaar Card') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '🎂 DOB / Year of Birth: ' + (d.dob || 'N/A') + '\\n';\n      out += '🏠 Address: ' + (d.address || 'N/A') + '\\n';\n      out += '🆔 ID Number: ' + (d.id_number || 'N/A');\n    } else if (t === 'PAN Card') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '👨 Father\\'s Name: ' + (d.father_name || 'N/A') + '\\n';\n      out += '🎂 DOB: ' + (d.dob || 'N/A') + '\\n';\n      out += '💳 PAN Number: ' + (d.id_number || 'N/A');\n    } else if (t === 'Driving License') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '🪪 License Number: ' + (d.id_number || 'N/A') + '\\n';\n      out += '🎂 DOB: ' + (d.dob || 'N/A') + '\\n';\n      out += '🏠 Address: ' + (d.address || 'N/A');\n    } else {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '📞 Phone: ' + (d.phone || 'N/A') + '\\n';\n      out += '📧 Email: ' + (d.email || 'N/A');\n    }\n    return out;\n  })()\n}}\n\nIs this information correct?",
+          "replyMarkup": "inlineKeyboard",
+          "inlineKeyboard": {
+            "rows": [
+              {
+                "row": {
+                  "buttons": [
+                    {
+                      "text": "✅ Confirm & Save",
+                      "additionalFields": {
+                        "callback_data": "=confirm_yes"
+                      }
+                    },
+                    {
+                      "text": "No",
+                      "additionalFields": {
+                        "callback_data": "confirm_no"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "additionalFields": {
+            "reply_to_message_id": "={{ $('Telegram Trigger1').item.json.message.message_id }}"
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1520,
+          768
+        ],
+        "id": "c6c927c8-c307-4a02-a279-2fe97d6b9748",
+        "name": "Send a text message2",
+        "webhookId": "4c320627-d76c-489b-9a53-5b5bd77f19eb",
+        "credentials": {
+          "telegramApi": {
+            "id": "iU8DLvbqYIvAwIaL",
+            "name": "Tikona_Cards"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.callback_query.data }}",
+                      "rightValue": "confirm_",
+                      "operator": {
+                        "type": "string",
+                        "operation": "startsWith"
+                      },
+                      "id": "57447a07-4d25-4ae0-8d9e-3ad1c13dfaf4"
+                    },
+                    {
+                      "leftValue": "={{ $json.callback_query.data }}",
+                      "rightValue": "confirm_no",
+                      "operator": {
+                        "type": "string",
+                        "operation": "notEquals"
+                      },
+                      "id": "57447a07-4d25-4ae0-8d9e-3ad1c13dfaf5"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Yes"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "c911853d-f74a-4cd3-91af-c63ea949aad2",
+                      "leftValue": "={{ $json.callback_query.data }}",
+                      "rightValue": "confirm_no",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "No"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          688,
+          1200
+        ],
+        "id": "f1f5d9c7-adc4-43c9-b53d-fb93fb1e5352",
+        "name": "Switch2",
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const cb = $input.item.json.callback_query;\nconst replyMsg = cb.message?.reply_to_message;\n\n// 1. Get file_id from original message\nconst file_id = replyMsg?.document?.file_id || replyMsg?.photo?.slice(-1)[0]?.file_id;\n\n// 2. Parse text fields from the confirmation message\nconst text = cb.message?.text || '';\n\nconst getField = (regex) => {\n  const match = text.match(regex);\n  if (!match || !match[1]) return '';\n  const val = match[1].trim();\n  return val === 'N/A' ? '' : val;\n};\n\nconst docTypeMatch = text.match(/Document Type:\\s*=?([^\\n]+)/i);\nconst docType = docTypeMatch ? docTypeMatch[1].trim().replace(/^=/, '') : 'Unknown';\n\nconst fields = {\n  name: getField(/Name:\\s*([^\\n]+)/i),\n  phone: getField(/Phone:\\s*([^\\n]+)/i),\n  email: getField(/Email:\\s*([^\\n]+)/i),\n  title_designation: getField(/Designation:\\s*([^\\n]+)/i),\n  company: getField(/Company:\\s*([^\\n]+)/i),\n  website: getField(/Website:\\s*([^\\n]+)/i),\n  address: getField(/Address:\\s*([^\\n]+)/i),\n  id_number: getField(/(?:ID Number|PAN Number|License Number):\\s*([^\\n]+)/i),\n  dob: getField(/(?:DOB|DOB \\/ Year of Birth):\\s*([^\\n]+)/i),\n  father_name: getField(/Father's Name:\\s*([^\\n]+)/i)\n};\n\nreturn {\n  json: {\n    file_id: file_id,\n    chat_id: cb.message.chat.id,\n    user_name: cb.from?.first_name || 'User',\n    docType: docType,\n    fields: fields\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          944,
+          1056
+        ],
+        "id": "c74ce231-794f-4c5e-9346-24356ebffbc6",
+        "name": "Code in JavaScript1",
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "resource": "file",
+          "fileId": "={{ $json.file_id }}",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1120,
+          1056
+        ],
+        "id": "aa556513-a871-463a-999c-550c752aa7d1",
+        "name": "Get a file1",
+        "webhookId": "2314bfbe-5596-47ca-a7fd-77219ceb0a83",
+        "credentials": {
+          "telegramApi": {
+            "id": "iU8DLvbqYIvAwIaL",
+            "name": "Tikona_Cards"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "name": "={{ $('Code in JavaScript1').item.json.user_name }}_{{ $('Code in JavaScript1').item.json.docType }}.pdf",
+          "driveId": {
+            "__rl": true,
+            "value": "0ACO9VrqDLbsuUk9PVA",
+            "mode": "list",
+            "cachedResultName": "Tikona Capital Team",
+            "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          736,
+          1728
+        ],
+        "id": "82431e54-5f25-4a5f-94ad-c5b569f6a17c",
+        "name": "Analyze document2",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "FSmi6gZI7NQLr4Z9",
+            "name": "Google Gemini(PaLM) Api account 3"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const rawText = $input.item.json.content?.parts?.[0]?.text || $input.item.json.text || '{}';\nconst cleanText = rawText.replace(/```json|```/g, '').trim();\n\nlet parsed = {};\ntry {\n  parsed = JSON.parse(cleanText);\n} catch (e) {\n  parsed = { docType: 'Unknown', data: {} };\n}\n\nconst telegramMsg = $('Telegram Trigger2').item.json.message;\n\nreturn {\n  json: {\n    chat_id: telegramMsg.chat.id,\n    message_id: telegramMsg.message_id,\n    identified_type: parsed.docType || 'Unknown',\n    extracted_data: parsed,\n    data: parsed.data || {}\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          992,
+          1728
+        ],
+        "id": "5e098b65-bd4a-42ef-b15b-5178750b4a56",
+        "name": "Parse Extracted Data1"
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $json.chat_id }}",
+          "text": "=📄 Document Type: {{ $json.identified_type }}\n{{ \n  (() => {\n    const t = $json.identified_type;\n    const d = $json.data || {};\n    let out = '';\n\n    if (t === 'Visiting Card') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '💼 Designation: ' + (d.title_designation || 'N/A') + '\\n';\n      out += '🏢 Company: ' + (d.company || 'N/A') + '\\n';\n      out += '📞 Phone: ' + (d.phone || 'N/A') + '\\n';\n      out += '📧 Email: ' + (d.email || 'N/A') + '\\n';\n      out += '🌐 Website: ' + (d.website || 'N/A') + '\\n';\n      out += '🏠 Address: ' + (d.address || 'N/A');\n    } else if (t === 'Aadhaar Card') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '🎂 DOB / Year of Birth: ' + (d.dob || 'N/A') + '\\n';\n      out += '🏠 Address: ' + (d.address || 'N/A') + '\\n';\n      out += '🆔 ID Number: ' + (d.id_number || 'N/A');\n    } else if (t === 'PAN Card') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '👨 Father\\'s Name: ' + (d.father_name || 'N/A') + '\\n';\n      out += '🎂 DOB: ' + (d.dob || 'N/A') + '\\n';\n      out += '💳 PAN Number: ' + (d.id_number || 'N/A');\n    } else if (t === 'Driving License') {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '🪪 License Number: ' + (d.id_number || 'N/A') + '\\n';\n      out += '🎂 DOB: ' + (d.dob || 'N/A') + '\\n';\n      out += '🏠 Address: ' + (d.address || 'N/A');\n    } else {\n      out += '👤 Name: ' + (d.name || 'N/A') + '\\n';\n      out += '📞 Phone: ' + (d.phone || 'N/A') + '\\n';\n      out += '📧 Email: ' + (d.email || 'N/A');\n    }\n    return out;\n  })()\n}}\n\nIs this information correct?",
+          "replyMarkup": "inlineKeyboard",
+          "inlineKeyboard": {
+            "rows": [
+              {
+                "row": {
+                  "buttons": [
+                    {
+                      "text": "✅ Confirm & Save",
+                      "additionalFields": {
+                        "callback_data": "=confirm_yes"
+                      }
+                    },
+                    {
+                      "text": "No",
+                      "additionalFields": {
+                        "callback_data": "confirm_no"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "additionalFields": {
+            "reply_to_message_id": "={{ $('Telegram Trigger2').item.json.message.message_id }}"
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1248,
+          1728
+        ],
+        "id": "bdcd7ac7-bb9f-4553-9da9-813f1e90c32a",
+        "name": "Send a text message4",
+        "webhookId": "cad4e004-7d2b-4623-aa60-95f9877502cb",
+        "credentials": {
+          "telegramApi": {
+            "id": "iU8DLvbqYIvAwIaL",
+            "name": "Tikona_Cards"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.callback_query.data }}",
+                      "rightValue": "confirm_",
+                      "operator": {
+                        "type": "string",
+                        "operation": "startsWith"
+                      },
+                      "id": "57447a07-4d25-4ae0-8d9e-3ad1c13dfaf4"
+                    },
+                    {
+                      "leftValue": "={{ $json.callback_query.data }}",
+                      "rightValue": "confirm_no",
+                      "operator": {
+                        "type": "string",
+                        "operation": "notEquals"
+                      },
+                      "id": "57447a07-4d25-4ae0-8d9e-3ad1c13dfaf5"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Yes"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "c911853d-f74a-4cd3-91af-c63ea949aad2",
+                      "leftValue": "={{ $json.callback_query.data }}",
+                      "rightValue": "confirm_no",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "No"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          432,
+          2192
+        ],
+        "id": "fc6fbe5c-43aa-4250-8cc6-9482f60441d6",
+        "name": "Switch4"
+      },
+      {
+        "parameters": {
+          "jsCode": "const cb = $input.item.json.callback_query;\nconst replyMsg = cb.message?.reply_to_message;\n\n// 1. Get file_id from original message\nconst file_id = replyMsg?.document?.file_id || replyMsg?.photo?.slice(-1)[0]?.file_id;\n\n// 2. Parse text fields from confirmation message\nconst text = cb.message?.text || '';\n\nconst getField = (regex) => {\n  const match = text.match(regex);\n  if (!match || !match[1]) return '';\n  const val = match[1].trim();\n  return val === 'N/A' ? '' : val;\n};\n\nconst docTypeMatch = text.match(/Document Type:\\s*=?([^\\n]+)/i);\nconst docType = docTypeMatch ? docTypeMatch[1].trim().replace(/^=/, '') : 'Unknown';\n\nconst fields = {\n  name: getField(/Name:\\s*([^\\n]+)/i),\n  phone: getField(/Phone:\\s*([^\\n]+)/i),\n  email: getField(/Email:\\s*([^\\n]+)/i),\n  title_designation: getField(/Designation:\\s*([^\\n]+)/i),\n  company: getField(/Company:\\s*([^\\n]+)/i),\n  website: getField(/Website:\\s*([^\\n]+)/i),\n  address: getField(/Address:\\s*([^\\n]+)/i),\n  id_number: getField(/(?:ID Number|PAN Number|License Number):\\s*([^\\n]+)/i),\n  dob: getField(/(?:DOB|DOB \\/ Year of Birth):\\s*([^\\n]+)/i),\n  father_name: getField(/Father's Name:\\s*([^\\n]+)/i)\n};\n\nreturn {\n  json: {\n    file_id: file_id,\n    chat_id: cb.message.chat.id,\n    user_name: cb.from?.first_name || 'User',\n    docType: docType,\n    fields: fields\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          688,
+          2176
+        ],
+        "id": "33dcc011-61d3-4a2f-9aa8-2d939e309166",
+        "name": "Code in JavaScript2"
+      },
+      {
+        "parameters": {
+          "resource": "file",
+          "fileId": "={{ $json.file_id }}",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          896,
+          2176
+        ],
+        "id": "44d82442-7af8-4751-8e02-9f9ac93f2b0c",
+        "name": "Get a file2",
+        "webhookId": "7cc9064a-01e2-4c18-8cdb-2054a2439896",
+        "credentials": {
+          "telegramApi": {
+            "id": "iU8DLvbqYIvAwIaL",
+            "name": "Tikona_Cards"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "name": "={{ ($('Code in JavaScript2').item.json.fields.name || 'Unknown_Client').replace(/[\\/\\\\:*?\"<>|]/g, '_').trim() }}_{{ $('Code in JavaScript2').item.json.docType }}.pdf",
+          "driveId": {
+            "__rl": true,
+            "value": "0ACO9VrqDLbsuUk9PVA",
+            "mode": "list",
+            "cachedResultName": "Tikona Capital Team",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/0ACO9VrqDLbsuUk9PVA"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1yuiyZGgqkg3PnaVXV2GiwMuzZjlv9pSL",
+            "mode": "list",
+            "cachedResultName": "Documents*",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1yuiyZGgqkg3PnaVXV2GiwMuzZjlv9pSL"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1088,
+          2176
+        ],
+        "id": "9d3485a8-098e-45fb-b6a0-391066276c18",
+        "name": "Upload file2",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $('Code in JavaScript2').item.json.docType }}",
+                      "rightValue": "Visiting Card",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "521da96d-436f-41b4-91cc-2c3ed4c4ee57"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Visiting Card"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "84d804d7-3dcd-4c35-b8fa-fc88a4a09f3a",
+                      "leftValue": "={{ $('Code in JavaScript2').item.json.docType }}",
+                      "rightValue": "PAN Card",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "PAN Card"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "9baad696-ca6c-4e75-8584-b50fec752008",
+                      "leftValue": "={{ $('Code in JavaScript2').item.json.docType }}",
+                      "rightValue": "Aadhaar Card",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Aadhaar Card"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "49e5d96a-9d07-4fea-87d5-067088de9720",
+                      "leftValue": "={{ $('Code in JavaScript2').item.json.docType }}",
+                      "rightValue": "Driving License",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Driving License"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "e29d6101-d02e-4001-9b98-9b2949b90c7a",
+                      "leftValue": "={{ $('Code in JavaScript2').item.json.docType }}",
+                      "rightValue": "Unknown",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Unknown"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          1312,
+          2144
+        ],
+        "id": "239a4b83-3e04-4b63-a356-b54c128fbec9",
+        "name": "Switch5"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1WQwdmFQarM_zuS3Twl1wSgUXvkELwpcfFZjpuHvfBIU",
+            "mode": "list",
+            "cachedResultName": "visiting/BusinessCards",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WQwdmFQarM_zuS3Twl1wSgUXvkELwpcfFZjpuHvfBIU/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WQwdmFQarM_zuS3Twl1wSgUXvkELwpcfFZjpuHvfBIU/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Name": "={{ $('Code in JavaScript2').item.json.fields.name }}",
+              "Designation": "={{ $('Code in JavaScript2').item.json.fields.title_designation }}",
+              "Company": "={{ $('Code in JavaScript2').item.json.fields.company }}",
+              "Phone": "={{ $('Code in JavaScript2').item.json.fields.phone }}",
+              "Email": "={{ $('Code in JavaScript2').item.json.fields.email }}",
+              "Website": "={{ $('Code in JavaScript2').item.json.fields.website }}",
+              "Address": "={{ $('Code in JavaScript2').item.json.fields.address }}",
+              "File Link": "={{ $('Upload file2').item.json.webViewLink }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Name",
+                "displayName": "Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Designation",
+                "displayName": "Designation",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Company",
+                "displayName": "Company",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Phone",
+                "displayName": "Phone",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Email",
+                "displayName": "Email",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Website",
+                "displayName": "Website",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Address",
+                "displayName": "Address",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "File Link",
+                "displayName": "File Link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1616,
+          1984
+        ],
+        "id": "be387f30-6ddb-4a9a-89d1-8e01cd97bf2d",
+        "name": "Append row in sheet8",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1sl5sl8xhADwSlJyetaWE4N19Oz6ze2owqprwx4CTrEA",
+            "mode": "list",
+            "cachedResultName": "panCard",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sl5sl8xhADwSlJyetaWE4N19Oz6ze2owqprwx4CTrEA/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sl5sl8xhADwSlJyetaWE4N19Oz6ze2owqprwx4CTrEA/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Name": "={{ $('Code in JavaScript2').item.json.fields.name }}",
+              "Father's Name": "={{ $('Code in JavaScript2').item.json.fields.father_name }}",
+              "DOB": "={{ $('Code in JavaScript2').item.json.fields.dob }}",
+              "PAN Number": "={{ $('Code in JavaScript2').item.json.fields.id_number }}",
+              "File Link": "={{ $('Upload file2').item.json.webViewLink }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Name",
+                "displayName": "Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Father's Name",
+                "displayName": "Father's Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "DOB",
+                "displayName": "DOB",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "PAN Number",
+                "displayName": "PAN Number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "File Link",
+                "displayName": "File Link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1616,
+          2112
+        ],
+        "id": "c6067e78-acea-42b5-b83b-b9ba262f9e8b",
+        "name": "Append row in sheet9",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "12HU4N6RTtOT-gnfK5_oCVVds7jIOpzzyuAhfiStVS2E",
+            "mode": "list",
+            "cachedResultName": "aadharCard",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12HU4N6RTtOT-gnfK5_oCVVds7jIOpzzyuAhfiStVS2E/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12HU4N6RTtOT-gnfK5_oCVVds7jIOpzzyuAhfiStVS2E/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Name": "={{ $('Code in JavaScript2').item.json.fields.name }}",
+              "DOB / Year of Birth": "={{ $('Code in JavaScript2').item.json.fields.dob }}",
+              "Address": "={{ $('Code in JavaScript2').item.json.fields.address }}",
+              "ID Number": "={{ $('Code in JavaScript2').item.json.fields.id_number }}",
+              "File Link": "={{ $('Upload file2').item.json.webViewLink }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Name",
+                "displayName": "Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "DOB / Year of Birth",
+                "displayName": "DOB / Year of Birth",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Address",
+                "displayName": "Address",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "ID Number",
+                "displayName": "ID Number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "File Link",
+                "displayName": "File Link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1616,
+          2256
+        ],
+        "id": "b9feea59-676c-4317-8f03-78d9efbfaebc",
+        "name": "Append row in sheet10",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1Up4Hlh3a8UqaCb_op3mZqGRZOQtNYGkSv7iKfvW3Dn8",
+            "mode": "list",
+            "cachedResultName": "drivingLicence",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Up4Hlh3a8UqaCb_op3mZqGRZOQtNYGkSv7iKfvW3Dn8/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Up4Hlh3a8UqaCb_op3mZqGRZOQtNYGkSv7iKfvW3Dn8/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Name": "={{ $('Code in JavaScript2').item.json.fields.name }}",
+              "License Number": "={{ $('Code in JavaScript2').item.json.fields.id_number }}",
+              "DOB": "={{ $('Code in JavaScript2').item.json.fields.dob }}",
+              "Address": "={{ $('Code in JavaScript2').item.json.fields.address }}",
+              "File Link": "={{ $('Upload file2').item.json.webViewLink }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Name",
+                "displayName": "Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "License Number",
+                "displayName": "License Number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "DOB",
+                "displayName": "DOB",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Address",
+                "displayName": "Address",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "File Link",
+                "displayName": "File Link",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1616,
+          2400
+        ],
+        "id": "ec134663-df66-42c2-905b-3693c840d81e",
+        "name": "Append row in sheet11",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('Code in JavaScript2').item.json.chat_id }}",
+          "text": "=✅ Successfully saved {{ $('Code in JavaScript2').item.json.fields.name || 'document' }} into {{ $('Code in JavaScript2').item.json.docType }} database!",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1936,
+          2160
+        ],
+        "id": "d729455c-e2cc-49f5-bd74-e0025ffe81f6",
+        "name": "Send a text message5",
+        "webhookId": "ed14c715-fc48-4327-8d7e-81c7429e8d86",
+        "credentials": {
+          "telegramApi": {
+            "id": "iU8DLvbqYIvAwIaL",
+            "name": "Tikona_Cards"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "queryString": "={{ $json.message?.text ? $json.message.text.trim().split(' ')[0] : '' }}",
+          "returnAll": true,
+          "filter": {
+            "folderId": {
+              "__rl": true,
+              "value": "1yuiyZGgqkg3PnaVXV2GiwMuzZjlv9pSL",
+              "mode": "list",
+              "cachedResultName": "Documents*",
+              "cachedResultUrl": "https://drive.google.com/drive/folders/1yuiyZGgqkg3PnaVXV2GiwMuzZjlv9pSL"
+            }
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          736,
+          1936
+        ],
+        "id": "bcc0ec89-3502-4e12-9707-844a8c02dba2",
+        "name": "Search files and folders",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "z9BTKWDUKGFkyilR",
+            "name": "Tikona Capital Drive"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $json.callback_query.message.chat.id }}",
+          "text": "❌ There seems to be an issue with the API. Please contact the developer to get this checked and resolved.",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          688,
+          2336
+        ],
+        "id": "2224c846-9de7-46c3-86c5-875a0aa7a862",
+        "name": "Send Re-upload Prompt",
+        "webhookId": "3efdf61f-b10e-4fd0-8bd3-79421f98b3ac",
+        "credentials": {
+          "telegramApi": {
+            "id": "iU8DLvbqYIvAwIaL",
+            "name": "Tikona_Cards"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1Lq_cMtVx1d-wO6dQpYknci9tjdVkageGU7V2xFKbaUU",
+            "mode": "list",
+            "cachedResultName": "Unknown*",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Lq_cMtVx1d-wO6dQpYknci9tjdVkageGU7V2xFKbaUU/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Lq_cMtVx1d-wO6dQpYknci9tjdVkageGU7V2xFKbaUU/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Name": "={{ $('Code in JavaScript2').item.json.fields.name }}",
+              "Phone": "={{ $('Code in JavaScript2').item.json.fields.phone }}",
+              "Email": "={{ $('Code in JavaScript2').item.json.fields.email }}"
+            },
+            "matchingColumns": [
+              "Name"
+            ],
+            "schema": [
+              {
+                "id": "Name",
+                "displayName": "Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Phone",
+                "displayName": "Phone",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Email",
+                "displayName": "Email",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1616,
+          2560
+        ],
+        "id": "b964a16a-bcbe-4f6d-9527-642e9f5d5e53",
+        "name": "Append row in sheet12",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Telegram Trigger": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Get a file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get a file": {
+        "main": [
+          [
+            {
+              "node": "Upload file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload file": {
+        "main": [
+          [
+            {
+              "node": "Switch1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Analyze document",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch1": {
+        "main": [
+          [
+            {
+              "node": "Append row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Append row in sheet3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Append row in sheet2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Append row in sheet1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet": {
+        "main": [
+          [
+            {
+              "node": "Send a text message1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet3": {
+        "main": [
+          [
+            {
+              "node": "Send a text message1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet2": {
+        "main": [
+          [
+            {
+              "node": "Send a text message1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet1": {
+        "main": [
+          [
+            {
+              "node": "Send a text message1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a text message1": {
+        "main": [
+          []
+        ]
+      },
+      "Analyze document": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Telegram Trigger1": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Analyze document1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Switch2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Analyze document1": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "Parse Extracted Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Get a file1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get a file1": {
+        "main": [
+          [
+            {
+              "node": "Upload file1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload file1": {
+        "main": [
+          [
+            {
+              "node": "Switch3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch3": {
+        "main": [
+          [
+            {
+              "node": "Append row in sheet4",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Append row in sheet5",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Append row in sheet6",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Append row in sheet7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet4": {
+        "main": [
+          [
+            {
+              "node": "Send a text message3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet5": {
+        "main": [
+          [
+            {
+              "node": "Send a text message3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet6": {
+        "main": [
+          [
+            {
+              "node": "Send a text message3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet7": {
+        "main": [
+          [
+            {
+              "node": "Send a text message3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Extracted Data": {
+        "main": [
+          [
+            {
+              "node": "Send a text message2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Is Document or Search?": {
+        "main": [
+          [
+            {
+              "node": "Analyze document2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Search files and folders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Search Results": {
+        "main": [
+          [
+            {
+              "node": "Send Search Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Telegram Trigger2": {
+        "main": [
+          [
+            {
+              "node": "If2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If2": {
+        "main": [
+          [
+            {
+              "node": "Is Document or Search?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Switch4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Analyze document2": {
+        "main": [
+          [
+            {
+              "node": "Parse Extracted Data1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Extracted Data1": {
+        "main": [
+          [
+            {
+              "node": "Send a text message4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch4": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send Re-upload Prompt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "Get a file2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get a file2": {
+        "main": [
+          [
+            {
+              "node": "Upload file2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload file2": {
+        "main": [
+          [
+            {
+              "node": "Switch5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch5": {
+        "main": [
+          [
+            {
+              "node": "Append row in sheet8",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Append row in sheet9",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Append row in sheet10",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Append row in sheet11",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Append row in sheet12",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet8": {
+        "main": [
+          [
+            {
+              "node": "Send a text message5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet9": {
+        "main": [
+          [
+            {
+              "node": "Send a text message5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet10": {
+        "main": [
+          [
+            {
+              "node": "Send a text message5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet11": {
+        "main": [
+          [
+            {
+              "node": "Send a text message5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search files and folders": {
+        "main": [
+          [
+            {
+              "node": "Format Search Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Append row in sheet12": {
+        "main": [
+          [
+            {
+              "node": "Send a text message5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version 955b7dac",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
