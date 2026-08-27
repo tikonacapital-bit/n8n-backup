@@ -1,0 +1,410 @@
+{
+  "updatedAt": "2026-08-26T14:16:37.616Z",
+  "createdAt": "2026-08-26T12:31:02.774Z",
+  "id": "nsgVvFT6Vbh7Y76WSLe6H",
+  "name": "n8n to GitHub Automated Backup",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "id": "c65c55ae-fc0f-460e-b61b-ab612d23752d",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "filters": {},
+        "requestOptions": {}
+      },
+      "id": "cff158fd-5e86-479c-a518-3f4319fc8894",
+      "name": "Get All Workflows",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        320,
+        496
+      ],
+      "credentials": {
+        "n8nApi": {
+          "id": "UHb21PeMpm4n6IMJ",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const zlib = require('zlib');\n\nreturn $input.all().map(item => {\n  const workflow = item.json;\n  const cleanName = (workflow.name || 'unnamed').replace(/[^a-zA-Z0-9_-]/g, '_');\n  const filePath = `workflows/${cleanName}_${workflow.id}.json.gz`;\n  \n  const jsonBuffer = Buffer.from(JSON.stringify(workflow, null, 2), 'utf-8');\n  const compressedBase64 = zlib.gzipSync(jsonBuffer).toString('base64');\n\n  return {\n    json: {\n      id: workflow.id,\n      name: workflow.name,\n      filePath: filePath,\n      content: compressedBase64\n    }\n  };\n});"
+      },
+      "id": "120cdd23-0b95-423f-9913-5e5c284e49cd",
+      "name": "Compress & Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "813b951d-1719-40d4-8533-5ae105ee585b",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        720,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/tikonacapital-bit/n8n-backup/contents/{{ $json.filePath }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "e7f0782d-2174-4a25-adfb-1b10b8f623da",
+      "name": "Get File SHA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        928,
+        496
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "XgmyMicguMrlBooY",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/tikonacapital-bit/n8n-backup/contents/{{ $('Loop Over Items').item.json.filePath }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ 'Backup: ' + $('Loop Over Items').item.json.name }}"
+            },
+            {
+              "name": "content",
+              "value": "={{ $('Loop Over Items').item.json.content }}"
+            },
+            {
+              "name": "sha",
+              "value": "={{ $json.sha ? $json.sha : undefined }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c1fc1af2-8523-4b12-8632-db1d0a97e81b",
+      "name": "Push to GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        496
+      ],
+      "credentials": {
+        "githubApi": {
+          "id": "XgmyMicguMrlBooY",
+          "name": "GitHub account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get All Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Workflows": {
+      "main": [
+        [
+          {
+            "node": "Compress & Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compress & Format": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get File SHA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File SHA": {
+      "main": [
+        [
+          {
+            "node": "Push to GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push to GitHub": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "84d1ea18-3ead-47ca-8e9c-76e2a0fc35cc",
+  "activeVersionId": "13b1b65f-c605-4399-b0e2-20632f680df7",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-08-26T12:31:02.784Z",
+      "createdAt": "2026-08-26T12:31:02.784Z",
+      "role": "workflow:owner",
+      "workflowId": "nsgVvFT6Vbh7Y76WSLe6H",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-08-26T13:51:07.000Z",
+    "createdAt": "2026-08-26T13:49:44.145Z",
+    "versionId": "13b1b65f-c605-4399-b0e2-20632f680df7",
+    "workflowId": "nsgVvFT6Vbh7Y76WSLe6H",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {}
+            ]
+          }
+        },
+        "id": "72f3cb72-9dfd-4398-b489-5e88a691a9f8",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -208,
+          -256
+        ]
+      },
+      {
+        "parameters": {
+          "filters": {},
+          "requestOptions": {}
+        },
+        "id": "cbf11d81-55e9-462f-a8ef-f31830dfdab9",
+        "name": "Get All Workflows",
+        "type": "n8n-nodes-base.n8n",
+        "typeVersion": 1,
+        "position": [
+          0,
+          -256
+        ],
+        "credentials": {
+          "n8nApi": {
+            "id": "UHb21PeMpm4n6IMJ",
+            "name": "n8n account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return $input.all().map(item => {\n  const workflow = item.json;\n  const cleanName = (workflow.name || 'unnamed').replace(/[^a-zA-Z0-9_-]/g, '_');\n  const filePath = `workflows/${cleanName}_${workflow.id}.json`;\n  const contentString = JSON.stringify(workflow, null, 2);\n  \n  return {\n    json: {\n      id: workflow.id,\n      name: workflow.name,\n      filePath: filePath,\n      content: Buffer.from(contentString).toString('base64')\n    }\n  };\n});"
+        },
+        "id": "80396b6b-3d7d-471d-a505-f5868324e62f",
+        "name": "Format JSON & Path",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          192,
+          -256
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://api.github.com/repos/tikonacapital-bit/n8n-backup/contents/{{ $json.filePath }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "githubApi",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "9375232b-5040-49cf-9822-22f5b5833e3d",
+        "name": "Check Existing File SHA",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          400,
+          -256
+        ],
+        "credentials": {
+          "githubApi": {
+            "id": "XgmyMicguMrlBooY",
+            "name": "GitHub account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://api.github.com/repos/tikonacapital-bit/n8n-backup/contents/{{ $('Format JSON & Path').item.json.filePath }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "githubApi",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "message",
+                "value": "={{ \"Backup: \" + $('Format JSON & Path').item.json.name }}"
+              },
+              {
+                "name": "content",
+                "value": "={{ $('Format JSON & Path').item.json.content }}"
+              },
+              {
+                "name": "sha",
+                "value": "={{ $json.sha ? $json.sha : undefined }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "250cc46f-fdb5-46df-8b90-edb827743112",
+        "name": "Push to GitHub",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          592,
+          -256
+        ],
+        "credentials": {
+          "githubApi": {
+            "id": "XgmyMicguMrlBooY",
+            "name": "GitHub account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get All Workflows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get All Workflows": {
+        "main": [
+          [
+            {
+              "node": "Format JSON & Path",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format JSON & Path": {
+        "main": [
+          [
+            {
+              "node": "Check Existing File SHA",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Existing File SHA": {
+        "main": [
+          [
+            {
+              "node": "Push to GitHub",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version 13b1b65f",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
