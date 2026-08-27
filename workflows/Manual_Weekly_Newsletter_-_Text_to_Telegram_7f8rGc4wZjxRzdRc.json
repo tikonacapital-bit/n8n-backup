@@ -159,8 +159,8 @@
       "parameters": {
         "method": "POST",
         "url": "https://api.pdfshift.io/v3/convert/pdf",
-        "authentication": "[REDACTED_SECRET]",
-        "genericAuthType": "[REDACTED_SECRET]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
