@@ -1,0 +1,294 @@
+{
+  "updatedAt": "2026-01-30T09:11:19.000Z",
+  "createdAt": "2025-11-17T11:54:21.590Z",
+  "id": "GXUxRIULCbJFBTun",
+  "name": "Research Agent",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e41c5a73-b9e9-43a9-8c0b-d2f635ed80bf",
+              "name": "prompt",
+              "value": "={{ $json.messages[0].text.body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        -48
+      ],
+      "id": "c32e3442-576a-4806-bd06-2463537cc5c8",
+      "name": "message to prompt"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        696,
+        176
+      ],
+      "id": "12a020a9-6d2a-44d5-90b1-e696ecbed536",
+      "name": "Google Gemini Chat Model"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert research analyst specializing in producing clear, insightful, and comprehensive industry research reports. Your task is to produce a well-structured and data-informed report on the following subject:{{ $('message to prompt').item.json.prompt }}\n\nPrimary Goal:\nThe output should be a professional business report ready for a corporate or investor audience. Focus on clear analysis, strategic insights, and actionable conclusions. Generate the report efficiently by prioritizing the most critical information.\n\nKey Constraints:\n\nNo Code: Do not provide any Python/R code, reproducibility steps, or appendices.\n\nNo Summaries in Place of Content: Each section must be fully developed.\n\nSimple Formatting: Use clean, numbered headings (e.g., 1.0, 2.0) that can be easily copied.\n\nRequired Structure & Content:\nExecutive Summary\n\nA concise overview (250-400 words) summarizing the most critical findings, analysis, and conclusions of the report.\n\n1.0 Introduction and Market Context\n\nProvide background on the subject.\n\nState the report's main objectives and scope.\n\nBriefly discuss the market environment and why this topic is important.\n\n2.0 Core Analysis and Key Findings\n\nThis is the main body of the report. Present your analysis, supported by data.\n\nUse simple, clear markdown tables to present key data (e.g., financial trends, market size, competitor data).\n\nIf the topic is a COMPANY: Analyze its business model, financial performance (last 3-5 known years), key products/services, competitive landscape, and recent strategic moves.\n\nIf the topic is a SECTOR/INDUSTRY: Analyze its market size and growth, key segments, major players, and significant trends (technological, regulatory, etc.).\n\n3.0 Strategic Discussion (SWOT & Outlook)\n\nProvide a SWOT Analysis (Strengths, Weaknesses, Opportunities, Threats).\n\nDiscuss the future outlook for the company or sector (2-5 years).\n\nInterpret the findings and discuss their strategic implications.\n\n4.0 Conclusion and Recommendations\n\nSummarize the key conclusions from your analysis.\n\nProvide 2-3 concrete, actionable recommendations for stakeholders (e.g., investors, company management).\n\n5.0 References\n\nList the key public sources used in your analysis (e.g., company reports, major news outlets, market research firms).\n\nData Sourcing and Integrity:\nBase your analysis on your extensive training data from credible public sources.\n\nDo not simulate or make up data.\n\nIf specific, recent data (e.g., for the current fiscal quarter) is unavailable to you, clearly state this and base your analysis on the most recent, complete information you have (e.g., \"Based on full-year data from 2024...\").\n\nCite key sources in-text where appropriate, for example: (Source: RIL Annual Report, 2024).",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        -48
+      ],
+      "id": "d28d90a1-a773-4581-9e3b-745cc7d9a80d",
+      "name": "Researcher"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert document formatter specializing in cleaning up and restructuring messy, broken text into clean, professional Markdown.\n\nYour sole task is to take the raw text provided below and reformat it according to these rules:\n\n**1. Fix Headings and Spacing:**\n- Identify text that is clearly a title or section header (e.g., \"Executive Summary\", \"1.0 Introduction\", \"SWOT Analysis\").\n- Format these using appropriate Markdown headings (`#`, `##`, `###`) and ensure they are on their own separate lines.\n- Insert proper paragraph breaks to separate distinct ideas and improve readability.\n\n**2. Standardize Lists:**\n- Find all items that look like lists (often starting with `•`, `⚫`, or `*`).\n- Convert them all into a standard Markdown bulleted list using the `-` character.\n\n**3. Reconstruct Broken Tables (Most Important):**\n- Pay close attention to data that looks like a table but is broken across multiple lines.\n- Your job is to parse this broken data and reconstruct it into a single, valid, and clean Markdown table.\n- Ensure the table has a proper header row, a separator line, and that all data is correctly aligned in its respective column.\n\n**CRITICAL CONSTRAINT:** Do not change the wording, add new information, or remove any content. Your only job is to fix the formatting, structure, and presentation.\n\n---\n**RAW TEXT TO FORMAT:**\n\n{{ $node[\"Researcher\"].json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        976,
+        -48
+      ],
+      "id": "08623f6b-23ac-4508-87d1-0877950600d7",
+      "name": "Formatter"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1048,
+        176
+      ],
+      "id": "20ba86d1-2b42-46f9-82b1-41926afae872",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3QB50nyg1ztqc12e",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        -48
+      ],
+      "id": "95b73b1c-c98e-4f0b-8d9d-b939fd78948f",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.html2pdf.app/v1/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "html",
+              "value": "={{ $json.data }}"
+            },
+            {
+              "name": "apiKey",
+              "value": "=C5j3IcWgKf9S11UIVAHXF6TbrkFf42NJglHglyMXvJptLlyothziFaoiE5RcI3Xn"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1552,
+        -48
+      ],
+      "id": "9056a310-92fe-47b1-ada7-1627fbc8495a",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        -48
+      ],
+      "id": "882dc672-08fa-4253-9df9-720a1fd6f92f",
+      "name": "Telegram Trigger",
+      "webhookId": "f990163c-9bdb-4a33-8249-939a023511eb",
+      "credentials": {
+        "telegramApi": {
+          "id": "YWjyhDu5J78b9yKN",
+          "name": "Telegram account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "1334670746",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1776,
+        -48
+      ],
+      "id": "0e6db22e-ae81-4ca9-aa86-e3bd94ecc40c",
+      "name": "Send a document",
+      "webhookId": "72e5f44f-2b9c-47db-976f-2acb8f8bdfc6",
+      "credentials": {
+        "telegramApi": {
+          "id": "GAmYzv1XOGi4Oa2e",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "message to prompt": {
+      "main": [
+        [
+          {
+            "node": "Researcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Researcher",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Researcher": {
+      "main": [
+        [
+          {
+            "node": "Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Formatter",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatter": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "message to prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "26eeafa2-121e-46c5-b534-df527eaca3e5",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-17T11:54:21.602Z",
+      "createdAt": "2025-11-17T11:54:21.602Z",
+      "role": "workflow:owner",
+      "workflowId": "GXUxRIULCbJFBTun",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
