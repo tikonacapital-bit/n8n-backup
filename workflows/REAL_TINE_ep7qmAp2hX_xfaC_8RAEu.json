@@ -1,0 +1,31 @@
+{
+  "updatedAt": "2026-02-13T11:41:24.000Z",
+  "createdAt": "2026-02-13T11:41:08.908Z",
+  "id": "ep7qmAp2hX_xfaC_8RAEu",
+  "name": "REAL_TINE",
+  "active": false,
+  "isArchived": true,
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "e0cea7c3-7ef8-48f5-839b-d00195c5bf30",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-13T11:41:08.911Z",
+      "createdAt": "2026-02-13T11:41:08.911Z",
+      "role": "workflow:owner",
+      "workflowId": "ep7qmAp2hX_xfaC_8RAEu",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
