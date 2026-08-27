@@ -1,0 +1,248 @@
+{
+  "updatedAt": "2025-08-01T21:35:26.000Z",
+  "createdAt": "2025-07-15T04:43:56.071Z",
+  "id": "VhZa9dML6ra3JNCA",
+  "name": "Research Reports copy",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1YTQO47pruyzheukVxXWOHY-Y9UrnDhd2",
+          "mode": "list",
+          "cachedResultName": "n8n Test",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        360,
+        -80
+      ],
+      "id": "d0ab2841-c0a7-45b7-9c71-9b540fa768b5",
+      "name": "Basic LLM Chain",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        340,
+        140
+      ],
+      "id": "74394ef0-2c45-444e-aa0c-433e922597c2",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GaCvOMdqQCMm3lhY",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "\n{\n  \"oneOf\": [\n    {\n      \"type\": \"object\",\n      \"properties\": {\n        \"company_name\": {\n          \"type\": \"string\",\n          \"const\": \"None\"\n        }\n      },\n      \"required\": [\"company_name\"],\n      \"additionalProperties\": false\n    },\n    {\n      \"type\": \"object\",\n      \"properties\": {\n        \"date\": {\n          \"type\": \"string\"\n        },\n        \"month\": {\n          \"type\": \"string\"\n        },\n        \"year\": {\n          \"type\": \"string\"\n        },\n        \"broker_name\": {\n          \"type\": \"string\"\n        },\n        \"company_name\": {\n          \"type\": \"string\"\n        },\n        \"current_price\": {\n          \"type\": \"number\"\n        },\n        \"target_price\": {\n          \"type\": \"number\"\n        },\n        \"upside_percentage\": {\n          \"type\": \"integer\"\n        },\n        \"detailed_argument\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"date\",\n        \"month\",\n        \"year\",\n        \"broker_name\",\n        \"company_name\",\n        \"current_price\",\n        \"target_price\",\n        \"upside_percentage\",\n        \"detailed_argument\"\n      ],\n      \"additionalProperties\": false\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        520,
+        120
+      ],
+      "id": "588c576f-e212-4883-97ec-12dc595615fd",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c9e1420-4392-4d76-bc66-b0df773b2adc",
+              "leftValue": "={{ $json.text }}",
+              "rightValue": "{\"company_name\": \"None\"}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        940,
+        -80
+      ],
+      "id": "86e5719f-048d-4419-915d-5c0cc47edb7a",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1cjfbUo_-LOQhARbl80zGN2K9XlWEDYMyazrZXXmJvEE",
+          "mode": "list",
+          "cachedResultName": "EQUITY RESEARCH REPORTS (Responses)",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@gmail.com",
+            "photoLink": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@gmail.com",
+              "photoLink": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@tikonacapital.com",
+              "role": "writer",
+              "displayName": "sumitpoddar",
+              "photoLink": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@gmail.com",
+              "role": "owner",
+              "displayName": "Tikona Capital",
+              "photoLink": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@gmail.com",
+            "photoLink": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@gmail.com",
+              "photoLink": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@tikonacapital.com",
+              "role": "writer",
+              "displayName": "sumitpoddar",
+              "photoLink": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@gmail.com",
+              "role": "owner",
+              "displayName": "Tikona Capital",
+              "photoLink": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@gmail.com",
+            "photoLink": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@gmail.com",
+              "photoLink": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@tikonacapital.com",
+              "role": "writer",
+              "displayName": "sumitpoddar",
+              "photoLink": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@gmail.com",
+              "role": "owner",
+              "displayName": "Tikona Capital",
+              "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocKxxGt8tk2neqWQcVpEqWEqoygVQN8m3E3S2d4gUAy6Fw-FzQ=s64",
+              "deleted": false,
+              "pendingOwner": false
+            }
+          ],
+          "spaces": [
+            "drive"
+          ],
+          "capabilities": {
+            "canAcceptOwnership": false,
+            "canAddChildren": false,
+            "canAddMyDriveParent": false,
+            "canChangeCopyRequiresWriterPermission": true,
+            "canChangeItemDownloadRestriction": true,
+            "canChangeSecurityUpdateEnabled": false,
+            "canChangeViewersCanCopyContent": true,
+            "canComment": true,
+            "canCopy": true,
+            "canDelete": true,
+            "canDisableInheritedPermissions": false,
+            "canDownload": true,
+            "canEdit": true,
+            "canEnableInheritedPermissions": true,
+            "canListChildren": false,
+            "canModifyContent": true,
+            "canModifyContentRestriction": true,
+            "canModifyEditorContentRestriction": true,
+            "canModifyOwnerContentRestriction": true,
+            "canModifyLabels": false,
+            "canMoveChildrenWithinDrive": false,
+            "canMoveItemIntoTeamDrive": true,
+            "canMoveItemOutOfDrive": true,
+            "canMoveItemWithinDrive": true,
+            "canReadLabels": false,
+            "canReadRevisions": true,
+            "canRemoveChildren": false,
+            "canRemoveContentRestriction": false,
+            "canRemoveMyDriveParent": true,
+            "canRename": true,
+            "canShare": true,
+            "canTrash": true,
+            "canUntrash": true
+          },
+          "permissionIds": [
+            "00138887900321845943",
+            "03930192055605420373"
+          ],
+          "linkShareMetadata": {
+            "securityUpdateEligible": false,
+            "securityUpdateEnabled": true
+          },
+          "downloadRestrictions": {
+            "itemDownloadRestriction": {
+              "restrictedForReaders": false,
+              "restrictedForWriters": false
+            },
+            "effectiveDownloadRestrictionWithContext": {
+              "restrictedForReaders": false,
+              "restrictedForWriters": false
+            }
+          },
+          "kind": "drive#file",
+          "id": "13jUxkiZL6Q-CL3ONtkkUe88yKvzf_GcO",
+          "name": "2025-07-14 - Nomura - Asia.pdf",
+          "mimeType": "application/pdf",
+          "starred": false,
+          "trashed": false,
+          "explicitlyTrashed": false,
+          "version": "4",
+          "webContentLink": "https://drive.google.com/uc?id=13jUxkiZL6Q-CL3ONtkkUe88yKvzf_GcO&export=download",
+          "webViewLink": "https://drive.google.com/file/d/13jUxkiZL6Q-CL3ONtkkUe88yKvzf_GcO/view?usp=drivesdk",
+          "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/pdf",
+          "hasThumbnail": true,
+          "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNviqsCRHYT7vNWtQTlISUaWZEwveyawMFYNCQcJZL_2qSw-bfYUrM7_myv8CJ9ndAdsVaYN3K9ObqHl3T1BcF7djBv-Le5DmTVy1-hpsdpx9w=s220",
+          "thumbnailVersion": "2",
+          "viewedByMe": false,
+          "createdTime": "2025-07-14T05:54:33.875Z",
+          "modifiedTime": "2025-07-14T05:54:36.219Z",
+          "modifiedByMeTime": "2025-07-14T05:54:36.219Z",
+          "modifiedByMe": true,
+          "shared": true,
+          "ownedByMe": true,
+          "viewersCanCopyContent": true,
+          "copyRequiresWriterPermission": false,
+          "writersCanShare": true,
+          "originalFilename": "Untitled",
+          "fullFileExtension": "pdf",
+          "fileExtension": "pdf",
+          "md5Checksum": "5953680caafe42b17a6f7d4dc11db299",
+          "sha1Checksum": "ce9381d593f8f30713efb84b6a469dd859520727",
+          "sha256Checksum": "949de56f3350e1d76a8ebc15a1a5256994263079acfe0b36b573b0ff87fac86b",
+          "size": "283762",
+          "quotaBytesUsed": "283762",
+          "headRevisionId": "0Bx4sp_McW5gwQW0zRDJQQTUvT1RYTnFOUHNnWnorQ2VPVTNrPQ",
+          "isAppAuthorized": true,
+          "inheritedPermissionsDisabled": false
+        }
+      }
+    ]
+  },
+  "versionId": "eb26db63-943f-4c10-8c5e-786b8ccefa3c",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-07-15T04:43:56.081Z",
+      "createdAt": "2025-07-15T04:43:56.081Z",
+      "role": "workflow:owner",
+      "workflowId": "VhZa9dML6ra3JNCA",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
