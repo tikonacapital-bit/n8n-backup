@@ -104,128 +104,7 @@
           "value": "17jovIgrogFuT0rOS-uNnZHMQVBWUZh-Pi0np7c1OUOE",
           "mode": "list",
           "cachedResultName": "Blog Automation",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17jovIgrogFuT0rOS-uNnZHMQVBWUZh-Pi0np7c1OUOE/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "Sheet1",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17jovIgrogFuT0rOS-uNnZHMQVBWUZh-Pi0np7c1OUOE/edit#gid=0"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "Topic": "={{ $('Check Status = generate').item.json.Topic }}",
-            "Doc Link": "={{ \"https://docs.google.com/document/d/\" + $json.documentId + \"/edit\" }}",
-            "Status": "generated"
-          },
-          "matchingColumns": [
-            "Topic"
-          ],
-          "schema": [
-            {
-              "id": "Topic",
-              "displayName": "Topic",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Status",
-              "displayName": "Status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Doc Link",
-              "displayName": "Doc Link",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Strapi ID",
-              "displayName": "Strapi ID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Schedule Date",
-              "displayName": "Schedule Date",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "row_number",
-              "displayName": "row_number",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "readOnly": true,
-              "removed": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "id": "4d324388-6e51-4a32-94c6-e4f687ebf0de",
-      "name": "Update Sheet - Generated",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [
-        1232,
-        -704
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "TSkkuRLhdX056rOY",
-          "name": "Tikona ops"
-        }
-      },
-      "notes": "⚙️ SETUP: Select the SAME Google Sheet and tab as the trigger. The 'Topic' column is used as the matching key to find and update the correct row."
-    },
-    {
-      "parameters": {
-        "operation": "sendAndWait",
-        "chatId": "-1002262360602",
-        "message": "=📝 **New Blog Draft Ready for Review!**\n\n**Topic:** {{ $('Google Sheets Trigger').item.json.Topic }}\n\n📄 **Review & Edit Here:**\n{{ $('Create Google Doc').item.json.documentId ? 'https://docs.google.com/document/d/' + $('Create Google Doc').item.json.documentId + '/edit' : 'Doc link unavailable' }}\n\n✅ Click **Approve** below when you're done editing, or update the Sheet status to \"approve\" manually.",
-        "options": {}
-      },
-      "id": "f7198d2b-75e6-4951-a0b8-1a78416e9e12",
-      "name": "Telegram - Send Approval Request",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        1456,
-        -704
-      ],
-      "webhookId": "503c6104-9df5-43b6-9233-2bfa8a5f80fb",
-      "credentials": {
-        "telegramApi": {
-          "id": "I0rf76FsxPDgaIaQ",
-          "name": "Telegram account"
-        }
-      },
-      "notes": "⚙️ SETUP: 1) Create a Telegram Bot via @BotFather. 2) Enter your Chat ID in the 'Chat ID' field (get it from @userinfobot). 3) Connect the Telegram Bot API credential."
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@BotFather. 2) Enter your Chat ID in the 'Chat ID' field (get it from @userinfobot). 3) Connect the Telegram Bot API credential."
     },
     {
       "parameters": {
@@ -524,8 +403,8 @@
       "parameters": {
         "method": "POST",
         "url": "http://strapi_cms:1337/api/blogs?status=draft",
-        "authentication": "[REDACTED_SECRET]",
-        "genericAuthType": "[REDACTED_SECRET]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"data\": {\n    \"internalName\": {{ JSON.stringify($json.topic) }},\n    \"title\": {{ JSON.stringify($json.topic) }},\n    \"slug\": {{ JSON.stringify($json.topic.toLowerCase().replace(/[^a-z0-9\\s-]/g, '').replace(/\\s+/g, '-').replace(/-+/g, '-').trim()) }},\n    \"author\": \"Sumit Poddar\",\n    \"content\": {{ JSON.stringify($json.google_doc_text) }}\n  }\n}",
@@ -549,7 +428,7 @@
           "name": "Strapi API"
         }
       },
-      "notes": "⚙️ SETUP: Create an 'Header Auth' credential with: Name = 'Authorization', Value = '[REDACTED_SECRET]'. This creates a draft (no publishedAt date = draft in Strapi)."
+      "notes": "⚙️ SETUP: Create an 'Header Auth' credential with: Name = 'Authorization', Value = 'Bearer [REDACTED_SECRET]'. This creates a draft (no publishedAt date = draft in Strapi)."
     },
     {
       "parameters": {
@@ -797,8 +676,8 @@
       "parameters": {
         "method": "PUT",
         "url": "=http://strapi_cms:1337/api/blogs/{{ $json['Strapi ID'] }}?status=published",
-        "authentication": "[REDACTED_SECRET]",
-        "genericAuthType": "[REDACTED_SECRET]",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"data\": {\n    \"date\": {{ JSON.stringify(new Date().toISOString()) }}\n  }\n}",
