@@ -1,0 +1,196 @@
+{
+  "updatedAt": "2026-07-13T11:15:51.593Z",
+  "createdAt": "2026-06-03T18:18:59.141Z",
+  "id": "PNgVWE46WJ355b7oFh9v7",
+  "name": "no use",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "shopify-checkout",
+        "options": {}
+      },
+      "name": "Shopify Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        -80
+      ],
+      "id": "3168d751-000a-4eb9-a87b-e2ee2c7d9fb5",
+      "webhookId": "b38d95a8-ae1b-493b-ad14-dea9e1238d76"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.body.email}}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "name": "Has Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        -80
+      ],
+      "id": "8a2952b0-b4d8-462d-8b9b-42a0ce54b239"
+    },
+    {
+      "parameters": {},
+      "name": "Wait 1 Hour",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -96
+      ],
+      "id": "85632efa-17eb-40d7-a6db-ca5d262f967e",
+      "webhookId": "ba30e554-2998-4646-91b9-ca62e5901eaa"
+    },
+    {
+      "parameters": {
+        "url": "=https://ai-automation-7170.myshopify.com/admin/api/2024-01/checkouts/{{$node[\"Shopify Webhook\"].json[\"body\"][\"token\"]}}.json",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "name": "Verify Checkout Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -272,
+        -96
+      ],
+      "id": "756652cc-7f0e-4cfa-81c1-52406fa53eaf"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.checkout.completed_at}}",
+              "operation": "isEmpty"
+            }
+          ]
+        }
+      },
+      "name": "Is Still Abandoned?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -96
+      ],
+      "id": "e4a95bd1-db92-4a09-816c-b18a2553a9a7"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$node[\"Shopify Webhook\"].json[\"body\"][\"email\"]}}",
+        "subject": "Looks like you left your shoes behind 👟",
+        "message": "=Hi {{$node[\"Shopify Webhook\"].json[\"body\"][\"customer\"][\"first_name\"] || \"there\"}},\n\nWe noticed you were looking at our shoes but didn't quite complete your order.\n\nIf you had any trouble checking out, or if you have questions about sizing or shipping, just reply directly to this email and let me know. I'm happy to help.\n\nIf you just got distracted, no worries at all! We saved your cart for you. You can pick up exactly where you left off right here:\n{{$node[\"Shopify Webhook\"].json[\"body\"][\"abandoned_checkout_url\"]}}\n\nBest,\nThe Team at AI Automation",
+        "options": {}
+      },
+      "name": "Send Recovery Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        176,
+        -128
+      ],
+      "id": "ad5f0a7a-0ff4-4157-8c7a-baca121eecad",
+      "webhookId": "690f1d29-5c43-43ee-b333-a4056e1e8943",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mZmjo128EUktXn99",
+          "name": "Tikona Ops Gmail"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Shopify Webhook": {
+      "main": [
+        [
+          {
+            "node": "Has Email?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Email?": {
+      "main": [
+        [
+          {
+            "node": "Wait 1 Hour",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 Hour": {
+      "main": [
+        [
+          {
+            "node": "Verify Checkout Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Checkout Status": {
+      "main": [
+        [
+          {
+            "node": "Is Still Abandoned?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Still Abandoned?": {
+      "main": [
+        [
+          {
+            "node": "Send Recovery Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "659b07e5-a55f-4f12-9b62-764f86fe1a00",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-06-03T18:18:59.149Z",
+      "createdAt": "2026-06-03T18:18:59.149Z",
+      "role": "workflow:owner",
+      "workflowId": "PNgVWE46WJ355b7oFh9v7",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
