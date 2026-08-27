@@ -1,0 +1,1281 @@
+{
+  "updatedAt": "2026-02-18T13:38:36.219Z",
+  "createdAt": "2026-02-09T11:18:32.298Z",
+  "id": "tdgjfd92TZP3BRkcutOhs",
+  "name": "Master Social Media Automation - Content & Posting",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7fca9604-d0ff-4d0e-940e-9c3eb9925614",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        -96
+      ],
+      "notes": "Replace with a Schedule Trigger or webhook as needed"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Social Master",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "0a925dcd-b47a-416e-a25e-9d7327eeb0d5",
+      "name": "Read Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -992,
+        -96
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      },
+      "notes": "Reads all rows from the 'Social Master' sheet. Spreadsheet ID: 1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['Post Status'] }}",
+                    "rightValue": "Generate Content",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "46cd18ff-6ac0-4627-88d7-9c4f869b0ac0"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Generate Content"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b6a17191-8556-423a-b879-be844fa0643e",
+                    "leftValue": "={{ $json['Post Status'] }}",
+                    "rightValue": "Post Content",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Post Content"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": false
+        }
+      },
+      "id": "261a4859-66dd-4aa1-9d1a-843564da414a",
+      "name": "Route by Post Status",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -768,
+        -96
+      ],
+      "notes": "Route 0: Post Status = 'Generate Content'\nRoute 1: Post Status = 'Post Content' AND Schedule Date <= now"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Role: You are the social media content strategist for Tikona Capital Finserv Pvt Ltd, a SEBI-registered investment advisory and wealth management firm based in Mumbai managing ₹200+ crore AUM.\n\nBrand & Voice:\nTrusted, professional, approachable. Educational, empowering, never salesy. Blend financial expertise with relatable Indian context.\nFounder: Sumit Poddar (20+ yrs, ex-Motilal Oswal, Axis Securities)\n\nOfferings:\nMutual Funds, Bonds, AIF/PMS, Unlisted Securities, Smallcase/Model Portfolios, SME IPO Fundraising\nServices: Financial, Goal & Wealth Planning\n\nAudience Personas (adapt tone):\n\nYoung Wealth Builders (22–35): simple, motivating, relatable\n\nEntrepreneurs (30–55): flexibility, diversification, liquidity\n\nCorporate Leaders (35–55): efficiency, tax optimization, institutional thinking\n\nHNI/UHNI (40–70): preservation, succession, sophistication\n\nPlatform Guidelines\n\nFacebook\n\nWarm, conversational, community-driven\n\nHook → 2–3 short paras → CTA\n\n80–150 words | 2–3 emojis\n\nEnd with Tikona Capital branding\n\nInstagram\n\nVibrant, educational, carousel-friendly\n\nBold opener → punchy insights → takeaway\n\n80–120 words | 4–6 emojis\n\n5–8 hashtags (always #TikonaCapital #WealthManagement)\n\nCTA: Save / Tag / Follow @tikonacapital\n\nLinkedIn\n\nProfessional, thought leadership\n\nStrong first line → insight + data/context → industry view\n\n150–250 words | max 1 emoji\n\nSoft CTA\n\nUse “Tikona Capital Finserv Pvt Ltd”\n\nX (Twitter)\n\nBold, punchy, opinion-led\n\nHook → 1–2 lines → CTA/question\n\nUnder 280 characters preferred\n\n1–3 emojis | 2–3 hashtags (always #TikonaCapital)\n\nContent Rules\n\nEach platform must be unique (no rewrites)\n\nIndian context only (₹, SEBI/RBI, Nifty/Sensex, tax season, etc.)\n\nNo specific investment advice, no return guarantees\n\nSEBI-compliant, educational framing\n\nNatural Hinglish allowed\n\nAvoid jargon, fear-mongering, fluff, or hype\n\nShareable, insightful, seasonally relevant\n\nOutput:\nRespond only in valid JSON:\n\n{\n\"Facebook_Post_Content\": \"\",\n\"Instagram_Post_Content\": \"\",\n\"LinkedIn_Post_Content\": \"\",\n\"X_Post_Content\": \"\"\n}",
+              "role": "system"
+            },
+            {
+              "content": "=Main idea to transform into posts: {{ $json[\"Idea Content (User Input)\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "75cac3da-f149-45c7-b4b7-1958691de907",
+      "name": "Generate Social Content (OpenAI)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -544,
+        -192
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "TMMS3pMqjiGuuWVj",
+          "name": "RAG 23-12-2025"
+        }
+      },
+      "notes": "Generates platform-specific content for Facebook, Instagram, LinkedIn, and X using GPT-4o-mini. Returns JSON with keys: Facebook_Post_Content, Instagram_Post_Content, LinkedIn_Post_Content, X_Post_Content"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Read Google Sheet').item.json['Create Image'] }}",
+                    "rightValue": "Yes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "cdb8989a-d38d-46f7-8c76-f8e833188bb7"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Generate Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Read Google Sheet').item.json['Create Image'] }}",
+                    "rightValue": "No",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b139eb4e-feb4-450c-b538-a2e93e246060"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Skip Image"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": false
+        }
+      },
+      "id": "8c384f49-9fba-4f7b-be79-ad57a017e93c",
+      "name": "Create Image?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        32,
+        -192
+      ],
+      "notes": "Checks column C 'Create Image' - routes to DALL-E or skips image generation"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "=Generate a square image (1080x1080 pixels) for social media with the following specifications:\n\nStyle Requirements:\n- Create a modern and visually appealing composition\n- Use colors that complement the message and mood\n- Ensure all text is clear and readable\n- Maintain consistent branding elements if specified\n- Include adequate negative space for visual balance\n\nTechnical Specifications:\n- Dimension: 1080 x 1080 pixels (perfect square)\n- Format: High-resolution digital image\n- Style: Minimalist\n\nAdditional Elements:\n- Add subtle visual elements that enhance the message\n- Include appropriate iconography if relevant\n- Ensure the composition works well for social media viewing\n\nImportant Notes:\n- Make sure all text is centered unless otherwise specified\n- Keep the design clean and uncluttered\n- Ensure high contrast between text and background\n- Consider social media platform requirements\n\nMain idea to generate Image: {{ $('Route by Post Status').item.json['Idea Content (User Input)'] }}",
+        "options": {
+          "size": "1024x1024",
+          "style": "vivid"
+        }
+      },
+      "id": "f7312b20-2564-446c-b99a-64833614ad38",
+      "name": "Generate Image (DALL-E 3)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        256,
+        -288
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "TMMS3pMqjiGuuWVj",
+          "name": "RAG 23-12-2025"
+        }
+      },
+      "notes": "Generates a 1024x1024 image using DALL-E 3 based on the idea content"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Social Master",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Image URL(Valid only for 10 min)": "={{ $json.webContentLink }}",
+            "Facebook Content": "={{ $('Code in JavaScript').item.json.facebook_content }}",
+            "LinkedIn Content": "={{ $('Code in JavaScript').item.json.linkedin_content }}",
+            "Instagram Content": "={{ $('Code in JavaScript').item.json.instagram_content }}",
+            "X(Formerly Twitter) Content": "={{ $('Code in JavaScript').item.json.x_content }}",
+            "Content Generation Date & Time": "={{ new Date().toLocaleString() }}",
+            "Post Status": "Content Generated",
+            "row_number": "={{ $('Route by Post Status').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Idea Content (User Input)",
+              "displayName": "Idea Content (User Input)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Post Status",
+              "displayName": "Post Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Create Image",
+              "displayName": "Create Image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Additional Prompt Instructions",
+              "displayName": "Additional Prompt Instructions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Facebook Content",
+              "displayName": "Facebook Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn Content",
+              "displayName": "LinkedIn Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Instagram Content",
+              "displayName": "Instagram Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "X(Formerly Twitter) Content",
+              "displayName": "X(Formerly Twitter) Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Image URL(Valid only for 10 min)",
+              "displayName": "Image URL(Valid only for 10 min)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Content Generation Date & Time",
+              "displayName": "Content Generation Date & Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Facebook link",
+              "displayName": "Facebook link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Instagram link",
+              "displayName": "Instagram link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn personal link",
+              "displayName": "LinkedIn personal link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn Company link",
+              "displayName": "LinkedIn Company link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Scheduled Date",
+              "displayName": "Scheduled Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "abd7ba36-2f49-4853-a739-07c41397bfba",
+      "name": "Update Sheet (With Image)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        704,
+        -288
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      },
+      "notes": "Updates the row with generated content + DALL-E image URL"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Social Master",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 0,
+            "Facebook Content": "={{ $('Code in JavaScript').item.json.facebook_content }}",
+            "Instagram Content": "={{ $('Code in JavaScript').item.json.instagram_content }}",
+            "LinkedIn Content": "={{ $('Code in JavaScript').item.json.linkedin_content }}",
+            "X(Formerly Twitter) Content": "={{ $('Code in JavaScript').item.json.x_content }}",
+            "Image URL(Valid only for 10 min)": "No Image Created",
+            "Content Generation Date & Time": "={{ new Date().toLocaleString() }}",
+            "Post Status": "Content Generated"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Idea Content (User Input)",
+              "displayName": "Idea Content (User Input)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Post Status",
+              "displayName": "Post Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Create Image",
+              "displayName": "Create Image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Additional Prompt Instructions",
+              "displayName": "Additional Prompt Instructions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Facebook Content",
+              "displayName": "Facebook Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn Content",
+              "displayName": "LinkedIn Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Instagram Content",
+              "displayName": "Instagram Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "X(Formerly Twitter) Content",
+              "displayName": "X(Formerly Twitter) Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Image URL(Valid only for 10 min)",
+              "displayName": "Image URL(Valid only for 10 min)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Content Generation Date & Time",
+              "displayName": "Content Generation Date & Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Facebook link",
+              "displayName": "Facebook link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Instagram link",
+              "displayName": "Instagram link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn personal link",
+              "displayName": "LinkedIn personal link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn Company link",
+              "displayName": "LinkedIn Company link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Scheduled Date",
+              "displayName": "Scheduled Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "e39a7126-aeb0-47e2-91d4-f6cc9ed1e66f",
+      "name": "Update Sheet (No Image)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        464,
+        -96
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      },
+      "notes": "Updates the row with generated content but Image URL = 'Not Created'"
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v23.0",
+        "node": "105205165548711",
+        "edge": "photos",
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "message",
+                "value": "={{ $('Read Google Sheet').item.json['Facebook Content'] }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "482166a2-6a5d-46ea-af2f-7ffc74862d31",
+      "name": "Post to Facebook",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        144
+      ],
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "dMEGTwKgnbmuQHcu",
+          "name": "Facebook Graph account"
+        }
+      },
+      "notes": "Posts to Facebook Page (Tikona Capital). Page ID: 105205165548711. Uses content from column E and image link from column I."
+    },
+    {
+      "parameters": {
+        "graphApiVersion": "v23.0",
+        "node": "17841453247289885",
+        "options": {}
+      },
+      "id": "01666909-a0bb-40f0-a8d6-2e9e84b65b50",
+      "name": "Post to Instagram",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        240,
+        96
+      ],
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "dMEGTwKgnbmuQHcu",
+          "name": "Facebook Graph account"
+        }
+      },
+      "notes": "Posts photo to Instagram Business account (tikonacapital). Account ID: 17841453247289885. Uses content from column G and image from column I.\n\nNOTE: n8n doesn't have a native Instagram node. You'll need to use the HTTP Request node with the Instagram Graph API OR use the Facebook Graph API node targeting the Instagram endpoint."
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1qtdTFb5fz4zI76AqsLuG9XYFP15jreEQTNSW3nSnmYo",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Social Master",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 0,
+            "Post Status": "Content Posted"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Idea Content (User Input)",
+              "displayName": "Idea Content (User Input)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Post Status",
+              "displayName": "Post Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Create Image",
+              "displayName": "Create Image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Additional Prompt Instructions",
+              "displayName": "Additional Prompt Instructions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Facebook Content",
+              "displayName": "Facebook Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn Content",
+              "displayName": "LinkedIn Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Instagram Content",
+              "displayName": "Instagram Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "X(Formerly Twitter) Content",
+              "displayName": "X(Formerly Twitter) Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Image URL(Valid only for 10 min)",
+              "displayName": "Image URL(Valid only for 10 min)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Content Generation Date & Time",
+              "displayName": "Content Generation Date & Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Facebook link",
+              "displayName": "Facebook link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Instagram link",
+              "displayName": "Instagram link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn personal link",
+              "displayName": "LinkedIn personal link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn Company link",
+              "displayName": "LinkedIn Company link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Scheduled Date",
+              "displayName": "Scheduled Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "215f8e62-a197-45f7-be89-22d9007fa850",
+      "name": "Update Sheet (Posted)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        688,
+        96
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ls9rJlg0IJOepg23",
+          "name": "Google Sheets"
+        }
+      },
+      "notes": "Updates Post Status to 'Content posted except X' after all platforms have been posted to"
+    },
+    {
+      "parameters": {
+        "name": "=image_{{ $('Route by Post Status').item.json[\"Idea Content (User Input)\"] }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        480,
+        -288
+      ],
+      "id": "0569f57e-85ea-4d45-9ec4-e49793f0cefb",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get ChatGPT response string\nconst raw = items[0].json.message.content;\n\n// Parse the JSON string inside content\nconst parsedContent = JSON.parse(raw);\n\n// Return in your required format\nreturn [\n  {\n    json: {\n      facebook_content: parsedContent.Facebook_Post_Content,\n      instagram_content: parsedContent.Instagram_Post_Content,\n      linkedin_content: parsedContent.LinkedIn_Post_Content,\n      x_content: parsedContent.X_Post_Content\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        -192
+      ],
+      "id": "b831026e-ab28-48dc-b466-15e37c69953f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "postAs": "organization",
+        "organization": "urn:li:organization:79035911",
+        "text": "={{ $('Read Google Sheet').item.json['LinkedIn Content'] }}",
+        "shareMediaCategory": "IMAGE",
+        "binaryPropertyName": "={{ $('Download Image from URL').item.binary.data }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        464,
+        96
+      ],
+      "id": "dbc054a8-0e5c-41a1-81a1-8d040e16071a",
+      "name": "Create a post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "sKkZblfqoZhLXccm",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{\n  $('Read Google Sheet').item.json['Image URL(Valid only for 10 min)']\n    .match(/[-\\w]{25,}/)[0]\n}}\n",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -480,
+        96
+      ],
+      "id": "47c4fe15-b471-4971-9242-64f38f21e3ff",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/17841453247289885/media",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "image_url",
+              "value": "={{   \"https://drive.google.com/uc?export=download&id=\" +   $('Read Google Sheet').item.json['Image URL(Valid only for 10 min)']     .match(/[-\\w]{25,}/)[0] }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $('Route by Post Status').item.json['Instagram Content'] }}"
+            },
+            {
+              "name": "access_token",
+              "value": "EAA5LkHII8sABQnH82meTi3G6HThlODv97lZB6wvPZBBNbSNmIknjz0mrT5XZBEaNhnzqhgHKP3CFr8okkEZAwtLxCTj7TlcY3alFkkzTb4P9RyPxTDgViMrCRkS2abcfYB3p2tmXZC0UGdZBnHFEDaxT3AbjzN8Kk2sOExTy6QbvwWMGna6naKBzirFZCLLyIZA1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        16,
+        96
+      ],
+      "id": "0ab0fdf0-4c17-4e0e-8659-19d3272e4b92",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{   $('Read Google Sheet').item.json['Image URL(Valid only for 10 min)']     .match(/[-\\w]{25,}/)[0] }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -272,
+        96
+      ],
+      "id": "27d40f49-6312-4e76-8075-8d3b74fc3acf",
+      "name": "Share file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "z9BTKWDUKGFkyilR",
+          "name": "Tikona Capital Drive"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Google Sheet": {
+      "main": [
+        [
+          {
+            "node": "Route by Post Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Post Status": {
+      "main": [
+        [
+          {
+            "node": "Generate Social Content (OpenAI)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Social Content (OpenAI)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Image?": {
+      "main": [
+        [
+          {
+            "node": "Generate Image (DALL-E 3)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Sheet (No Image)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image (DALL-E 3)": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Facebook": {
+      "main": [
+        []
+      ]
+    },
+    "Post to Instagram": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet (With Image)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Create Image?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a post": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet (Posted)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Share file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sheet (No Image)": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Post to Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share file": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "27e9bedb-48de-460c-9fc2-f9ab2a8f2fb1",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-09T11:18:32.306Z",
+      "createdAt": "2026-02-09T11:18:32.306Z",
+      "role": "workflow:owner",
+      "workflowId": "tdgjfd92TZP3BRkcutOhs",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
