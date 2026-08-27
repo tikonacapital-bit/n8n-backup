@@ -1,0 +1,632 @@
+{
+  "updatedAt": "2026-03-05T04:44:42.028Z",
+  "createdAt": "2025-09-27T19:46:52.236Z",
+  "id": "e1Q6LmysxHX9hScf",
+  "name": "Idea Screener",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY",
+          "mode": "list",
+          "cachedResultName": "Portfolio tracker ",
+          "cachedResultUrl": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@tikonacapital.com",
+              "type": "string"
+            },
+            {
+              "id": "963c4035-3721-4b1b-bf99-4a85de7ed82c",
+              "name": "trendlyne_username",
+              "value": "sumitpoddar@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "c1394787-b37d-4162-b746-1acfe2196eb1",
+              "name": "password",
+              "value": "Tikona@2022",
+              "type": "string"
+            },
+            {
+              "id": "5bd28830-9cf5-4824-b357-42fad90cdc3c",
+              "name": "links",
+              "value": "={{ $json.links }}",
+              "type": "array"
+            },
+            {
+              "id": "beb66ec0-6c3c-4b41-bfd2-2ead0f8e7e06",
+              "name": "sheet_name",
+              "value": "IDEA Screener",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        752
+      ],
+      "id": "e69ee65a-3c2f-4143-8ed8-1c16cdff3ae3",
+      "name": "Variables"
+    },
+    {
+      "parameters": {
+        "operation": "runCustomScript",
+        "scriptCode": "// This script tries the fast method first, and only re-logs in if it fails.\nconst { URL } = require('url');\nconst { link, screener_username, password, screenerCookies } = $json;\n\nlet currentCookies = screenerCookies;\n\n// First, try to access the page with the current session\ntry {\n    await $page.setCookie(...currentCookies);\n    await $page.goto(link, { waitUntil: 'networkidle2' });\n    // Check if the page is valid by looking for the token. Use a short timeout.\n    await $page.waitForSelector('input[name=\"csrfmiddlewaretoken\"]', { timeout: 7000 });\n    console.log(`Session for ${link} is valid. Proceeding.`);\n} catch (error) {\n    // If the above fails, the session is likely dead. Re-login.\n    console.warn(`Session invalid for ${link}. Performing re-login...`);\n\n    await $page.goto('https://[REDACTED_USER]:[REDACTED_PASSWORD]@tikonacapital.com",
+                "type": "string"
+              },
+              {
+                "id": "963c4035-3721-4b1b-bf99-4a85de7ed82c",
+                "name": "trendlyne_username",
+                "value": "sumitpoddar@gmail.com",
+                "type": "string"
+              },
+              {
+                "id": "c1394787-b37d-4162-b746-1acfe2196eb1",
+                "name": "password",
+                "value": "Tikona@2022",
+                "type": "string"
+              },
+              {
+                "id": "5bd28830-9cf5-4824-b357-42fad90cdc3c",
+                "name": "links",
+                "value": "={{ $json.links }}",
+                "type": "array"
+              },
+              {
+                "id": "beb66ec0-6c3c-4b41-bfd2-2ead0f8e7e06",
+                "name": "sheet_name",
+                "value": "IDEA Screener",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          640,
+          752
+        ],
+        "id": "e69ee65a-3c2f-4143-8ed8-1c16cdff3ae3",
+        "name": "Variables"
+      },
+      {
+        "parameters": {
+          "operation": "runCustomScript",
+          "scriptCode": "// This script tries the fast method first, and only re-logs in if it fails.\nconst { URL } = require('url');\nconst { link, screener_username, password, screenerCookies } = $json;\n\nlet currentCookies = screenerCookies;\n\n// First, try to access the page with the current session\ntry {\n    await $page.setCookie(...currentCookies);\n    await $page.goto(link, { waitUntil: 'networkidle2' });\n    // Check if the page is valid by looking for the token. Use a short timeout.\n    await $page.waitForSelector('input[name=\"csrfmiddlewaretoken\"]', { timeout: 7000 });\n    console.log(`Session for ${link} is valid. Proceeding.`);\n} catch (error) {\n    // If the above fails, the session is likely dead. Re-login.\n    console.warn(`Session invalid for ${link}. Performing re-login...`);\n\n    await $page.goto('https://www.screener.in/login/', { waitUntil: 'networkidle2' });\n    await $page.type('#id_username', screener_username);\n    await $page.type('#id_password', password);\n    await Promise.all([\n        $page.waitForNavigation({ waitUntil: 'networkidle2' }),\n        $page.click('button[type=\"submit\"]')\n    ]);\n    // After re-logging in, we MUST go back to the target link\n    await $page.goto(link, { waitUntil: 'networkidle2' });\n}\n\n// By this point, we are guaranteed to be on the correct page with a valid session.\n// Now we can safely scrape the data.\nconst csrfToken = await $page.$eval('input[name=\"csrfmiddlewaretoken\"]', el => el.value);\nconst finalCookies = await $page.cookies(); // Get the latest cookies\n\nconst url = new URL(link);\nconst pathParts = url.pathname.split('/').filter(part => part);\nconst screenId = pathParts[1];\nconst slugName = pathParts[2];\nconst downloadUrl = `https://www.screener.in/api/export/screen/?url_name=screen&screen_id=${screenId}&slug_name=${slugName}`;\n\n// Return all ingredients for the HTTP Request\nreturn [{\n    json: {\n        ...$json,\n        csrfToken: csrfToken,\n        cookies: finalCookies, // Use the latest cookies\n        downloadUrl: downloadUrl\n    }\n}];",
+          "options": {}
+        },
+        "type": "n8n-nodes-puppeteer.puppeteer",
+        "typeVersion": 1,
+        "position": [
+          2208,
+          576
+        ],
+        "id": "7c7cb1fb-f590-4bec-9224-33d4b93f81fb",
+        "name": "Puppeteer5",
+        "retryOnFail": true
+      },
+      {
+        "parameters": {
+          "jsCode": "// This script parses the Trendlyne URL to get the unique screen ID.\nconst link = items[0].json.link;\nconst parts = link.split('/');\n\n// The ID is the number right after 'stock-screener' in the URL\nconst screenId = parts[parts.indexOf('stock-screener') + 1];\n\nif (!screenId) {\n  throw new Error('Could not parse screenId from Trendlyne link.');\n}\n\n// Add the screenId to the data for the next step\nreturn [{\n  json: {\n    ...items[0].json,\n    screenId: screenId\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2432,
+          768
+        ],
+        "id": "9f97210e-523b-426c-bd7b-17eefab5c347",
+        "name": "Code in JavaScript2"
+      },
+      {
+        "parameters": {
+          "url": "=https://trendlyne.com/fundamentals/tl-all-in-one-screener-data-get/?screenpk={{ $json.screenId }}&perPageCount=1000",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Cookie",
+                "value": "={{ $json.trendlyneCookies.map(c => c.name + '=' + c.value).join('; ') }}"
+              },
+              {
+                "name": "Referer",
+                "value": "={{ $json.link }}"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json, text/javascript, */*; q=0.01"
+              },
+              {
+                "name": "User-Agent",
+                "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+              },
+              {
+                "name": "Accept-Language",
+                "value": "en-US,en;q=0.9"
+              },
+              {
+                "name": "Accept-Encoding",
+                "value": "gzip, deflate, br, zstd"
+              },
+              {
+                "name": "Priority",
+                "value": "u=1, i"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2656,
+          768
+        ],
+        "id": "18f8b2cf-9141-4ac4-9691-7c947e07f3bc",
+        "name": "HTTP Request2"
+      },
+      {
+        "parameters": {
+          "operation": "runCustomScript",
+          "scriptCode": "// This script navigates to a Trendlyne screener, clicks the export buttons,\n// and captures the downloaded CSV file.\n\n// --- 1. Get Inputs ---\nconst { link, trendlyneCookies } = $json;\nif (!link || !link.includes('trendlyne.com')) {\n    throw new Error('A valid Trendlyne link was not provided.');\n}\nif (!trendlyneCookies || !Array.isArray(trendlyneCookies)) {\n    throw new Error('Trendlyne cookies were not provided.');\n}\n\n// --- 2. Setup Page and Cookies ---\nawait $page.setCookie(...trendlyneCookies);\nconsole.log('Successfully set Trendlyne cookies.');\n\n// --- 3. Intercept Downloads using CDP ---\nconst client = await $page.target().createCDPSession();\nawait client.send('Page.setDownloadBehavior', {\n    behavior: 'allowAndName',\n    downloadPath: '/dev/null',\n    eventsEnabled: true,\n});\n\nconst downloadPromise = new Promise((resolve, reject) => {\n    let downloadInfo = {};\n    client.on('Page.downloadWillBegin', (event) => {\n        downloadInfo.fileName = event.suggestedFilename;\n        console.log(`Trendlyne download started: ${downloadInfo.fileName}`);\n    });\n    client.on('Page.downloadProgress', (event) => {\n        if (event.state === 'completed') {\n            downloadInfo.data = event.data;\n            resolve(downloadInfo);\n        } else if (event.state === 'canceled') {\n            reject(new Error('Download was canceled.'));\n        }\n    });\n    setTimeout(() => {\n        reject(new Error('Download timed out after 30 seconds.'));\n    }, 30000);\n});\n\n// --- 4. Navigate and Perform Clicks ---\nawait $page.goto(link, { waitUntil: 'networkidle2' });\nconsole.log(`Mapsd to Trendlyne link: ${link}`);\n\n// Click the main export dropdown button\nawait $page.waitForSelector('#exportOptionContainer', { visible: true });\nawait $page.click('#exportOptionContainer');\nconsole.log('Clicked main export container.');\n\n// Wait for the \"This Table\" option to appear and click it.\n// --- THIS IS THE CORRECTED LINE ---\nconst downloadButtonXPath = \"//*[contains(text(), 'This Table')]\";\nawait $page.waitForSelector(`xpath/${downloadButtonXPath}`, { visible: true });\nconst [downloadButton] = await $page.$$(`xpath/.${downloadButtonXPath}`);\n\nif (!downloadButton) {\n    throw new Error('Could not find the \"This Table\" button in the dropdown.');\n}\nawait downloadButton.click();\nconsole.log('Clicked \"This Table\". Waiting for download to complete...');\n\n\n// --- 5. Await Download and Return Data ---\nconst { fileName, data } = await downloadPromise;\nconsole.log(`Download captured successfully: ${fileName}`);\n\nawait client.detach();\n\n// Return the filename and the Base64 data for the next nodes\nreturn [{\n    json: {\n        ...$json, // Pass along all previous data\n        fileName: fileName,\n        data: data, // The Base64 string\n    }\n}];",
+          "options": {}
+        },
+        "type": "n8n-nodes-puppeteer.puppeteer",
+        "typeVersion": 1,
+        "position": [
+          -256,
+          -320
+        ],
+        "id": "2398023b-fc72-4e1b-8455-769eab8f8f80",
+        "name": "Trendlyne Test"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Get the starting range info from our first node in the loop\nconst rangeData = $('Calculate Index & Range').item.json;\nconst col_letter = rangeData.col_letter;\nconst start_row = rangeData.start_row;\n\n// Get the response data from the Trendlyne API call\nconst apiResponse = items[0].json.body;\nconst headers = apiResponse.tableHeaders;\nconst dataRows = apiResponse.tableData;\n\nif (!dataRows || dataRows.length === 0) {\n  console.log(\"API returned no data rows. Skipping.\");\n  return []; // Return empty to stop this branch\n}\n\n// Find the column indices for both NSE and BSE codes for fallback\nconst nseCodeIndex = headers.findIndex(header => header.unique_name === 'NSEcode');\nconst bseCodeIndex = headers.findIndex(header => header.unique_name === 'BSEcode');\n\nif (nseCodeIndex === -1) {\n  throw new Error(\"Could not find 'NSEcode' column in the API response headers.\");\n}\n\n// Create a simple list of codes, using BSE as a fallback (same as Screener logic)\nconst codeList = dataRows.map(row => {\n  let code = row[nseCodeIndex];\n  // Use BSE code if NSE code is missing and BSE index was found\n  if (!code && bseCodeIndex !== -1) {\n    code = row[bseCodeIndex];\n  }\n  return code ? String(code) : \"\";\n});\n\n// Format the list for the Google Sheets API (e.g., [ [\"TVSLTD\"], [\"RECLTD\"] ])\nconst valuesForApi = codeList.map(code => [code]);\n\n// Calculate the end row and create the full range string (e.g., \"B7:B16\")\nconst end_row = start_row + dataRows.length - 1;\nconst fullRange = `${col_letter}${start_row}:${col_letter}${end_row}`;\n\n// Return a single item with all the data needed for the final step\nreturn [{\n  json: {\n    ...rangeData, // Pass along original data\n    fullRange: fullRange,\n    valuesForApi: valuesForApi,\n\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2880,
+          768
+        ],
+        "id": "1779e930-6da9-4d2d-b89b-dbb045045a9b",
+        "name": "Code in JavaScript4"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://sheets.googleapis.com/v4/spreadsheets/1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY/values/'IDEA%20Screener'!{{ $json.fullRange }}?valueInputOption=USER_ENTERED",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleSheetsOAuth2Api",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ \"values\": $json.valuesForApi }) }}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          3104,
+          768
+        ],
+        "id": "ed240ab3-56c4-408d-8f9b-9556e43cdb49",
+        "name": "HTTP Request3",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://sheets.googleapis.com/v4/spreadsheets/1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY/values/'IDEA%20Screener'!A5?valueInputOption=USER_ENTERED",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleSheetsOAuth2Api",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={   \"majorDimension\": \"ROWS\",   \"values\": [     [\"Last Updated at: {{ $now.plus(0, 'minutes').format('yyyy/LL/dd HH:mm:ss') }}\"]   ] }",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1664,
+          432
+        ],
+        "id": "eaad309a-7af1-444e-870c-9787c822e3fc",
+        "name": "HTTP Request5",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "name": "Replace Me1",
+        "typeVersion": 1,
+        "position": [
+          3824,
+          624
+        ],
+        "id": "b71afb19-2179-4aa9-abbb-dc62e28b6875"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://sheets.googleapis.com/v4/spreadsheets/1Z2B_bnIbjKjpaaO98k8YKrwg5n6h_243gEOXyYMdaKY/values/'IDEA%20Screener'!A5?valueInputOption=USER_ENTERED",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleSheetsOAuth2Api",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={   \"majorDimension\": \"ROWS\",   \"values\": [     [\"Last Updated at: {{ $now.plus(0, 'minutes').format('yyyy/LL/dd HH:mm:ss') }}\"]   ] }",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          3568,
+          736
+        ],
+        "id": "ab9573a6-2a34-464f-b41b-aaae12ab1727",
+        "name": "HTTP Request6",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "Ls9rJlg0IJOepg23",
+            "name": "Google Sheets"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "weeks"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -304,
+          752
+        ],
+        "id": "42cfdee2-1494-427b-952a-64e6650ab4f6",
+        "name": "Schedule Trigger"
+      }
+    ],
+    "connections": {
+      "Get row(s) in sheet": {
+        "main": [
+          [
+            {
+              "node": "Filter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          []
+        ]
+      },
+      "Filter": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Variables",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Puppeteer": {
+        "main": [
+          [
+            {
+              "node": "Puppeteer3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request5",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Calculate Index & Range",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Puppeteer5",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Puppeteer2": {
+        "main": [
+          []
+        ]
+      },
+      "Wait": {
+        "main": [
+          []
+        ]
+      },
+      "Wait1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Puppeteer3": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gemini Download": {
+        "main": [
+          []
+        ]
+      },
+      "Puppeteer4": {
+        "main": [
+          []
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Extract from File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract from File": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request1": {
+        "main": [
+          [
+            {
+              "node": "Wait2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calculate Index & Range": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait2": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Variables": {
+        "main": [
+          [
+            {
+              "node": "Puppeteer",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Puppeteer5": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trendlyne Test": {
+        "main": [
+          []
+        ]
+      },
+      "Code in JavaScript4": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request3": {
+        "main": [
+          [
+            {
+              "node": "Wait1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request6": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version 2711a735",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": [
+    {
+      "updatedAt": "2025-07-20T07:40:28.334Z",
+      "createdAt": "2025-07-20T07:40:28.334Z",
+      "id": "qPqFNHTQy5850MBa",
+      "name": "🔵 In Progress"
+    }
+  ]
+}
