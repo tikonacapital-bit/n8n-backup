@@ -1,0 +1,196 @@
+{
+  "updatedAt": "2026-08-21T13:01:52.613Z",
+  "createdAt": "2026-08-21T11:36:26.745Z",
+  "id": "IV4o8HjCVHNijHvJEWIn9",
+  "name": "TikonaOrbit",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Orbit",
+        "options": {}
+      },
+      "id": "e539b36c-4955-4544-9ecd-3a9180459227",
+      "name": "Supabase Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -96
+      ],
+      "webhookId": "notice-board-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || {};\nconst newActivities = body.record?.data?.activity || [];\nconst oldActivities = body.old_record?.data?.activity || [];\n\n// Create a set of previous IDs\nconst oldIds = new Set(oldActivities.map(a => a.id));\n\n// Find newly added items\nconst addedActivities = newActivities.filter(a => a && a.id && !oldIds.has(a.id));\n\n// Exclude silent tracking entries\nconst visibleActivities = addedActivities.filter(a => a.type !== 'share_copied');\n\nif (visibleActivities.length === 0) {\n  return [];\n}\n\nconst formatActivity = (act) => {\n  const name = act.name || act.userName || 'Someone';\n  \n  switch (act.type) {\n    case 'checkin':\n      return `🟢 *Check-in*: ${name} checked in.`;\n    case 'checkout':\n      return `🔴 *Check-out*: ${name} checked out.`;\n    case 'leave':\n      return `🌴 *Leave*: ${name} applied for leave (${act.text || 'Scheduled'}).`;\n    case 'register':\n      return `👤 *New User*: ${name} joined.`;\n    case 'exit':\n      return `🚪 *Exit*: ${name} logged out.`;\n    case 'announcement':\n      return `📢 *Notice Board Announcement*:\\n${act.text || act.message || ''}`;\n    case 'task_created':\n      return `📋 *New Task*: \"${act.text || act.title || 'Untitled'}\" created by ${name}.`;\n    case 'project_created':\n      return `📁 *New Project*: \"${act.text || act.title || 'Untitled'}\" created.`;\n    case 'due_changed':\n      return `⏰ *Due Date Updated*: ${act.text || 'Task due date modified.'}`;\n    default:\n      return `📌 *Notice Board Update*:\\n${act.text || `${name} performed ${act.type}`}`;\n  }\n};\n\nreturn visibleActivities.map(act => ({\n  json: {\n    activity_id: act.id,\n    activity_type: act.type,\n    message: formatActivity(act)\n  }\n}));"
+      },
+      "id": "59c37c0e-deee-4672-bf64-872746af0f98",
+      "name": "Diff & Format Activities",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "1091786888",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "b9fa449d-9d77-4e7f-81a0-1b886305792d",
+      "name": "Send Notice to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        272,
+        -96
+      ],
+      "webhookId": "11416f38-a0aa-43bd-9f1d-509a7441813d",
+      "credentials": {
+        "telegramApi": {
+          "id": "INGZkjPSy3qnA27j",
+          "name": "TikonaOrbit"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Supabase Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Diff & Format Activities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Diff & Format Activities": {
+      "main": [
+        [
+          {
+            "node": "Send Notice to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "43bece14-dd30-4553-aaa1-ceda91e83549",
+  "activeVersionId": "43bece14-dd30-4553-aaa1-ceda91e83549",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-08-21T11:36:26.755Z",
+      "createdAt": "2026-08-21T11:36:26.755Z",
+      "role": "workflow:owner",
+      "workflowId": "IV4o8HjCVHNijHvJEWIn9",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-08-21T12:55:06.000Z",
+    "createdAt": "2026-08-21T12:55:05.729Z",
+    "versionId": "43bece14-dd30-4553-aaa1-ceda91e83549",
+    "workflowId": "IV4o8HjCVHNijHvJEWIn9",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "Orbit",
+          "options": {}
+        },
+        "id": "e539b36c-4955-4544-9ecd-3a9180459227",
+        "name": "Supabase Webhook Trigger",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          -320,
+          -96
+        ],
+        "webhookId": "notice-board-webhook"
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $input.item.json.body || {};\nconst newActivities = body.record?.data?.activity || [];\nconst oldActivities = body.old_record?.data?.activity || [];\n\n// Create a set of previous IDs\nconst oldIds = new Set(oldActivities.map(a => a.id));\n\n// Find newly added items\nconst addedActivities = newActivities.filter(a => a && a.id && !oldIds.has(a.id));\n\n// Exclude silent tracking entries\nconst visibleActivities = addedActivities.filter(a => a.type !== 'share_copied');\n\nif (visibleActivities.length === 0) {\n  return [];\n}\n\nconst formatActivity = (act) => {\n  const name = act.name || act.userName || 'Someone';\n  \n  switch (act.type) {\n    case 'checkin':\n      return `🟢 *Check-in*: ${name} checked in.`;\n    case 'checkout':\n      return `🔴 *Check-out*: ${name} checked out.`;\n    case 'leave':\n      return `🌴 *Leave*: ${name} applied for leave (${act.text || 'Scheduled'}).`;\n    case 'register':\n      return `👤 *New User*: ${name} joined.`;\n    case 'exit':\n      return `🚪 *Exit*: ${name} logged out.`;\n    case 'announcement':\n      return `📢 *Notice Board Announcement*:\\n${act.text || act.message || ''}`;\n    case 'task_created':\n      return `📋 *New Task*: \"${act.text || act.title || 'Untitled'}\" created by ${name}.`;\n    case 'project_created':\n      return `📁 *New Project*: \"${act.text || act.title || 'Untitled'}\" created.`;\n    case 'due_changed':\n      return `⏰ *Due Date Updated*: ${act.text || 'Task due date modified.'}`;\n    default:\n      return `📌 *Notice Board Update*:\\n${act.text || `${name} performed ${act.type}`}`;\n  }\n};\n\nreturn visibleActivities.map(act => ({\n  json: {\n    activity_id: act.id,\n    activity_type: act.type,\n    message: formatActivity(act)\n  }\n}));"
+        },
+        "id": "59c37c0e-deee-4672-bf64-872746af0f98",
+        "name": "Diff & Format Activities",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -32,
+          -96
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "1091786888",
+          "text": "={{ $json.message }}",
+          "additionalFields": {
+            "parse_mode": "Markdown"
+          }
+        },
+        "id": "b9fa449d-9d77-4e7f-81a0-1b886305792d",
+        "name": "Send Notice to Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          272,
+          -96
+        ],
+        "webhookId": "11416f38-a0aa-43bd-9f1d-509a7441813d",
+        "credentials": {
+          "telegramApi": {
+            "id": "INGZkjPSy3qnA27j",
+            "name": "TikonaOrbit"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Supabase Webhook Trigger": {
+        "main": [
+          [
+            {
+              "node": "Diff & Format Activities",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Diff & Format Activities": {
+        "main": [
+          [
+            {
+              "node": "Send Notice to Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Sumit Poddar",
+    "name": "Version 43bece14",
+    "description": "",
+    "autosaved": false
+  },
+  "tags": []
+}
