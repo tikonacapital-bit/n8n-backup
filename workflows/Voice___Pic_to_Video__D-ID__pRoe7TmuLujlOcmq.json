@@ -1,0 +1,179 @@
+{
+  "updatedAt": "2026-01-14T06:55:53.000Z",
+  "createdAt": "2026-01-14T06:55:32.333Z",
+  "id": "pRoe7TmuLujlOcmq",
+  "name": "Voice + Pic to Video (D-ID)",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "43295064-5d36-4742-857c-074c4e57854c",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "image_url",
+              "value": "https://img.freepik.com/free-photo/portrait-young-man-with-dark-hair_176532-14666.jpg"
+            },
+            {
+              "name": "audio_url",
+              "value": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "18c7b654-3e66-4519-b68c-9c061d71e9a7",
+      "name": "Set Inputs (Photo & Audio)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -16
+      ],
+      "notes": "Apni Photo aur Audio ka link yahan daal bhai"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.d-id.com/talks",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "dGlrb25hY2FwaXRhbEBnbWFpbC5jb20:u9i7h25vdbk5Rqvce9BtI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "164daf54-6c6a-4754-944f-ec4232a0e180",
+      "name": "Generate Video Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        656,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 15,
+        "unit": "seconds"
+      },
+      "id": "c352fc42-e0f6-4ceb-bba1-aa75d9587776",
+      "name": "Wait 15s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -16
+      ],
+      "webhookId": "86a5c36e-b6aa-439e-b2bf-90ba5b598ea5"
+    },
+    {
+      "parameters": {
+        "url": "={{ \"https://api.d-id.com/talks/\" + $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "dGlrb25hY2FwaXRhbEBnbWFpbC5jb20:u9i7h25vdbk5Rqvce9BtI"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0db18b0f-c91d-4d6c-8e56-5847f98bfa31",
+      "name": "Get Final Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1088,
+        -16
+      ]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Inputs (Photo & Audio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Inputs (Photo & Audio)": {
+      "main": [
+        [
+          {
+            "node": "Generate Video Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Video Request": {
+      "main": [
+        [
+          {
+            "node": "Wait 15s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 15s": {
+      "main": [
+        [
+          {
+            "node": "Get Final Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "88a79236-280f-4064-a47a-338bf73771d1",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-14T06:55:32.339Z",
+      "createdAt": "2026-01-14T06:55:32.339Z",
+      "role": "workflow:owner",
+      "workflowId": "pRoe7TmuLujlOcmq",
+      "projectId": "74e1tpTgpmNkUvUf"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
