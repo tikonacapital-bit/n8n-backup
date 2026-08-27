@@ -26,41 +26,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://ginigen-veo3-free.hf.space/gradio_api/call/generate_video_with_audio",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"data\": [\n    \n    \"{{ $json.output }}\",\n\"\",\n    1,\n    512,\n    512,\n    2,\n    4,\n    2025,\n    true,\n    true,\n    \"\",\n    10,\n    1\n  ]\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        912,
-        328
-      ],
-      "id": "e4bc8731-16bc-4268-9983-aa5cfda7f36f",
-      "name": "HTTP Request"
-    },
-    {
-      "parameters": {
-        "url": "=https://ginigen-veo3-free.hf.space/gradio_api/call/generate_video_with_audio/{{$json.event_id}}\n",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1360,
-        336
-      ],
-      "id": "e2d8db05-776a-4b27-9084-6f99bddda7c6",
-      "name": "HTTP Request1"
-    },
-    {
-      "parameters": {
-        "model": "qwen/qwen-2.5-vl-7b-instruct:free",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+        "url": "https://[REDACTED_USER]:[REDACTED_PASSWORD]@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
         632,
